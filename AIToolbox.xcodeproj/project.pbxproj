@@ -1,0 +1,820 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0E0A4F9D1C133E8800AD5AAE /* AIToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0A4F931C133E8800AD5AAE /* AIToolbox.framework */; };
+		0E0A4FAE1C1342CC00AD5AAE /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29CF1A98311A0012CEC9 /* Queue.swift */; };
+		0E0A4FAF1C1342D300AD5AAE /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29C71A91355A0012CEC9 /* Graph.swift */; };
+		0E0A4FB01C1342D700AD5AAE /* AlphaBeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECD88651A9C3F6300049F28 /* AlphaBeta.swift */; };
+		0E0A4FB11C1342DD00AD5AAE /* GeneticAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E408D8E1AA0323000E00370 /* GeneticAlgorithm.swift */; };
+		0E0A4FB21C1342E100AD5AAE /* ConstraintPropogation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5544551AAABDF800BF5FAD /* ConstraintPropogation.swift */; };
+		0E0A4FB31C1342E500AD5AAE /* NeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA941AA1BC4D581006BAECD /* NeuralNetwork.swift */; };
+		0E0A4FB41C1342E800AD5AAE /* QueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29D11A98376F0012CEC9 /* QueueTests.swift */; };
+		0E0A4FB51C1342EB00AD5AAE /* GraphTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29C91A9135940012CEC9 /* GraphTests.swift */; };
+		0E0A4FB61C1342EF00AD5AAE /* AlphaBetaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECD88671A9C44BD00049F28 /* AlphaBetaTests.swift */; };
+		0E0A4FB71C1342F200AD5AAE /* ConstraintPropogationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5544571AAAC58E00BF5FAD /* ConstraintPropogationTests.swift */; };
+		0E0A4FB81C1342F500AD5AAE /* NeuralNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA941AC1BD5F80E006BAECD /* NeuralNetworkTests.swift */; };
+		0E0A4FBA1C14B60800AD5AAE /* SVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0A4FB91C14B60800AD5AAE /* SVM.swift */; };
+		0E0A4FBB1C14B60800AD5AAE /* SVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0A4FB91C14B60800AD5AAE /* SVM.swift */; };
+		0E0A4FBD1C14C7CF00AD5AAE /* DataSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0A4FBC1C14C7CF00AD5AAE /* DataSet.swift */; };
+		0E0A4FBE1C14C7CF00AD5AAE /* DataSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0A4FBC1C14C7CF00AD5AAE /* DataSet.swift */; };
+		0E0A4FC01C14EDC100AD5AAE /* SVMTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0A4FBF1C14EDC100AD5AAE /* SVMTests.swift */; };
+		0E0A4FC11C14EDC100AD5AAE /* SVMTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0A4FBF1C14EDC100AD5AAE /* SVMTests.swift */; };
+		0E0A4FC31C153D8500AD5AAE /* Kernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0A4FC21C153D8500AD5AAE /* Kernel.swift */; };
+		0E0A4FC41C153D8500AD5AAE /* Kernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0A4FC21C153D8500AD5AAE /* Kernel.swift */; };
+		0E0E25FE1CA119160087932B /* PrincipalComponantAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */; };
+		0E0E25FF1CA119160087932B /* PrincipalComponantAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */; };
+		0E0E26011CA44EA80087932B /* PCATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E26001CA44EA80087932B /* PCATests.swift */; };
+		0E0E26021CA44EA80087932B /* PCATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E26001CA44EA80087932B /* PCATests.swift */; };
+		0E408D8F1AA0323000E00370 /* GeneticAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E408D8E1AA0323000E00370 /* GeneticAlgorithm.swift */; };
+		0E5544561AAABDF800BF5FAD /* ConstraintPropogation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5544551AAABDF800BF5FAD /* ConstraintPropogation.swift */; };
+		0E5544581AAAC58E00BF5FAD /* ConstraintPropogationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5544571AAAC58E00BF5FAD /* ConstraintPropogationTests.swift */; };
+		0E8C9F7D1C9BB0B000F88E34 /* KMeansTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8C9F7C1C9BB0B000F88E34 /* KMeansTest.swift */; };
+		0E8C9F7E1C9BB0B000F88E34 /* KMeansTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8C9F7C1C9BB0B000F88E34 /* KMeansTest.swift */; };
+		0E9931891C5536D700E45DC5 /* SVMExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E9931881C5536D700E45DC5 /* SVMExtensions.swift */; };
+		0E99318A1C55371900E45DC5 /* SVMExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E9931881C5536D700E45DC5 /* SVMExtensions.swift */; };
+		0E9F9BEB1C95FBA60037071D /* KMeans.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9BEA1C95FBA60037071D /* KMeans.swift */; };
+		0E9F9BEC1C95FBA60037071D /* KMeans.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E9F9BEA1C95FBA60037071D /* KMeans.swift */; };
+		0EA941AB1BC4D581006BAECD /* NeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA941AA1BC4D581006BAECD /* NeuralNetwork.swift */; };
+		0EA941AD1BD5F80E006BAECD /* NeuralNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA941AC1BD5F80E006BAECD /* NeuralNetworkTests.swift */; };
+		0EBA29B11A91350C0012CEC9 /* AIToolbox.h in Headers */ = {isa = PBXBuildFile; fileRef = 0EBA29B01A91350C0012CEC9 /* AIToolbox.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0EBA29B71A91350C0012CEC9 /* AIToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EBA29AB1A91350C0012CEC9 /* AIToolbox.framework */; };
+		0EBA29C81A91355A0012CEC9 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29C71A91355A0012CEC9 /* Graph.swift */; };
+		0EBA29CA1A9135940012CEC9 /* GraphTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29C91A9135940012CEC9 /* GraphTests.swift */; };
+		0EBA29D01A98311A0012CEC9 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29CF1A98311A0012CEC9 /* Queue.swift */; };
+		0EBA29D21A98376F0012CEC9 /* QueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29D11A98376F0012CEC9 /* QueueTests.swift */; };
+		0ECD88661A9C3F6300049F28 /* AlphaBeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECD88651A9C3F6300049F28 /* AlphaBeta.swift */; };
+		0ECD88681A9C44BD00049F28 /* AlphaBetaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECD88671A9C44BD00049F28 /* AlphaBetaTests.swift */; };
+		0EDA12131C3F7DAF00F03FDE /* MetalNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12121C3F7DAF00F03FDE /* MetalNeuralNetwork.swift */; };
+		0EDA12151C3F813600F03FDE /* MetalNeuralNetworkShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12141C3F813600F03FDE /* MetalNeuralNetworkShaders.metal */; };
+		0EDA12171C435FF700F03FDE /* MetalNeuralNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12161C435FF700F03FDE /* MetalNeuralNetworkTests.swift */; };
+		0EDA12181C435FF700F03FDE /* MetalNeuralNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12161C435FF700F03FDE /* MetalNeuralNetworkTests.swift */; };
+		0EDA12221C48BF4300F03FDE /* MetalNeuralNetworkShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12141C3F813600F03FDE /* MetalNeuralNetworkShaders.metal */; };
+		0EDA12231C48BF5200F03FDE /* MetalNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12121C3F7DAF00F03FDE /* MetalNeuralNetwork.swift */; };
+		0EDA12251C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */; };
+		0EDA12261C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */; };
+		0EDA12281C4B1CB200F03FDE /* MachineLearningProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12271C4B1CB200F03FDE /* MachineLearningProtocols.swift */; };
+		0EDA12291C4B1CB200F03FDE /* MachineLearningProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12271C4B1CB200F03FDE /* MachineLearningProtocols.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0E0A4F9E1C133E8800AD5AAE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0EBA29A21A91350C0012CEC9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0E0A4F921C133E8800AD5AAE;
+			remoteInfo = AIToolboxIOS;
+		};
+		0EBA29B81A91350C0012CEC9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0EBA29A21A91350C0012CEC9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0EBA29AA1A91350C0012CEC9;
+			remoteInfo = AIToolbox;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0E0A4F931C133E8800AD5AAE /* AIToolbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AIToolbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0E0A4F971C133E8800AD5AAE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0E0A4F9C1C133E8800AD5AAE /* AIToolboxIOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AIToolboxIOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0E0A4FA31C133E8800AD5AAE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0E0A4FB91C14B60800AD5AAE /* SVM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SVM.swift; sourceTree = "<group>"; };
+		0E0A4FBC1C14C7CF00AD5AAE /* DataSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataSet.swift; sourceTree = "<group>"; };
+		0E0A4FBF1C14EDC100AD5AAE /* SVMTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SVMTests.swift; sourceTree = "<group>"; };
+		0E0A4FC21C153D8500AD5AAE /* Kernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Kernel.swift; sourceTree = "<group>"; };
+		0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrincipalComponantAnalysis.swift; sourceTree = "<group>"; };
+		0E0E26001CA44EA80087932B /* PCATests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PCATests.swift; sourceTree = "<group>"; };
+		0E408D8E1AA0323000E00370 /* GeneticAlgorithm.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneticAlgorithm.swift; sourceTree = "<group>"; };
+		0E5544551AAABDF800BF5FAD /* ConstraintPropogation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstraintPropogation.swift; sourceTree = "<group>"; };
+		0E5544571AAAC58E00BF5FAD /* ConstraintPropogationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstraintPropogationTests.swift; sourceTree = "<group>"; };
+		0E8C9F7C1C9BB0B000F88E34 /* KMeansTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KMeansTest.swift; sourceTree = "<group>"; };
+		0E9931881C5536D700E45DC5 /* SVMExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SVMExtensions.swift; sourceTree = "<group>"; };
+		0E9F9BEA1C95FBA60037071D /* KMeans.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KMeans.swift; sourceTree = "<group>"; };
+		0EA941AA1BC4D581006BAECD /* NeuralNetwork.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeuralNetwork.swift; sourceTree = "<group>"; };
+		0EA941AC1BD5F80E006BAECD /* NeuralNetworkTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeuralNetworkTests.swift; sourceTree = "<group>"; };
+		0EBA29AB1A91350C0012CEC9 /* AIToolbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AIToolbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0EBA29AF1A91350C0012CEC9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0EBA29B01A91350C0012CEC9 /* AIToolbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AIToolbox.h; sourceTree = "<group>"; };
+		0EBA29B61A91350C0012CEC9 /* AIToolboxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AIToolboxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0EBA29BC1A91350C0012CEC9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0EBA29C71A91355A0012CEC9 /* Graph.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Graph.swift; sourceTree = "<group>"; };
+		0EBA29C91A9135940012CEC9 /* GraphTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GraphTests.swift; sourceTree = "<group>"; };
+		0EBA29CF1A98311A0012CEC9 /* Queue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
+		0EBA29D11A98376F0012CEC9 /* QueueTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueueTests.swift; sourceTree = "<group>"; };
+		0ECD88651A9C3F6300049F28 /* AlphaBeta.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlphaBeta.swift; sourceTree = "<group>"; };
+		0ECD88671A9C44BD00049F28 /* AlphaBetaTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlphaBetaTests.swift; sourceTree = "<group>"; };
+		0EDA12121C3F7DAF00F03FDE /* MetalNeuralNetwork.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalNeuralNetwork.swift; sourceTree = "<group>"; };
+		0EDA12141C3F813600F03FDE /* MetalNeuralNetworkShaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = MetalNeuralNetworkShaders.metal; sourceTree = "<group>"; };
+		0EDA12161C435FF700F03FDE /* MetalNeuralNetworkTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalNeuralNetworkTests.swift; sourceTree = "<group>"; };
+		0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalNeuralNetworkShaders.swift; sourceTree = "<group>"; };
+		0EDA12271C4B1CB200F03FDE /* MachineLearningProtocols.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MachineLearningProtocols.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0E0A4F8F1C133E8800AD5AAE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0E0A4F991C133E8800AD5AAE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E0A4F9D1C133E8800AD5AAE /* AIToolbox.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0EBA29A71A91350C0012CEC9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0EBA29B31A91350C0012CEC9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0EBA29B71A91350C0012CEC9 /* AIToolbox.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0E0A4F941C133E8800AD5AAE /* AIToolboxIOS */ = {
+			isa = PBXGroup;
+			children = (
+				0E0A4FAC1C1340E300AD5AAE /* Supporting Files */,
+			);
+			path = AIToolboxIOS;
+			sourceTree = "<group>";
+		};
+		0E0A4FA01C133E8800AD5AAE /* AIToolboxIOSTests */ = {
+			isa = PBXGroup;
+			children = (
+				0E0A4FAD1C1340EF00AD5AAE /* Supporting Files */,
+			);
+			path = AIToolboxIOSTests;
+			sourceTree = "<group>";
+		};
+		0E0A4FAC1C1340E300AD5AAE /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				0E0A4F971C133E8800AD5AAE /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		0E0A4FAD1C1340EF00AD5AAE /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				0E0A4FA31C133E8800AD5AAE /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		0EBA29A11A91350C0012CEC9 = {
+			isa = PBXGroup;
+			children = (
+				0EBA29AD1A91350C0012CEC9 /* AIToolbox */,
+				0EBA29BA1A91350C0012CEC9 /* AIToolboxTests */,
+				0E0A4F941C133E8800AD5AAE /* AIToolboxIOS */,
+				0E0A4FA01C133E8800AD5AAE /* AIToolboxIOSTests */,
+				0EBA29AC1A91350C0012CEC9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		0EBA29AC1A91350C0012CEC9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0EBA29AB1A91350C0012CEC9 /* AIToolbox.framework */,
+				0EBA29B61A91350C0012CEC9 /* AIToolboxTests.xctest */,
+				0E0A4F931C133E8800AD5AAE /* AIToolbox.framework */,
+				0E0A4F9C1C133E8800AD5AAE /* AIToolboxIOSTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0EBA29AD1A91350C0012CEC9 /* AIToolbox */ = {
+			isa = PBXGroup;
+			children = (
+				0EBA29CF1A98311A0012CEC9 /* Queue.swift */,
+				0EBA29C71A91355A0012CEC9 /* Graph.swift */,
+				0ECD88651A9C3F6300049F28 /* AlphaBeta.swift */,
+				0E408D8E1AA0323000E00370 /* GeneticAlgorithm.swift */,
+				0E5544551AAABDF800BF5FAD /* ConstraintPropogation.swift */,
+				0EDA12271C4B1CB200F03FDE /* MachineLearningProtocols.swift */,
+				0E0A4FBC1C14C7CF00AD5AAE /* DataSet.swift */,
+				0EA941AA1BC4D581006BAECD /* NeuralNetwork.swift */,
+				0E0A4FC21C153D8500AD5AAE /* Kernel.swift */,
+				0E0A4FB91C14B60800AD5AAE /* SVM.swift */,
+				0E9931881C5536D700E45DC5 /* SVMExtensions.swift */,
+				0EDA12121C3F7DAF00F03FDE /* MetalNeuralNetwork.swift */,
+				0EDA12141C3F813600F03FDE /* MetalNeuralNetworkShaders.metal */,
+				0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */,
+				0E9F9BEA1C95FBA60037071D /* KMeans.swift */,
+				0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */,
+				0EBA29AE1A91350C0012CEC9 /* Supporting Files */,
+			);
+			path = AIToolbox;
+			sourceTree = "<group>";
+		};
+		0EBA29AE1A91350C0012CEC9 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				0EBA29B01A91350C0012CEC9 /* AIToolbox.h */,
+				0EBA29AF1A91350C0012CEC9 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		0EBA29BA1A91350C0012CEC9 /* AIToolboxTests */ = {
+			isa = PBXGroup;
+			children = (
+				0EBA29D11A98376F0012CEC9 /* QueueTests.swift */,
+				0EBA29C91A9135940012CEC9 /* GraphTests.swift */,
+				0ECD88671A9C44BD00049F28 /* AlphaBetaTests.swift */,
+				0E5544571AAAC58E00BF5FAD /* ConstraintPropogationTests.swift */,
+				0EA941AC1BD5F80E006BAECD /* NeuralNetworkTests.swift */,
+				0E0A4FBF1C14EDC100AD5AAE /* SVMTests.swift */,
+				0EDA12161C435FF700F03FDE /* MetalNeuralNetworkTests.swift */,
+				0E8C9F7C1C9BB0B000F88E34 /* KMeansTest.swift */,
+				0E0E26001CA44EA80087932B /* PCATests.swift */,
+				0EBA29BB1A91350C0012CEC9 /* Supporting Files */,
+			);
+			path = AIToolboxTests;
+			sourceTree = "<group>";
+		};
+		0EBA29BB1A91350C0012CEC9 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				0EBA29BC1A91350C0012CEC9 /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		0E0A4F901C133E8800AD5AAE /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0EBA29A81A91350C0012CEC9 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0EBA29B11A91350C0012CEC9 /* AIToolbox.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		0E0A4F921C133E8800AD5AAE /* AIToolboxIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0E0A4FA81C133E8800AD5AAE /* Build configuration list for PBXNativeTarget "AIToolboxIOS" */;
+			buildPhases = (
+				0E0A4F8E1C133E8800AD5AAE /* Sources */,
+				0E0A4F8F1C133E8800AD5AAE /* Frameworks */,
+				0E0A4F901C133E8800AD5AAE /* Headers */,
+				0E0A4F911C133E8800AD5AAE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AIToolboxIOS;
+			productName = AIToolboxIOS;
+			productReference = 0E0A4F931C133E8800AD5AAE /* AIToolbox.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		0E0A4F9B1C133E8800AD5AAE /* AIToolboxIOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0E0A4FA91C133E8800AD5AAE /* Build configuration list for PBXNativeTarget "AIToolboxIOSTests" */;
+			buildPhases = (
+				0E0A4F981C133E8800AD5AAE /* Sources */,
+				0E0A4F991C133E8800AD5AAE /* Frameworks */,
+				0E0A4F9A1C133E8800AD5AAE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0E0A4F9F1C133E8800AD5AAE /* PBXTargetDependency */,
+			);
+			name = AIToolboxIOSTests;
+			productName = AIToolboxIOSTests;
+			productReference = 0E0A4F9C1C133E8800AD5AAE /* AIToolboxIOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		0EBA29AA1A91350C0012CEC9 /* AIToolbox */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0EBA29C11A91350C0012CEC9 /* Build configuration list for PBXNativeTarget "AIToolbox" */;
+			buildPhases = (
+				0EBA29A61A91350C0012CEC9 /* Sources */,
+				0EBA29A71A91350C0012CEC9 /* Frameworks */,
+				0EBA29A81A91350C0012CEC9 /* Headers */,
+				0EBA29A91A91350C0012CEC9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AIToolbox;
+			productName = AIToolbox;
+			productReference = 0EBA29AB1A91350C0012CEC9 /* AIToolbox.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		0EBA29B51A91350C0012CEC9 /* AIToolboxTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0EBA29C41A91350C0012CEC9 /* Build configuration list for PBXNativeTarget "AIToolboxTests" */;
+			buildPhases = (
+				0EBA29B21A91350C0012CEC9 /* Sources */,
+				0EBA29B31A91350C0012CEC9 /* Frameworks */,
+				0EBA29B41A91350C0012CEC9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0EBA29B91A91350C0012CEC9 /* PBXTargetDependency */,
+			);
+			name = AIToolboxTests;
+			productName = AIToolboxTests;
+			productReference = 0EBA29B61A91350C0012CEC9 /* AIToolboxTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0EBA29A21A91350C0012CEC9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftMigration = 0700;
+				LastSwiftUpdateCheck = 0710;
+				LastUpgradeCheck = 0700;
+				ORGANIZATIONNAME = "Kevin Coble";
+				TargetAttributes = {
+					0E0A4F921C133E8800AD5AAE = {
+						CreatedOnToolsVersion = 7.1.1;
+					};
+					0E0A4F9B1C133E8800AD5AAE = {
+						CreatedOnToolsVersion = 7.1.1;
+					};
+					0EBA29AA1A91350C0012CEC9 = {
+						CreatedOnToolsVersion = 6.3;
+					};
+					0EBA29B51A91350C0012CEC9 = {
+						CreatedOnToolsVersion = 6.3;
+					};
+				};
+			};
+			buildConfigurationList = 0EBA29A51A91350C0012CEC9 /* Build configuration list for PBXProject "AIToolbox" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 0EBA29A11A91350C0012CEC9;
+			productRefGroup = 0EBA29AC1A91350C0012CEC9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0EBA29AA1A91350C0012CEC9 /* AIToolbox */,
+				0EBA29B51A91350C0012CEC9 /* AIToolboxTests */,
+				0E0A4F921C133E8800AD5AAE /* AIToolboxIOS */,
+				0E0A4F9B1C133E8800AD5AAE /* AIToolboxIOSTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0E0A4F911C133E8800AD5AAE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0E0A4F9A1C133E8800AD5AAE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0EBA29A91A91350C0012CEC9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0EBA29B41A91350C0012CEC9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0E0A4F8E1C133E8800AD5AAE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E0E25FF1CA119160087932B /* PrincipalComponantAnalysis.swift in Sources */,
+				0E0A4FAF1C1342D300AD5AAE /* Graph.swift in Sources */,
+				0E0A4FB01C1342D700AD5AAE /* AlphaBeta.swift in Sources */,
+				0EDA12231C48BF5200F03FDE /* MetalNeuralNetwork.swift in Sources */,
+				0E0A4FBB1C14B60800AD5AAE /* SVM.swift in Sources */,
+				0E0A4FAE1C1342CC00AD5AAE /* Queue.swift in Sources */,
+				0EDA12221C48BF4300F03FDE /* MetalNeuralNetworkShaders.metal in Sources */,
+				0E99318A1C55371900E45DC5 /* SVMExtensions.swift in Sources */,
+				0E0A4FB11C1342DD00AD5AAE /* GeneticAlgorithm.swift in Sources */,
+				0E0A4FB21C1342E100AD5AAE /* ConstraintPropogation.swift in Sources */,
+				0EDA12261C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */,
+				0E0A4FC41C153D8500AD5AAE /* Kernel.swift in Sources */,
+				0E0A4FBE1C14C7CF00AD5AAE /* DataSet.swift in Sources */,
+				0E0A4FB31C1342E500AD5AAE /* NeuralNetwork.swift in Sources */,
+				0EDA12291C4B1CB200F03FDE /* MachineLearningProtocols.swift in Sources */,
+				0E9F9BEC1C95FBA60037071D /* KMeans.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0E0A4F981C133E8800AD5AAE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E0A4FB61C1342EF00AD5AAE /* AlphaBetaTests.swift in Sources */,
+				0E0A4FB81C1342F500AD5AAE /* NeuralNetworkTests.swift in Sources */,
+				0E8C9F7E1C9BB0B000F88E34 /* KMeansTest.swift in Sources */,
+				0E0E26021CA44EA80087932B /* PCATests.swift in Sources */,
+				0E0A4FC11C14EDC100AD5AAE /* SVMTests.swift in Sources */,
+				0E0A4FB51C1342EB00AD5AAE /* GraphTests.swift in Sources */,
+				0EDA12181C435FF700F03FDE /* MetalNeuralNetworkTests.swift in Sources */,
+				0E0A4FB71C1342F200AD5AAE /* ConstraintPropogationTests.swift in Sources */,
+				0E0A4FB41C1342E800AD5AAE /* QueueTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0EBA29A61A91350C0012CEC9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E0E25FE1CA119160087932B /* PrincipalComponantAnalysis.swift in Sources */,
+				0EBA29C81A91355A0012CEC9 /* Graph.swift in Sources */,
+				0ECD88661A9C3F6300049F28 /* AlphaBeta.swift in Sources */,
+				0E0A4FBA1C14B60800AD5AAE /* SVM.swift in Sources */,
+				0EBA29D01A98311A0012CEC9 /* Queue.swift in Sources */,
+				0E408D8F1AA0323000E00370 /* GeneticAlgorithm.swift in Sources */,
+				0EDA12131C3F7DAF00F03FDE /* MetalNeuralNetwork.swift in Sources */,
+				0E9931891C5536D700E45DC5 /* SVMExtensions.swift in Sources */,
+				0E5544561AAABDF800BF5FAD /* ConstraintPropogation.swift in Sources */,
+				0E0A4FC31C153D8500AD5AAE /* Kernel.swift in Sources */,
+				0EDA12251C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */,
+				0E0A4FBD1C14C7CF00AD5AAE /* DataSet.swift in Sources */,
+				0EA941AB1BC4D581006BAECD /* NeuralNetwork.swift in Sources */,
+				0EDA12151C3F813600F03FDE /* MetalNeuralNetworkShaders.metal in Sources */,
+				0EDA12281C4B1CB200F03FDE /* MachineLearningProtocols.swift in Sources */,
+				0E9F9BEB1C95FBA60037071D /* KMeans.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0EBA29B21A91350C0012CEC9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0ECD88681A9C44BD00049F28 /* AlphaBetaTests.swift in Sources */,
+				0EA941AD1BD5F80E006BAECD /* NeuralNetworkTests.swift in Sources */,
+				0E8C9F7D1C9BB0B000F88E34 /* KMeansTest.swift in Sources */,
+				0E0E26011CA44EA80087932B /* PCATests.swift in Sources */,
+				0E0A4FC01C14EDC100AD5AAE /* SVMTests.swift in Sources */,
+				0EBA29CA1A9135940012CEC9 /* GraphTests.swift in Sources */,
+				0EDA12171C435FF700F03FDE /* MetalNeuralNetworkTests.swift in Sources */,
+				0E5544581AAAC58E00BF5FAD /* ConstraintPropogationTests.swift in Sources */,
+				0EBA29D21A98376F0012CEC9 /* QueueTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0E0A4F9F1C133E8800AD5AAE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0E0A4F921C133E8800AD5AAE /* AIToolboxIOS */;
+			targetProxy = 0E0A4F9E1C133E8800AD5AAE /* PBXContainerItemProxy */;
+		};
+		0EBA29B91A91350C0012CEC9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0EBA29AA1A91350C0012CEC9 /* AIToolbox */;
+			targetProxy = 0EBA29B81A91350C0012CEC9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0E0A4FA41C133E8800AD5AAE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = AIToolboxIOS/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.AIToolboxIOS;
+				PRODUCT_NAME = AIToolbox;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0E0A4FA51C133E8800AD5AAE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = AIToolboxIOS/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.AIToolboxIOS;
+				PRODUCT_NAME = AIToolbox;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		0E0A4FA61C133E8800AD5AAE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = AIToolboxIOSTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.AIToolboxIOSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		0E0A4FA71C133E8800AD5AAE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = AIToolboxIOSTests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.1;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.AIToolboxIOSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		0EBA29BF1A91350C0012CEC9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		0EBA29C01A91350C0012CEC9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		0EBA29C21A91350C0012CEC9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = AIToolbox/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.MacRobotics.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		0EBA29C31A91350C0012CEC9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = AIToolbox/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.MacRobotics.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		0EBA29C51A91350C0012CEC9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				"FRAMEWORK_SEARCH_PATHS[arch=*]" = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+					"/Users/kevincoble/Library/Developer/Xcode/DerivedData/AIToolbox-fotxzwujvdsnmbcllkiihtlmhuph/Build/Products/Debug",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = AIToolboxTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.MacRobotics.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		0EBA29C61A91350C0012CEC9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+				);
+				"FRAMEWORK_SEARCH_PATHS[arch=*]" = (
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(inherited)",
+					"/Users/kevincoble/Library/Developer/Xcode/DerivedData/AIToolbox-fotxzwujvdsnmbcllkiihtlmhuph/Build/Products/Release",
+				);
+				INFOPLIST_FILE = AIToolboxTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.MacRobotics.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0E0A4FA81C133E8800AD5AAE /* Build configuration list for PBXNativeTarget "AIToolboxIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E0A4FA41C133E8800AD5AAE /* Debug */,
+				0E0A4FA51C133E8800AD5AAE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0E0A4FA91C133E8800AD5AAE /* Build configuration list for PBXNativeTarget "AIToolboxIOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E0A4FA61C133E8800AD5AAE /* Debug */,
+				0E0A4FA71C133E8800AD5AAE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0EBA29A51A91350C0012CEC9 /* Build configuration list for PBXProject "AIToolbox" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0EBA29BF1A91350C0012CEC9 /* Debug */,
+				0EBA29C01A91350C0012CEC9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0EBA29C11A91350C0012CEC9 /* Build configuration list for PBXNativeTarget "AIToolbox" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0EBA29C21A91350C0012CEC9 /* Debug */,
+				0EBA29C31A91350C0012CEC9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0EBA29C41A91350C0012CEC9 /* Build configuration list for PBXNativeTarget "AIToolboxTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0EBA29C51A91350C0012CEC9 /* Debug */,
+				0EBA29C61A91350C0012CEC9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0EBA29A21A91350C0012CEC9 /* Project object */;
+}
