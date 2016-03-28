@@ -118,9 +118,11 @@ class Kernel {
             var tmp = parameters.gamma * sum + parameters.coef0
             var ret = 1.0
             
-            for var t = parameters.degree; t > 0; t/=2 {
+            var t = parameters.degree
+            while (t > 0) {
                 if (t%2==1) { ret *= tmp }
                 tmp = tmp * tmp
+                t /= 2
             }
             return ret
             
@@ -156,9 +158,11 @@ class Kernel {
         var tmp = gamma * dotProduct(vector1Index, vector2Index) + coef0
         var ret = 1.0
         
-        for var t = degree; t > 0; t/=2 {
+        var t = degree
+        while (t > 0) {
             if (t%2==1) { ret *= tmp }
             tmp = tmp * tmp
+            t /= 2
         }
         return ret
     }

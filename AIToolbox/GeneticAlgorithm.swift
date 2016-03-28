@@ -60,7 +60,7 @@ public class Population
             for member in population {
                 totalScoreToIndex += member.score
                 if (fatherScore < totalScoreToIndex) {break}
-                fatherIndex++
+                fatherIndex += 1
             }
             
             //  If sexual reproduction, find a mother and mate
@@ -74,7 +74,7 @@ public class Population
                     for member in population {
                         totalScoreToIndex += member.score
                         if (motherScore < totalScoreToIndex) {break}
-                        motherIndex++
+                        motherIndex += 1
                     }
                 }
                 
@@ -347,7 +347,7 @@ public class DoubleGene
                 if (sequence[allele] < range.min) {sequence[allele] = range.min}
                 if (sequence[allele] > range.max) {sequence[allele] = range.max}
             }
-            allele++
+            allele += 1
         }
     }
     

@@ -42,7 +42,7 @@ public class Queue<T> {
             queueTail?.nextItemInQueue = newNode
             queueTail = newNode
         }
-        itemCount++
+        itemCount += 1
     }
 
     ///  Method to get the item at the front of the queue.  The item is removed from the queue
@@ -55,7 +55,7 @@ public class Queue<T> {
         queueHead = headNode?.nextItemInQueue
 
         //  Lower the count
-        itemCount--
+        itemCount -= 1
         if (itemCount == 0) { queueTail = nil}
         
         return headNode!.queuedItem

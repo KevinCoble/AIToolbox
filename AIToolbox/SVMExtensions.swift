@@ -62,12 +62,12 @@ extension SVMModel : Classifier {
                 }
                 sum -= ρ[permutation]
                 decisionValues.append(sum)
-                permutation++
+                permutation += 1
                 if (sum > 0) {
-                    vote[i]++
+                    vote[i] += 1
                 }
                 else {
-                    vote[j]++
+                    vote[j] += 1
                 }
             }
         }

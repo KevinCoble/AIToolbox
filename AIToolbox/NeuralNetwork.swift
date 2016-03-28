@@ -522,7 +522,7 @@ public class NeuralNetwork: Classifier, Regressor {
             for classIndex in 0..<layers.last!.nodes.count {
                 trainData.outputs![sampleIndex].append(classIndex == classValue ? 1.0 : falseLevel)
             }
-            sampleIndex++
+            sampleIndex += 1
         }
         
         //  Train using the normal routine

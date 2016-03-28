@@ -478,9 +478,6 @@ public class MetalNeuralNetwork {
         //  Get the results of a feedForward run (each node remembers its own output)
         feedForward(inputs)
         
-        let sum = (layers[0].weights[0] * inputs[0]) + (layers[0].weights[1] * 1.0)
-        let expected = 1.0 / (1.0 + exp(-sum))
-        
         //  Calculate the delta for the final layer
         layers.last!.getFinalLayerDelta(expectedOutputs, device: device!, commandQueue: commandQueue!, metalLibrary: metalNNLibrary!)
         

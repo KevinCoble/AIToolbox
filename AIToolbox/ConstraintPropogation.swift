@@ -81,7 +81,7 @@ public class ConstraintProblemVariable {
         var result = false
         
         if (possibleSettings[varValueIndex]) {
-            remainingPossibilityCount--
+            remainingPossibilityCount -= 1
             possibleSettings[varValueIndex] = false
             result = true
         }
@@ -95,7 +95,7 @@ public class ConstraintProblemVariable {
         var result = false
        
         if (!possibleSettings[varValueIndex]) {
-            remainingPossibilityCount++
+            remainingPossibilityCount += 1
             possibleSettings[varValueIndex] = true
             result = true
         }
@@ -383,7 +383,7 @@ public class ConstraintProblem {
         var nIndex = 0
         for node in graphNodeList {
             node.nodeIndex = nIndex
-            nIndex++
+            nIndex += 1
         }
 
     }

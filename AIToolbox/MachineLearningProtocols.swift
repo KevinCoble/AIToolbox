@@ -33,7 +33,7 @@ extension Classifier {
         for index in 0..<testData.size {
             //  Get the results of a feedForward run
             let result = try classifyOne(testData.inputs[index])
-            if (result == testData.classes![index]) {countCorrect++}
+            if (result == testData.classes![index]) {countCorrect += 1}
         }
         
         //  Calculate the percentage

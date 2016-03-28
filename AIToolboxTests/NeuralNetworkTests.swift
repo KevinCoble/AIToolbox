@@ -104,7 +104,7 @@ class NeuralNetworkTests: XCTestCase {
             let expectedResult = (input1 >= 0.5 && input2 >= 0.5) ? true : false
             let result = network.feedForward([input1, input2])
             let booleanResult = (result[0] >= 0.5) ? true : false
-            if booleanResult == expectedResult {correctCount++}
+            if booleanResult == expectedResult {correctCount += 1}
         }
         XCTAssert(correctCount >= 70, "network trained for AND")    //  Best case is around 75% accuracy without the deadband.  70 gives us room for bad random data set
     }
@@ -227,7 +227,7 @@ class NeuralNetworkTests: XCTestCase {
             input1 += (Double(arc4random()) * 0.2 / Double(UInt32.max)) - 0.1
             input2 += (Double(arc4random()) * 0.2 / Double(UInt32.max)) - 0.1
             let result = network.classifyOne([input1, input2])
-            if (result == classNumber) {correctCount++}
+            if (result == classNumber) {correctCount += 1}
         }
         XCTAssert(correctCount >= 80, "network trained for classification")    //  80 gives us room for bad random data
     }

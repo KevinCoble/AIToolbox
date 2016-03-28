@@ -142,7 +142,7 @@ public class SVMModel
         for i in 0..<data.size {
             if let index = label.indexOf(data.classes![i]) {
                 //  label already found
-                count[index]++
+                count[index] += 1
             }
             else {
                 //  new label - add to list
@@ -191,7 +191,7 @@ public class SVMModel
             coefficients = [[]]
             for index in 0..<data.size {    //  Get the support vector points and save them
                 if (fabs(f.α[index]) > 0.0) {
-                    totalSupportVectors++
+                    totalSupportVectors += 1
                     supportVector.append(data.inputs[index])
                     coefficients[0].append(f.α[index])
                 }
@@ -283,8 +283,8 @@ public class SVMModel
                 for i in 0..<classificationData.numClasses {
                     for j in 0..<classificationData.classCount[i] {
                         if(nonZero[classificationData.classOffsets[i][j]]) {
-                            ++supportVectorCount[i]
-                            ++totalSupportVectors
+                            supportVectorCount[i] += 1
+                            totalSupportVectors += 1
                         }
                     }
                 }
@@ -313,16 +313,18 @@ public class SVMModel
                         var q = coeffStart[i]
                         for index in 0..<classificationData.classCount[i] {
                             if (nonZero[classificationData.classOffsets[i][index]]) {
-                                coefficients[j-1][q++] = functions[permutation].α[index]
+                                coefficients[j-1][q] = functions[permutation].α[index]
+                                q += 1
                             }
                         }
                         q = coeffStart[j]
                         for index in 0..<classificationData.classCount[j] {
                             if (nonZero[classificationData.classOffsets[j][index]]) {
-                                coefficients[i][q++] = functions[permutation].α[index + classificationData.classCount[i]]
+                                coefficients[i][q] = functions[permutation].α[index + classificationData.classCount[i]]
+                                q += 1
                             }
                         }
-                        permutation++
+                        permutation += 1
                     }
                 }
             }
@@ -392,13 +394,13 @@ public class SVMModel
                 let entry = solver!.α[index]
                 if(abs(entry) > 0.0)
                 {
-                    ++numSupportVectors
+                    numSupportVectors += 1
                     if let output = data.singleOutput(index) {
                         if(output > 0.0) {
-                            if(abs(entry) >= solver!.positiveUpperBound) {++numBaseSupportVectors}
+                            if(abs(entry) >= solver!.positiveUpperBound) {numBaseSupportVectors += 1}
                         }
                         else {
-                            if(abs(entry) >= solver!.negativeUpperBound) {++numBaseSupportVectors}
+                            if(abs(entry) >= solver!.negativeUpperBound) {numBaseSupportVectors += 1}
                         }
                     }
                 }
@@ -461,8 +463,7 @@ public class SVMModel
                     for i in 0..<nFolds {
                         let begin = i * classificationData.classCount[c] / nFolds;
                         let end = (i+1) * classificationData.classCount[c] / nFolds;
-                        var j : Int
-                        for (j=begin; j<end; j++) {
+                        for j in begin..<end {
                             perm.append(shuffledIndices[c][j])
                         }
                     }
@@ -533,11 +534,11 @@ public class SVMModel
                 var negativeLabel = 0
                 for index in 0..<subProblem.size {
                     if (subProblem.classes![index] == positiveLabel) {
-                        countPositive++
+                        countPositive += 1
                         positiveLabel = subProblem.classes![index]
                     }
                     else {
-                        countNegative++
+                        countNegative += 1
                         negativeLabel = subProblem.classes![index]
                     }
                 }
@@ -707,7 +708,7 @@ public class SVMModel
         mae=0.0
         for i in 0..<data.size {
             if (fabs(ymv[i]) > 5*std) {
-                count++
+                count += 1
             }
             else {
                 mae += fabs(ymv[i])
@@ -736,7 +737,7 @@ public class SVMModel
             let thisClassIndex = classificationData.foundLabels.indexOf(thisClass)
             if let classIndex = thisClassIndex {
                 //  Class label found, increment count
-                classificationData.classCount[classIndex]++
+                classificationData.classCount[classIndex] += 1
                 //  Add offset of data point
                 classificationData.classOffsets[classIndex].append(index)
             }
@@ -808,12 +809,12 @@ public class SVMModel
                         }
                         sum -= ρ[permutation]
                         decisionValues.append(sum)
-                        permutation++
+                        permutation += 1
                         if (sum > 0) {
-                            vote[i]++
+                            vote[i] += 1
                         }
                         else {
-                            vote[j]++
+                            vote[j] += 1
                         }
                     }
                 }
@@ -884,7 +885,7 @@ public class SVMModel
                 for j in i+1..<numClasses {
                     pairwiseProbability[i][j] = min(max(SVMModel.sigmoidPredict(data.outputs![0][k], probA: probabilityA[k], probB: probabilityB[k]), minProbability), 1.0-minProbability)
                     pairwiseProbability[j][i] = 1.0 - pairwiseProbability[i][j]
-                    k++
+                    k += 1
                 }
             }
             let probabilityEstimates = multiclassProbability(pairwiseProbability)
@@ -966,7 +967,7 @@ public class SVMModel
                 }
             }
             
-            iter++
+            iter += 1
         }
         
         if (iter >= max_iter) {
@@ -1171,7 +1172,7 @@ internal class Solver {
             if let indexes = indices {
                 let i = indexes.i
                 let j = indexes.j
-                ++iter
+                iter += 1
                 print("at iteration \(iter), select indices \(i) and \(j)")
                 // update α[i] and α[j], handle bounds carefully
                 let Q_i = kernel!.getQ(i)
@@ -1420,7 +1421,7 @@ internal class Solver {
                 }
             }
             else {
-                ++numberFree
+                numberFree += 1
                 sumFree += yG
             }
         }
@@ -1697,7 +1698,7 @@ internal class Solver_ν : Solver
                     lb1 = max(lb1, gradient[i])
                     break
                 case .Free:
-                    ++nr_free1
+                    nr_free1 += 1
                     sum_free1 += gradient[i]
                     break
                 }
@@ -1711,7 +1712,7 @@ internal class Solver_ν : Solver
                     lb2 = max(lb2, gradient[i])
                     break
                 case .Free:
-                    ++nr_free2
+                    nr_free2 += 1
                     sum_free2 += gradient[i]
                     break
                 }

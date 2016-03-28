@@ -81,10 +81,12 @@ public class GraphNode {
     
     ///  Method to remove all edges to a specified destination node
     public func removeEdgesToNode(node: GraphNode) {
-        for var index = edgeList.count-1; index >= 0; index--  {
+        var index = edgeList.count-1
+        while (index >= 0) {
             if edgeList[index].goesToNode(node) {
                 edgeList.removeAtIndex(index)
             }
+            index -= 1
         }
     }
     
@@ -140,7 +142,7 @@ public class Graph<T : GraphNode> {
     
     ///  Method to remove a node from the graph, along with all edges to that node
     public func removeNode(nodeToRemove: T) {
-        for var index = 0; index < graphNodeList.count; index++  {
+        for index in 0 ..< graphNodeList.count  {
             if graphNodeList[index] === nodeToRemove {
                 graphNodeList.removeAtIndex(index)
                 for node in graphNodeList {
@@ -195,7 +197,7 @@ public class Graph<T : GraphNode> {
                         nextDepthList.append(newEntry)
                         edge.destinationNode.visited = true
                     }
-                    index++
+                    index += 1
                 }
                 
                 //  Put the next level at the end of the current queue
@@ -255,7 +257,7 @@ public class Graph<T : GraphNode> {
                         nextDepthList.append(newEntry)
                         edge.destinationNode.visited = true
                     }
-                    index++
+                    index += 1
                 }
                 
                 //  See if this is the node we want
@@ -316,7 +318,7 @@ public class Graph<T : GraphNode> {
                         //  Add the new node sorted, based on it's heuristic value
                         enqueueCurrentOrdered(newEntry, orderHeuristic: nodeHeuristic)
                     }
-                    index++
+                    index += 1
                 }
                 
                 //  See if this is the node we want
@@ -399,7 +401,7 @@ public class Graph<T : GraphNode> {
                         nextDepthList.append(newEntry)
                         edge.destinationNode.visited = true
                     }
-                    index++
+                    index += 1
                 }
                 
                 //  See if this is the node we want
@@ -458,7 +460,7 @@ public class Graph<T : GraphNode> {
                             edge.destinationNode.leastCostToNode = newCost
                         }
                     }
-                    index++
+                    index += 1
                 }
                 
                 //  See if this is a goal node
@@ -520,7 +522,7 @@ public class Graph<T : GraphNode> {
                             edge.destinationNode.leastCostToNode = newCost
                         }
                     }
-                    index++
+                    index += 1
                 }
                 
                 //  See if this is a goal node

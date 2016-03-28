@@ -54,7 +54,7 @@ class TestAlphaBetaNode : AlphaBetaNode {
     let creationIndex : Int
     override init() {
         creationIndex = staticEvaluationIndex
-        staticEvaluationIndex++
+        staticEvaluationIndex += 1
         print("created node \(creationIndex)")
         super.init()
     }

@@ -79,7 +79,7 @@ class ConstraintPropogationTests: XCTestCase {
         for _ in stateConnect {
             let node = ConstraintProblemNode(variableDomainSize: 4)     //  4 color map problem
             nodeList.append(node)
-            nIndex++
+            nIndex += 1
         }
         problem.setNodeList(nodeList)
         
