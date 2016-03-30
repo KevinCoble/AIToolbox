@@ -1,5 +1,5 @@
 # AIToolbox
-A toolbox of AI modules written in Swift:  Graphs/Trees, Support Vector Machines, Neural Networks, PCA, K-Means, Genetic Algorithms
+A toolbox of AI modules written in Swift:  Graphs/Trees, Support Vector Machines, Neural Networks, PCA, KMeans, Genetic Algorithms, MDP
 
 This framework uses the Accelerate library to speed up computations
 Written for Swift 2.2.  Will update to 3 when officially released
@@ -33,6 +33,7 @@ Classes/Algorithms supported:
     Neural Networks
         multiple layers, several non-linearity models
         on-line and batch training
+        simple network training using GPU-Metal
 
     Support Vector Machine
         Classification
@@ -44,4 +45,8 @@ Classes/Algorithms supported:
 
     Principal Component Analysis
         data dimension reduction
+
+    Markov Decision Process
+        value iteration
+        policy iteration
         
