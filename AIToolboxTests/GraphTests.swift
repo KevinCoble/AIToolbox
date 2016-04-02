@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Kevin Coble. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 import XCTest
 import AIToolbox
 
