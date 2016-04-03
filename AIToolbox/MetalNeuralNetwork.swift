@@ -8,6 +8,7 @@
 
 import Foundation
 import Accelerate
+import Metal
 
 
 @available(OSX 10.11, iOS 8.0, *)
