@@ -46,6 +46,10 @@
 		0EAAFD481CA9F37E0062EBD5 /* MarkovDecisionProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAAFD461CA9F37E0062EBD5 /* MarkovDecisionProcess.swift */; };
 		0EAAFD4A1CA9F3BD0062EBD5 /* MDPTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAAFD491CA9F3BD0062EBD5 /* MDPTests.swift */; };
 		0EAAFD4B1CA9F3BD0062EBD5 /* MDPTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAAFD491CA9F3BD0062EBD5 /* MDPTests.swift */; };
+		0EAAFD6A1CB33D4F0062EBD5 /* LinearRegression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAAFD691CB33D4F0062EBD5 /* LinearRegression.swift */; };
+		0EAAFD6B1CB33D4F0062EBD5 /* LinearRegression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAAFD691CB33D4F0062EBD5 /* LinearRegression.swift */; };
+		0EAAFD6D1CB33DA10062EBD5 /* LinearRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAAFD6C1CB33DA10062EBD5 /* LinearRegressionTests.swift */; };
+		0EAAFD6E1CB33DA10062EBD5 /* LinearRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAAFD6C1CB33DA10062EBD5 /* LinearRegressionTests.swift */; };
 		0EBA29B11A91350C0012CEC9 /* AIToolbox.h in Headers */ = {isa = PBXBuildFile; fileRef = 0EBA29B01A91350C0012CEC9 /* AIToolbox.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0EBA29B71A91350C0012CEC9 /* AIToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EBA29AB1A91350C0012CEC9 /* AIToolbox.framework */; };
 		0EBA29C81A91355A0012CEC9 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29C71A91355A0012CEC9 /* Graph.swift */; };
@@ -123,6 +127,8 @@
 		0EA941AC1BD5F80E006BAECD /* NeuralNetworkTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NeuralNetworkTests.swift; sourceTree = "<group>"; };
 		0EAAFD461CA9F37E0062EBD5 /* MarkovDecisionProcess.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MarkovDecisionProcess.swift; sourceTree = "<group>"; };
 		0EAAFD491CA9F3BD0062EBD5 /* MDPTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MDPTests.swift; sourceTree = "<group>"; };
+		0EAAFD691CB33D4F0062EBD5 /* LinearRegression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinearRegression.swift; sourceTree = "<group>"; };
+		0EAAFD6C1CB33DA10062EBD5 /* LinearRegressionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinearRegressionTests.swift; sourceTree = "<group>"; };
 		0EBA29AB1A91350C0012CEC9 /* AIToolbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AIToolbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0EBA29AF1A91350C0012CEC9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0EBA29B01A91350C0012CEC9 /* AIToolbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AIToolbox.h; sourceTree = "<group>"; };
@@ -266,6 +272,7 @@
 				0E9F9BEA1C95FBA60037071D /* KMeans.swift */,
 				0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */,
 				0EAAFD461CA9F37E0062EBD5 /* MarkovDecisionProcess.swift */,
+				0EAAFD691CB33D4F0062EBD5 /* LinearRegression.swift */,
 				0EBA29AE1A91350C0012CEC9 /* Supporting Files */,
 			);
 			path = AIToolbox;
@@ -293,6 +300,7 @@
 				0E8C9F7C1C9BB0B000F88E34 /* KMeansTest.swift */,
 				0E0E26001CA44EA80087932B /* PCATests.swift */,
 				0EAAFD491CA9F3BD0062EBD5 /* MDPTests.swift */,
+				0EAAFD6C1CB33DA10062EBD5 /* LinearRegressionTests.swift */,
 				0EBA29BB1A91350C0012CEC9 /* Supporting Files */,
 			);
 			path = AIToolboxTests;
@@ -525,6 +533,7 @@
 				0E0A4FB21C1342E100AD5AAE /* ConstraintPropogation.swift in Sources */,
 				0EDA12261C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */,
 				0E0A4FC41C153D8500AD5AAE /* Kernel.swift in Sources */,
+				0EAAFD6B1CB33D4F0062EBD5 /* LinearRegression.swift in Sources */,
 				0E0A4FBE1C14C7CF00AD5AAE /* DataSet.swift in Sources */,
 				0EAAFD481CA9F37E0062EBD5 /* MarkovDecisionProcess.swift in Sources */,
 				0E0A4FB31C1342E500AD5AAE /* NeuralNetwork.swift in Sources */,
@@ -545,6 +554,7 @@
 				0EAAFD4B1CA9F3BD0062EBD5 /* MDPTests.swift in Sources */,
 				0E0A4FB51C1342EB00AD5AAE /* GraphTests.swift in Sources */,
 				0EDA12181C435FF700F03FDE /* MetalNeuralNetworkTests.swift in Sources */,
+				0EAAFD6E1CB33DA10062EBD5 /* LinearRegressionTests.swift in Sources */,
 				0E0A4FB71C1342F200AD5AAE /* ConstraintPropogationTests.swift in Sources */,
 				0E0A4FB41C1342E800AD5AAE /* QueueTests.swift in Sources */,
 			);
@@ -561,6 +571,7 @@
 				0EBA29D01A98311A0012CEC9 /* Queue.swift in Sources */,
 				0E408D8F1AA0323000E00370 /* GeneticAlgorithm.swift in Sources */,
 				0EDA12131C3F7DAF00F03FDE /* MetalNeuralNetwork.swift in Sources */,
+				0EAAFD6A1CB33D4F0062EBD5 /* LinearRegression.swift in Sources */,
 				0E9931891C5536D700E45DC5 /* SVMExtensions.swift in Sources */,
 				0E5544561AAABDF800BF5FAD /* ConstraintPropogation.swift in Sources */,
 				0E0A4FC31C153D8500AD5AAE /* Kernel.swift in Sources */,
@@ -586,6 +597,7 @@
 				0EAAFD4A1CA9F3BD0062EBD5 /* MDPTests.swift in Sources */,
 				0EBA29CA1A9135940012CEC9 /* GraphTests.swift in Sources */,
 				0EDA12171C435FF700F03FDE /* MetalNeuralNetworkTests.swift in Sources */,
+				0EAAFD6D1CB33DA10062EBD5 /* LinearRegressionTests.swift in Sources */,
 				0E5544581AAAC58E00BF5FAD /* ConstraintPropogationTests.swift in Sources */,
 				0EBA29D21A98376F0012CEC9 /* QueueTests.swift in Sources */,
 			);

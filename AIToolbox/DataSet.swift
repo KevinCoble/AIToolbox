@@ -160,6 +160,18 @@ public class DataSet {
         classes!.append(output)
     }
     
+    public func setOutput(index: Int, newOutput : [Double]) throws
+    {
+        //  Validate the data
+        if (dataType != .Regression) { throw DataTypeError.DataWrongForType }
+        if (index < 0) { throw  DataIndexError.Negative }
+        if (index > inputs.count) { throw  DataIndexError.Negative }
+        if (newOutput.count != outputDimension) { throw DataTypeError.WrongDimensionOnOutput }
+        
+        //  Add the new output item
+        outputs![index] = newOutput
+    }
+    
     public func setClass(index: Int, newClass : Int) throws
     {
         //  Validate the data
@@ -187,12 +199,31 @@ public class DataSet {
         inputs.append(input)
     }
     
+    public func getInput(index: Int) throws ->[Double]
+    {
+        //  Validate the data
+        if (index < 0) { throw  DataIndexError.Negative }
+        if (index > inputs.count) { throw  DataIndexError.IndexAboveDataSetSize }
+        
+        return inputs[index]
+    }
+    
+    public func getOutput(index: Int) throws ->[Double]
+    {
+        //  Validate the data
+        if (dataType != .Regression) { throw DataTypeError.DataWrongForType }
+        if (index < 0) { throw  DataIndexError.Negative }
+        if (index > outputs!.count) { throw  DataIndexError.IndexAboveDataSetSize }
+        
+        return outputs![index]
+    }
+   
     public func getClass(index: Int) throws ->Int
     {
         //  Validate the data
         if (dataType != .Classification) { throw DataTypeError.DataWrongForType }
         if (index < 0) { throw  DataIndexError.Negative }
-        if (index > inputs.count) { throw  DataIndexError.Negative }
+        if (index > classes!.count) { throw  DataIndexError.IndexAboveDataSetSize }
         
         return classes![index]
     }

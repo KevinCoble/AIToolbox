@@ -9,17 +9,42 @@
 import Foundation
 import Accelerate
 
+///  Errors that MDP routines can throw
+public enum MDPErrors: ErrorType {
+    case FailedSolving
+    case ErrorCreatingSampleSet
+    case ErrorCreatingSampleTargetValues
+    case ModelInputDimensionError
+    case ModelOutputDimensionError
+}
+
 ///  Class to solve Markov Decision Process problems
 public class MDP {
-    var numStates : Int
+    var numStates : Int         //  If discrete states
     var numActions : Int
     var discountFactor : Double
+    public var convergenceLimit = 0.0000001
     
+    //  Continuos state variables
+    var numSamples = 10000
+    var deterministicModel = true       //  If true, we don't need to sample end states
+    var nonDeterministicSampleSize = 20  //  Number of samples to take if resulting model state is not deterministic
+    
+    
+    ///  Init MDP.  Set states to 0 for continuous states
     public init(states: Int, actions: Int, discount: Double)
     {
         numStates = states
         numActions = actions
         discountFactor = discount
+    }
+    
+    ///  Method to set the parameters for continuous state fittedValueIteration MDP's
+    public func setContinousStateParameters(sampleSize: Int, deterministic: Bool, nonDetSampleSize: Int = 20)
+    {
+        numSamples = sampleSize
+        deterministicModel = deterministic
+        nonDeterministicSampleSize = nonDetSampleSize
     }
     
     ///  Method to solve using value iteration
@@ -31,8 +56,8 @@ public class MDP {
         var π = [Int](count: numStates, repeatedValue: 0)
         var V = [Double](count: numStates, repeatedValue: 0.0)
         
-        var difference = 9999.0
-        while (difference > 0.0000001) {    //  Go till convergence
+        var difference = convergenceLimit + 1.0
+        while (difference > convergenceLimit) {    //  Go till convergence
             difference = 0.0
             //  Update each state's value
             for state in 0..<numStates {
@@ -67,7 +92,6 @@ public class MDP {
     
     ///  Method to solve using policy iteration
     ///  Returns array of actions for each state
-    public enum MDPErrors: ErrorType { case failedSolving }
     public func policyIteration(getActions: ((fromState: Int) -> [Int]),
                                getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
                                getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) throws -> [Int]
@@ -125,10 +149,155 @@ public class MDP {
                 V = constants
             }
             else {
-                throw MDPErrors.failedSolving
+                throw MDPErrors.FailedSolving
             }
         }
         
         return π
+    }
+    
+    ///  Computes a linear regression model that translates the state feature mapping to V
+    public func fittedValueIteration(getRandomState: (() -> [Double]),
+                              getResultingState: ((fromState: [Double], action : Int) -> [Double]),
+                              getReward: ((fromState: [Double], action:Int, toState: [Double]) -> Double),
+                              fitModel: LinearRegressionModel) throws
+    {
+        //  Get a set of random states
+        let sample = getRandomState()
+        let sampleStates = DataSet(dataType: .Regression, inputDimension: sample.count, outputDimension: 1)
+        do {
+            try sampleStates.addDataPoint(input: sample, output: [0])
+            //  Get the rest of the random state samples
+            for _ in 1..<numSamples {
+                try sampleStates.addDataPoint(input: getRandomState(), output: [0])
+            }
+        }
+        catch {
+            throw MDPErrors.ErrorCreatingSampleSet
+        }
+        
+        //  Make sure the model fits
+        if (fitModel.inputDimension != sample.count) {throw MDPErrors.ModelInputDimensionError}
+        if (fitModel.outputDimension != 1) {throw MDPErrors.ModelOutputDimensionError}
+        
+        //  Start Θ as the null vector
+        fitModel.Θ = [[Double](count:fitModel.parameterCount, repeatedValue: 0.0)]
+        
+        var difference = convergenceLimit + 1.0
+        while (difference > convergenceLimit) {    //  Go till convergence
+            difference = 0.0
+            
+            //  Get the target value (y) for each sample
+            if (deterministicModel) {
+                //  If deterministic, a single sample works
+                for index in 0..<numSamples {
+                    var maximumReward = -Double.infinity
+                    for action in 0..<numActions {
+                        var state : [Double]
+                        do {
+                            state = try sampleStates.getInput(index)
+                            let resultState = getResultingState(fromState: state, action: action)
+                            let Vprime = try fitModel.predictOne(resultState)
+                            let expectedReward = getReward(fromState: state, action:action, toState: resultState) + discountFactor * Vprime[0]
+                            if (expectedReward > maximumReward) { maximumReward = expectedReward }
+                        }
+                        catch {
+                            throw MDPErrors.ErrorCreatingSampleTargetValues
+                        }
+                    }
+                    do {
+                        try sampleStates.setOutput(index, newOutput: [maximumReward])
+                    }
+                    catch {
+                        throw MDPErrors.ErrorCreatingSampleTargetValues
+                    }
+                }
+            }
+            else {
+                //  If not deterministic, sample the possible result states and average
+                for index in 0..<numSamples {
+                    var maximumReward = -Double.infinity
+                    for action in 0..<numActions {
+                        var expectedReward = 0.0
+                        for _ in 0..<nonDeterministicSampleSize {
+                            var state : [Double]
+                            do {
+                                state = try sampleStates.getInput(index)
+                                let resultState = getResultingState(fromState: state, action: action)
+                                let Vprime = try fitModel.predictOne(resultState)
+                                expectedReward += getReward(fromState: state, action:action, toState: resultState)  + discountFactor * Vprime[0]
+                            }
+                            catch {
+                                throw MDPErrors.ErrorCreatingSampleTargetValues
+                            }
+                        }
+                        expectedReward /= Double(nonDeterministicSampleSize)
+                        if (expectedReward > maximumReward) { maximumReward = expectedReward }
+                    }
+                    do {
+                        try sampleStates.setOutput(index, newOutput: [maximumReward])
+                    }
+                    catch {
+                        throw MDPErrors.ErrorCreatingSampleTargetValues
+                    }
+                }
+            }
+            
+            //  Use linear regression to get our estimation for the V function
+            do {
+                try fitModel.trainRegressor(sampleStates)
+            }
+            catch {
+                throw MDPErrors.FailedSolving
+            }
+        }
+    }
+    
+    //  Once fittedValueIteration has been used, use this function to get the action for any particular state
+    public func getAction(forState: [Double],
+                   getResultingState: ((fromState: [Double], action : Int) -> [Double]),
+                   getReward: ((fromState: [Double], action:Int, toState: [Double]) -> Double),
+                   fitModel: LinearRegressionModel) -> Int
+    {
+        var maximumReward = -Double.infinity
+        var bestAction = 0
+        if (deterministicModel) {
+            for action in 0..<numActions {
+                let resultState = getResultingState(fromState: forState, action: action)
+                do {
+                    let Vprime = try fitModel.predictOne(resultState)
+                    let expectedReward = getReward(fromState: forState, action:action, toState: resultState) + Vprime[0]
+                    if (expectedReward > maximumReward) {
+                        maximumReward = expectedReward
+                        bestAction = action
+                    }
+                }
+                catch {
+                    
+                }
+            }
+        }
+        else {
+            for action in 0..<numActions {
+                var expectedReward = 0.0
+                for _ in 0..<nonDeterministicSampleSize {
+                    let resultState = getResultingState(fromState: forState, action: action)
+                    do {
+                        let Vprime = try fitModel.predictOne(resultState)
+                        expectedReward += getReward(fromState: forState, action:action, toState: resultState) +  Vprime[0]
+                    }
+                    catch {
+                        expectedReward = 0.0    //  Error in system that should be caught elsewhere
+                    }
+                }
+                expectedReward /= Double(nonDeterministicSampleSize)
+                if (expectedReward > maximumReward) {
+                    maximumReward = expectedReward
+                    bestAction = action
+                }
+            }
+        }
+        
+        return bestAction
     }
 }

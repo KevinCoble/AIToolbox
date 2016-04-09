@@ -1,5 +1,5 @@
 # AIToolbox
-A toolbox of AI modules written in Swift:  Graphs/Trees, Support Vector Machines, Neural Networks, PCA, KMeans, Genetic Algorithms, MDP
+A toolbox of AI modules written in Swift:  Graphs/Trees, Linear Regression, Support Vector Machines, Neural Networks, PCA, KMeans, Genetic Algorithms, MDP
 
 This framework uses the Accelerate library to speed up computations
 Written for Swift 2.2.  Will update to 3 when officially released
@@ -30,10 +30,15 @@ Classes/Algorithms supported:
     Constraint Propogation
         i.e. 3-color map problem
 
+    Linear Regression
+        arbitrary function in model
+        convenience constructor for standard polygons
+        Least-squares error
+
     Neural Networks
         multiple layers, several non-linearity models
         on-line and batch training
-        simple network training using GPU-Metal
+        simple network training using GPU via Apple's Metal
 
     Support Vector Machine
         Classification
@@ -49,4 +54,9 @@ Classes/Algorithms supported:
     Markov Decision Process
         value iteration
         policy iteration
-        
+        fitted value iteration for continuous state MDPs - uses Linear Regression class for fit
+                (see my MDPRobot project on github for an example use)
+
+## License
+
+This framework is made available with the Apache license.
