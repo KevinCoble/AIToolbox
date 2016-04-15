@@ -35,9 +35,9 @@ class PCATests: XCTestCase {
         do {
             for _ in 0..<20 {
                 let scale = Double(arc4random()) * 200.0  / Double(UInt32.max) - 100.0
-                vector[0] = scale * initBasis[0] + DataSet.gaussianRandom(0.0, standardDeviation: 0.01)
-                vector[1] = scale * initBasis[1] + DataSet.gaussianRandom(0.0, standardDeviation: 0.01)
-                vector[2] = scale * initBasis[2] + DataSet.gaussianRandom(0.0, standardDeviation: 0.01)
+                vector[0] = scale * initBasis[0] + Gaussian.gaussianRandom(0.0, standardDeviation: 0.01)
+                vector[1] = scale * initBasis[1] + Gaussian.gaussianRandom(0.0, standardDeviation: 0.01)
+                vector[2] = scale * initBasis[2] + Gaussian.gaussianRandom(0.0, standardDeviation: 0.01)
                 try data.addUnlabeledDataPoint(input: vector)
             }
         }

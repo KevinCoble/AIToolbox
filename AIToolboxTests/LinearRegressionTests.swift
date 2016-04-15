@@ -31,7 +31,7 @@ class LinearRegressionTests: XCTestCase {
         do {
             for _ in 0..<50 {
                 inputs[0] = Double(arc4random()) * 100.0 / Double(UInt32.max)
-                let output = inputs[0] * slope + offset + DataSet.gaussianRandom(0.0, standardDeviation: 0.01)
+                let output = inputs[0] * slope + offset + Gaussian.gaussianRandom(0.0, standardDeviation: 0.01)
                 try data.addDataPoint(input: inputs, output: [output])
             }
         }

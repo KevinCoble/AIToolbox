@@ -18,7 +18,7 @@ enum KMeansError: ErrorType {
 public class KMeans {
     var numClasses : Int
     var initWithKPlusPlus = true      //  If false, Forgy initialization (only one point used as centroid per class)
-    var centroids : [[Double]]
+    public private(set) var centroids : [[Double]]
     
     public init(classes: Int)
     {
@@ -32,7 +32,7 @@ public class KMeans {
         //  If there are not enough points for the classes, throw
         if (data.size < numClasses) { throw KMeansError.TwoFewPointsForClasses }
         
-        //  If the number of points exaclty matches the number of classes, just assign in order
+        //  If the number of points exactly matches the number of classes, just assign in order
         if (data.size == numClasses) {
             data.classes = [];
             for classIndex in 0..<numClasses { data.classes!.append(classIndex) }

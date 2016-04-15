@@ -10,7 +10,7 @@ import Foundation
 import Accelerate
 
 
-enum LinearRegressionError: ErrorType {
+public enum LinearRegressionError: ErrorType {
     case ModelExceedsInputDimension
     case DataNotRegression
     case DataWrongDimension

@@ -34,9 +34,9 @@ final class NeuralNode {
         activation = activationFunction
         weights = []
         for _ in 0..<(numInputs)  { //  Add one weight for the bias term
-            weights.append(DataSet.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numInputs)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+            weights.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numInputs)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
         }
-        weights.append(DataSet.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
+        weights.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
         lastWeightedSum = 0.0
         lastOutput = 0.0
         delta = 0.0

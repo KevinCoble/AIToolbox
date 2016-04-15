@@ -284,33 +284,9 @@ public class DataSet {
         return results
     }
     
-    static var y2 = 0.0
-    static var use_last = false
+    //  Leave here in case it is used by other methods
     public static func gaussianRandom(mean : Double, standardDeviation : Double) -> Double
     {
-        var y1 : Double
-        if (use_last)		        /* use value from previous call */
-        {
-            y1 = y2
-            use_last = false
-        }
-        else
-        {
-            var w = 1.0
-            var x1 = 0.0
-            var x2 = 0.0
-            repeat {
-                x1 = 2.0 * (Double(arc4random()) / Double(UInt32.max)) - 1.0
-                x2 = 2.0 * (Double(arc4random()) / Double(UInt32.max)) - 1.0
-                w = x1 * x1 + x2 * x2
-            } while ( w >= 1.0 )
-            
-            w = sqrt( (-2.0 * log( w ) ) / w )
-            y1 = x1 * w
-            y2 = x2 * w
-            use_last = true
-        }
-        
-        return( mean + y1 * standardDeviation )
+        return Gaussian.gaussianRandom(mean, standardDeviation: standardDeviation)
     }
 }
