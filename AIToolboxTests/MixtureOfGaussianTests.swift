@@ -93,7 +93,7 @@ class MixtureOfGaussianTests: XCTestCase {
             
             //  See if it predicted the data source setup
             let averageError = try mog.getTotalAbsError(testData) / Double(trainData.size)
-            XCTAssert(averageError < 0.01, "mixture-of-gaussians ratio")
+            XCTAssert(averageError < 0.01, "mixture-of-gaussians validation error")
         }
         catch {
             print("error training mixture of gaussians")

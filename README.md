@@ -1,7 +1,7 @@
 # AIToolbox
 A toolbox of AI modules written in Swift:  Graphs/Trees, Linear Regression, Support Vector Machines, Neural Networks, PCA, KMeans, Genetic Algorithms, MDP, Mixture of Gaussians
 
-This framework uses the Accelerate library to speed up computations
+This framework uses the Accelerate library to speed up computations.
 Written for Swift 2.2.  Will update to 3 when officially released
 
 SVM ported from the public domain LIBSVM repository
@@ -34,6 +34,11 @@ Classes/Algorithms supported:
         arbitrary function in model
         convenience constructor for standard polygons
         Least-squares error
+
+    Non-Linear Regression
+        parameter-delta
+        Gradient-Descent
+        Gauss-Newton
 
     Neural Networks
         multiple layers, several non-linearity models

@@ -20,6 +20,17 @@ public protocol Regressor {
     func predict(testData: DataSet) throws
 }
 
+public protocol NonLinearEquation {
+    //  If output dimension > 1, parameters is a matrix with each row the parameters for one of the outputs
+    var parameters: [Double] { get set }
+
+    func getInputDimension() -> Int
+    func getOutputDimension() -> Int
+    func getParameterDimension() -> Int     //  This must be an integer multiple of output dimension
+    func getOutputs(inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
+    func getGradient(inputs: [Double]) throws -> [Double]       //  Returns vector gradient sized for parameters - can be stubbed for ParameterDelta method
+}
+
 extension Classifier {
     ///  Calculate the precentage correct on a classification network using a test data set
     public func getClassificationPercentage(testData: DataSet) throws -> Double
