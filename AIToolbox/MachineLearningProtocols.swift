@@ -9,13 +9,23 @@
 import Foundation
 
 public protocol Classifier {
+    func getInputDimension() -> Int
+    func getParameterDimension() -> Int     //  May only be valid after training
+    func getNumberOfClasses() -> Int        //  May only be valid after training
+    func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
     func trainClassifier(trainData: DataSet) throws
+    func continueTrainingClassifier(trainData: DataSet) throws      //  Trains without initializing parameters first
     func classifyOne(inputs: [Double]) throws ->Int
     func classify(testData: DataSet) throws
 }
 
 public protocol Regressor {
+    func getInputDimension() -> Int
+    func getOutputDimension() -> Int
+    func getParameterDimension() -> Int
+    func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
     func trainRegressor(trainData: DataSet) throws
+    func continueTrainingRegressor(trainData: DataSet) throws      //  Trains without initializing parameters first
     func predictOne(inputs: [Double]) throws ->[Double]
     func predict(testData: DataSet) throws
 }

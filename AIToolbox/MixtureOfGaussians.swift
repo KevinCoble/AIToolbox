@@ -32,6 +32,7 @@ public class MixtureOfGaussians : Regressor
     public var α : [Double]
     public var initWithKMeans = true        //  if true initial probability distributions are computed with kmeans of training data, else random
     public var convergenceLimit = 0.0000001
+    var initializeFunction : ((trainData: DataSet)->[Double])!
     
     public init(inputSize: Int, numberOfTerms: Int, diagonalCoVariance: Bool) throws
     {
@@ -54,6 +55,34 @@ public class MixtureOfGaussians : Regressor
         }
         
         α = [Double](count: termCount, repeatedValue: 1.0)
+    }
+    
+    public func getInputDimension() -> Int
+    {
+        return inputDimension
+    }
+    public func getOutputDimension() -> Int
+    {
+        return 1
+    }
+    public func getParameterDimension() -> Int
+    {
+        var parameterCount = 1      //  alpha
+        if (diagonalΣ) {
+            parameterCount += inputDimension    //  If diagonal, only one covariance term per input
+        }
+        else {
+            parameterCount += inputDimension * inputDimension    //  If not diagonal, full matrix of covariance
+        }
+        
+        parameterCount *= termCount     //  alpha and covariance for each gaussian term
+        
+        return parameterCount
+    }
+    
+    ///  A custom initializer for Mixture-of-Gaussians must assign the training data to classes [the 'classes' member of the dataset]
+    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
+        initializeFunction = function
     }
     
     ///  Function to calculate the parameters of the model
@@ -85,14 +114,21 @@ public class MixtureOfGaussians : Regressor
         }
         else {
             //  Assign each point to a random term
-            var classes = [Int](count: trainData.size, repeatedValue: 0)
-            for index in 0..<termCount {        //  Assign first few points to each class to guarantee at least one point per term
-                classes[index] = index
+            if let initFunc = initializeFunction {
+                //  If a custom initializer has been provided, use it to assign the initial classes
+                initFunc(trainData: trainData)
             }
-            for index in termCount..<trainData.size {
-                classes[index] = Int(arc4random_uniform(UInt32(termCount)))
+            else {
+                //  No initializer, assign to random classes
+                var classes = [Int](count: trainData.size, repeatedValue: 0)
+                for index in 0..<termCount {        //  Assign first few points to each class to guarantee at least one point per term
+                    classes[index] = index
+                }
+                for index in termCount..<trainData.size {
+                    classes[index] = Int(arc4random_uniform(UInt32(termCount)))
+                }
+                trainData.classes = classes
             }
-            trainData.classes = classes
             
             //  Calculate centroids
             var counts = [Int](count: termCount, repeatedValue: 0)
@@ -200,7 +236,24 @@ public class MixtureOfGaussians : Regressor
             }
         }
         
-        //  Calculate the log-likelihood for the convergence check
+        //  Use the continue function to converge the model
+        do {
+            try continueTrainingRegressor(trainData)
+        }
+        catch let error {
+            throw error
+        }
+    }
+    
+    ///  Function to continue calculating the parameters of the model with more data, without initializing parameters
+    public func continueTrainingRegressor(trainData: DataSet) throws
+    {
+        //  Verify that the data is regression data
+        if (trainData.dataType != DataSetType.Regression) { throw LinearRegressionError.DataNotRegression }
+        if (trainData.inputDimension != inputDimension) { throw MixtureOfGaussianError.DataWrongDimension }
+        if (trainData.outputDimension != 1) { throw MixtureOfGaussianError.DataWrongDimension }
+        
+        //  Calculate the log-likelihood with the current parameters for the convergence check
         var lastLogLikelihood = 0.0
         for point in 0..<trainData.size {
             do {
@@ -215,6 +268,8 @@ public class MixtureOfGaussians : Regressor
         //  Use the EM algorithm until it converges
         var membershipWeights : [[Double]]
         
+        var centroids : [[Double]] = []
+        var matrix = [Double](count: inputDimension * inputDimension, repeatedValue: 0.0)
         var difference = convergenceLimit + 1.0
         while (difference > convergenceLimit) {    //  Go till convergence
             difference = 0
@@ -345,7 +400,6 @@ public class MixtureOfGaussians : Regressor
                 }
             }
             
-//!!            print("log likelihood = \(logLikelihood)")
             difference = fabs(lastLogLikelihood - logLikelihood)
             lastLogLikelihood = logLikelihood
         }

@@ -22,6 +22,7 @@ public enum NeuralActivationFunction {
 final class NeuralNode {
     //  Activation function
     let activation : NeuralActivationFunction
+    let numWeights : Int
     var weights : [Double]
     var lastWeightedSum : Double //  Last weights dot-producted with inputs - remembered for training purposes
     var lastOutput : Double //  Last result calculated
@@ -32,14 +33,37 @@ final class NeuralNode {
     init(numInputs : Int, activationFunction: NeuralActivationFunction)
     {
         activation = activationFunction
+        numWeights = numInputs + 1  //  Add one weight for the bias term
         weights = []
-        for _ in 0..<(numInputs)  { //  Add one weight for the bias term
-            weights.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numInputs)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
-        }
-        weights.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
         lastWeightedSum = 0.0
         lastOutput = 0.0
         delta = 0.0
+    }
+    
+    //  Initialize the weights
+    func initWeights(startWeights: [Double]!)
+    {
+        if let startWeights = startWeights {
+            if (startWeights.count == 1) {
+                weights = [Double](count: numWeights, repeatedValue: startWeights[0])
+            }
+            else {
+                weights = []
+                var index = 1 //  First number (if more than 1) goes into the bias weight, then repeat the remaining
+                for _ in 0..<numWeights-1  {
+                    if (index >= startWeights.count) { index = 1 }      //  Wrap if necessary
+                    weights.append(startWeights[index])
+                }
+                weights.append(startWeights[0])     //  Add the bias term
+            }
+        }
+        else {
+            weights = []
+            for _ in 0..<numWeights-1  {
+                weights.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numWeights-1)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+            }
+            weights.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
+        }
     }
     
     func getNodeOutput(inputs: [Double]) -> Double
@@ -201,6 +225,34 @@ final class NeuralLayer {
         }
     }
     
+    //  Initialize the weights
+    func initWeights(startWeights: [Double]!)
+    {
+        if let startWeights = startWeights {
+            if (startWeights.count >= nodes.count * nodes[0].numWeights) {
+                //  If there are enough weights for all nodes, split the weights and initialize
+                var startIndex = 0
+                for node in nodes {
+                    let subArray = Array(startWeights[startIndex...(startIndex+node.numWeights-1)])
+                    node.initWeights(subArray)
+                    startIndex += node.numWeights
+                }
+            }
+            else {
+                //  If there are not enough weights for all nodes, initialize each node with the set given
+                for node in nodes {
+                    node.initWeights(startWeights)
+                }
+            }
+        }
+        else {
+            //  No specified weights - just initialize normally
+            for node in nodes {
+                node.initWeights(nil)
+            }
+        }
+    }
+    
     func getLayerOutputs(inputs: [Double]) -> [Double]
     {
         var outputs : [Double] = []
@@ -300,6 +352,7 @@ public class NeuralNetwork: Classifier, Regressor {
     var layers : [NeuralLayer]
     var trainingRate = 0.3
     var weightDecay = 1.0
+    var initializeFunction : ((trainData: DataSet)->[Double])!
     
     ///  Create the neural network based on an array of tuples, one for each non-input layer (number of nodes, activation function)
     ///     There must be at least two layers (hidden layer and output layer), but can have more
@@ -317,6 +370,27 @@ public class NeuralNetwork: Classifier, Regressor {
         }
     }
     
+    public func getInputDimension() -> Int
+    {
+        return numInputs
+    }
+    public func getOutputDimension() -> Int
+    {
+        return layers.last!.nodes.count
+    }
+    public func getParameterDimension() -> Int
+    {
+        var count = 0
+        for layer in layers {
+            count += layer.nodes.count * layer.nodes[0].weights.count
+        }
+        return count
+    }
+    public func getNumberOfClasses() -> Int
+    {
+        return layers.last!.nodes.count
+    }
+    ///  FeedForward routine
     public func feedForward(inputs: [Double]) -> [Double] {
         var layerInputs = inputs
         
@@ -332,12 +406,59 @@ public class NeuralNetwork: Classifier, Regressor {
         return layerInputs
     }
     
+    ///  Method to set a custom function to initialize the parameters.  If not set, random parameters are used
+    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
+    {
+        initializeFunction = function
+    }
+    
+    ///  Method to initialize the weights - call before any training other than 'trainClassifier' or 'trainRegressor', which call this
+    public func initializeWeights(trainData: DataSet!)
+    {
+        if let initFunc = initializeFunction, data = trainData {
+            let startWeights = initFunc(trainData: data)
+            //  If enough for all parameters, split and send to layers
+            if (getParameterDimension() == startWeights.count) {
+                var startIndex = 0
+                for layer in layers {
+                    let numWeightsForLayer = layer.nodes.count * layer.nodes[0].weights.count
+                    let subArray = Array(startWeights[startIndex...(startIndex+numWeightsForLayer-1)])
+                    layer.initWeights(subArray)
+                    startIndex += numWeightsForLayer
+                }
+            }
+            else {
+                //  Otherwise, send the same set to each layer
+                for layer in layers {
+                    layer.initWeights(startWeights)
+                }
+            }
+        }
+        else {
+            //  No initialization function, set weights to random values
+            for layer in layers {
+                layer.initWeights(nil)
+            }
+        }
+    }
+    
     public func trainClassifier(trainData: DataSet) throws
     {
+        initializeWeights(trainData)
+        
         let epochCount = trainData.size * 2
         let epochSize = trainData.size / 10
         try classificationSGDBatchTrain(trainData, epochSize: epochSize, epochCount : epochCount, trainingRate: trainingRate, weightDecay: weightDecay)
     }
+    
+    public func continueTrainingClassifier(trainData: DataSet) throws
+    {
+
+        let epochCount = trainData.size * 2
+        let epochSize = trainData.size / 10
+        try classificationSGDBatchTrain(trainData, epochSize: epochSize, epochCount : epochCount, trainingRate: trainingRate, weightDecay: weightDecay)
+    }
+    
     
     ///  Return a 0 based index of the best neuron output (giving the most probable class for the input)
     public func classifyOne(inputs: [Double]) -> Int {
@@ -372,6 +493,15 @@ public class NeuralNetwork: Classifier, Regressor {
     
     public func trainRegressor(trainData: DataSet) throws
     {
+        initializeWeights(trainData)
+        
+        let epochCount = trainData.size * 2
+        let epochSize = trainData.size / 10
+        SGDBatchTrain(trainData, epochSize: epochSize, epochCount : epochCount, trainingRate: trainingRate, weightDecay: weightDecay)
+    }
+    
+    public func continueTrainingRegressor(trainData: DataSet) throws
+    {
         let epochCount = trainData.size * 2
         let epochSize = trainData.size / 10
         SGDBatchTrain(trainData, epochSize: epochSize, epochCount : epochCount, trainingRate: trainingRate, weightDecay: weightDecay)
@@ -396,7 +526,7 @@ public class NeuralNetwork: Classifier, Regressor {
         }
     }
 
-    
+    ///  Train on one data item.  Be sure to initialize the weights before using the first time
     public func trainOne(inputs: [Double], expectedOutputs: [Double], trainingRate: Double, weightDecay: Double)
     {
         //  Get the results of a feedForward run (each node remembers its own output)
@@ -426,6 +556,7 @@ public class NeuralNetwork: Classifier, Regressor {
         }
     }
     
+    ///  Train on a batch data item.  Be sure to initialize the weights before using the first time
     public func batchTrain(trainData: DataSet, epochIndices : [Int], trainingRate: Double, weightDecay: Double)
     {
         //  Clear the weight change accumulations
@@ -469,7 +600,7 @@ public class NeuralNetwork: Classifier, Regressor {
         }
     }
 
-    ///  Train a network on a set of data
+    ///  Train a network on a set of data.  Be sure to initialize the weights before using the first time
     public func SGDBatchTrain(trainData: DataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double)
     {
         //  Create the batch indices array
@@ -487,7 +618,7 @@ public class NeuralNetwork: Classifier, Regressor {
         }
     }
     
-    ///  Train a classification network for a single instance
+    ///  Train a classification network for a single instance.  Be sure to initialize the weights before using the first time
     public func classificationTrainOne(inputs: [Double], expectedOutput: Int, trainingRate: Double, weightDecay: Double)
     {
         //  Get the false level for the output layer
@@ -504,7 +635,7 @@ public class NeuralNetwork: Classifier, Regressor {
         trainOne(inputs, expectedOutputs: expectedOutputs, trainingRate: trainingRate, weightDecay: weightDecay)
     }
     
-    ///  Train a classification network on a set of data
+    ///  Train a classification network on a set of data.  Be sure to initialize the weights before using the first time
     public func classificationSGDBatchTrain(trainData: DataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double) throws
     {
         //  Verify the data set is the right type

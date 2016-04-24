@@ -19,6 +19,7 @@ public enum LinearRegressionError: ErrorType {
     case NotTrained
     case NegativeInLogOrPower
     case DivideByZero
+    case ContinuationNotSupported
 }
 
 
@@ -181,14 +182,27 @@ public class LinearRegressionModel : Regressor
         terms.append(newTerm)
     }
     
-    public var parameterCount : Int {
-        get {
-            var numParameters = terms.count
-            if (includeBias) { numParameters += 1 }
-            return numParameters
-        }
+    public func getInputDimension() -> Int
+    {
+        return inputDimension
     }
     
+    public func getOutputDimension() -> Int
+    {
+        return outputDimension
+    }
+    
+    public func getParameterDimension() -> Int
+    {
+        var numParameters = terms.count
+        if (includeBias) { numParameters += 1 }
+        return numParameters
+    }
+    
+    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
+        //  Ignore, as Linear Regression doesn't use an initialization
+    }
+
     public func trainRegressor(trainData: DataSet) throws
     {
         //  Verify that the data is regression data
@@ -212,7 +226,7 @@ public class LinearRegressionModel : Regressor
         }
         
         //  Get the number of terms in the matrix (columns)
-        let numColumns = parameterCount
+        let numColumns = getParameterDimension()
         
         //  Make sure we have enough data for a solution (at least 1 per term)
         if (trainData.size < numColumns) {
@@ -346,6 +360,12 @@ public class LinearRegressionModel : Regressor
                 Θ[solution] = parameters
             }
         }
+    }
+    
+    public func continueTrainingRegressor(trainData: DataSet) throws
+    {
+        //  Linear regression uses one-batch training (solved analytically)
+        throw LinearRegressionError.ContinuationNotSupported
     }
     
     public func predictOne(inputs: [Double]) throws ->[Double]

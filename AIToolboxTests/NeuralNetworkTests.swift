@@ -25,6 +25,9 @@ class NeuralNetworkTests: XCTestCase {
         //  Create a 1 node network
         var network = NeuralNetwork(numInputs: 1, layerDefinitions: [(numNodes: 1, activation: NeuralActivationFunction.Sigmoid)])
         
+        //  Initialize the weights
+        network.initializeWeights(nil)
+        
         //  Train to output a constant 0.5
         for _ in 0..<1000 {
             network.trainOne([Double(arc4random()) / Double(UInt32.max)], expectedOutputs: [0.5], trainingRate: 1, weightDecay: 0.98)
@@ -36,6 +39,9 @@ class NeuralNetworkTests: XCTestCase {
         
         //  Create a 1 node network
         network = NeuralNetwork(numInputs: 1, layerDefinitions: [(numNodes: 1, activation: NeuralActivationFunction.RectifiedLinear)])
+        
+        //  Initialize the weights
+        network.initializeWeights(nil)
         
         //  Train to output a constant slope 0.5
         for _ in 0..<1000 {
@@ -52,6 +58,9 @@ class NeuralNetworkTests: XCTestCase {
     func testNetworkBooleanAnd() {
         //  Create a 1 node network
         let network = NeuralNetwork(numInputs: 2, layerDefinitions: [(numNodes: 1, activation: NeuralActivationFunction.HyberbolicTangent)])
+        
+        //  Initialize the weights
+        network.initializeWeights(nil)
         
         //  Train the network for and function
         for _ in 0..<1000 {
@@ -75,6 +84,9 @@ class NeuralNetworkTests: XCTestCase {
     func testNetworkAnalogAnd() {
         //  Create a 1 node network
         let network = NeuralNetwork(numInputs: 2, layerDefinitions: [(numNodes: 1, activation: NeuralActivationFunction.Sigmoid)])
+        
+        //  Initialize the weights
+        network.initializeWeights(nil)
         
         //  Train the network for and function
         for _ in 0..<1000 {
@@ -115,6 +127,9 @@ class NeuralNetworkTests: XCTestCase {
                          (numNodes: 1, activation: NeuralActivationFunction.HyberbolicTangent)]
         let network = NeuralNetwork(numInputs: 2, layerDefinitions: layerDefs)
         
+        //  Initialize the weights
+        network.initializeWeights(nil)
+        
         //  Train the network for exclusive or
         for _ in 0..<1000 {
             let input1 = (arc4random() > (UInt32.max >> 1)) ? 1.0 : -1.0
@@ -153,6 +168,9 @@ class NeuralNetworkTests: XCTestCase {
             print("Invalid data set created")
         }
         
+        //  Initialize the weights
+        network.initializeWeights(data)
+        
         //  Train the network for 1000 epochs of 4
         var trainIndexes = [0, 1, 2, 4]
         for _ in 0..<1000 {
@@ -185,7 +203,10 @@ class NeuralNetworkTests: XCTestCase {
             (numNodes: 3, activation: NeuralActivationFunction.SigmoidWithCrossEntropy)]
         let network = NeuralNetwork(numInputs: 2, layerDefinitions: layerDefs)
         
-        //  Train the network for
+        //  Initialize the weights
+        network.initializeWeights(nil)
+        
+        //  Train the network for classification
         var input1 : Double
         var input2 : Double
         

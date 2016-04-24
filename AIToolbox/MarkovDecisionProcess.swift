@@ -156,11 +156,11 @@ public class MDP {
         return π
     }
     
-    ///  Computes a linear regression model that translates the state feature mapping to V
+    ///  Computes a regression model that translates the state feature mapping to V
     public func fittedValueIteration(getRandomState: (() -> [Double]),
                               getResultingState: ((fromState: [Double], action : Int) -> [Double]),
                               getReward: ((fromState: [Double], action:Int, toState: [Double]) -> Double),
-                              fitModel: LinearRegressionModel) throws
+                              fitModel: Regressor) throws
     {
         //  Get a set of random states
         let sample = getRandomState()
@@ -176,12 +176,11 @@ public class MDP {
             throw MDPErrors.ErrorCreatingSampleSet
         }
         
-        //  Make sure the model fits
-        if (fitModel.inputDimension != sample.count) {throw MDPErrors.ModelInputDimensionError}
-        if (fitModel.outputDimension != 1) {throw MDPErrors.ModelOutputDimensionError}
+        //  Make sure the model fits our usage of it
+        if (fitModel.getInputDimension() != sample.count) {throw MDPErrors.ModelInputDimensionError}
+        if (fitModel.getOutputDimension() != 1) {throw MDPErrors.ModelOutputDimensionError}
         
-        //  Start Θ as the null vector
-        fitModel.Θ = [[Double](count:fitModel.parameterCount, repeatedValue: 0.0)]
+        //  It is recommended that the model starts with parameters as the null vector so initial inresults are 'no expected reward for each position'.  Initialization is done on first iteration
         
         var difference = convergenceLimit + 1.0
         while (difference > convergenceLimit) {    //  Go till convergence
@@ -243,7 +242,7 @@ public class MDP {
                 }
             }
             
-            //  Use linear regression to get our estimation for the V function
+            //  Use regression to get our estimation for the V function
             do {
                 try fitModel.trainRegressor(sampleStates)
             }
@@ -253,11 +252,11 @@ public class MDP {
         }
     }
     
-    //  Once fittedValueIteration has been used, use this function to get the action for any particular state
+    ///  Once fittedValueIteration has been used, use this function to get the action for any particular state
     public func getAction(forState: [Double],
                    getResultingState: ((fromState: [Double], action : Int) -> [Double]),
                    getReward: ((fromState: [Double], action:Int, toState: [Double]) -> Double),
-                   fitModel: LinearRegressionModel) -> Int
+                   fitModel: Regressor) -> Int
     {
         var maximumReward = -Double.infinity
         var bestAction = 0

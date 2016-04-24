@@ -14,10 +14,29 @@ import Foundation
 enum SVMError: ErrorType {
     case InvalidModelType
     case ModelNotTrained
+    case ContinuationNotSupported
 }
 
 
 extension SVMModel : Classifier {
+    public func getInputDimension() -> Int
+    {
+        if (supportVector.count < 1) { return 0 }
+        return supportVector[0].count
+    }
+    public func getParameterDimension() -> Int
+    {
+        return totalSupportVectors
+    }
+    public func getNumberOfClasses() -> Int
+    {
+        return numClasses
+    }
+    
+    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
+        //  Ignore, as SVM doesn't use an initialization
+    }
+
     public func trainClassifier(trainData: DataSet) throws
     {
         //  Verify the SVMModel is the right type
@@ -26,8 +45,14 @@ extension SVMModel : Classifier {
         //  Verify the data set is the right type
         if (trainData.dataType == .Classification) { throw DataTypeError.InvalidDataType }
         
-        //  Train on the data
+        //  Train on the data (ignore initialization, as SVM's do single-batch training)
         train(trainData)
+    }
+    
+    public func continueTrainingClassifier(trainData: DataSet) throws
+    {
+        //  Linear regression uses one-batch training (solved analytically)
+        throw SVMError.ContinuationNotSupported
     }
     
     public func classifyOne(inputs: [Double]) ->Int

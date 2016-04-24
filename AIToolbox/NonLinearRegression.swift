@@ -94,6 +94,22 @@ public class NonLinearRegression : Regressor
         convergenceLimit = limit
     }
     
+    public func getInputDimension() -> Int
+    {
+        return equation.getInputDimension()
+    }
+    
+    public func getOutputDimension() -> Int
+    {
+        return equation.getOutputDimension()
+    }
+    
+    public func getParameterDimension() -> Int
+    {
+        return equation.getParameterDimension()
+    }
+
+    
     public func trainRegressor(trainData: DataSet) throws
     {
         //  Validate the training data
@@ -119,6 +135,23 @@ public class NonLinearRegression : Regressor
             equation.parameters = initParameters
         }
         
+        //  Use the continue function to converge the model
+        do {
+            try continueTrainingRegressor(trainData)
+        }
+        catch let error {
+            throw error
+        }
+    }
+    
+    ///  Function to continue calculating the parameters of the model with more data, without initializing parameters
+    public func continueTrainingRegressor(trainData: DataSet) throws
+    {
+        //  Validate the training data
+        if (trainData.dataType != .Regression) { throw NonLinearRegressionError.DataNotRegression }
+        if (trainData.inputDimension != equation.getInputDimension()) { throw NonLinearRegressionError.DataWrongDimension }
+        if (trainData.outputDimension != equation.getOutputDimension()) { throw NonLinearRegressionError.DataWrongDimension }
+
         //  Use the specified method to converge the parameters
         do {
             switch (solveType) {
