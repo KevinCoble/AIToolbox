@@ -43,6 +43,10 @@
 		0E0E25FF1CA119160087932B /* PrincipalComponantAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */; };
 		0E0E26011CA44EA80087932B /* PCATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E26001CA44EA80087932B /* PCATests.swift */; };
 		0E0E26021CA44EA80087932B /* PCATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E26001CA44EA80087932B /* PCATests.swift */; };
+		0E3CB5A01CCD30AE008ABA4E /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3CB59F1CCD30AE008ABA4E /* Validation.swift */; };
+		0E3CB5A11CCD30AE008ABA4E /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3CB59F1CCD30AE008ABA4E /* Validation.swift */; };
+		0E3CB5A31CCD30D3008ABA4E /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3CB5A21CCD30D3008ABA4E /* ValidationTests.swift */; };
+		0E3CB5A41CCD30D3008ABA4E /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3CB5A21CCD30D3008ABA4E /* ValidationTests.swift */; };
 		0E408D8F1AA0323000E00370 /* GeneticAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E408D8E1AA0323000E00370 /* GeneticAlgorithm.swift */; };
 		0E5544561AAABDF800BF5FAD /* ConstraintPropogation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5544551AAABDF800BF5FAD /* ConstraintPropogation.swift */; };
 		0E5544581AAAC58E00BF5FAD /* ConstraintPropogationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5544571AAAC58E00BF5FAD /* ConstraintPropogationTests.swift */; };
@@ -135,6 +139,8 @@
 		0E0A4FC21C153D8500AD5AAE /* Kernel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Kernel.swift; sourceTree = "<group>"; };
 		0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrincipalComponantAnalysis.swift; sourceTree = "<group>"; };
 		0E0E26001CA44EA80087932B /* PCATests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PCATests.swift; sourceTree = "<group>"; };
+		0E3CB59F1CCD30AE008ABA4E /* Validation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
+		0E3CB5A21CCD30D3008ABA4E /* ValidationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValidationTests.swift; sourceTree = "<group>"; };
 		0E408D8E1AA0323000E00370 /* GeneticAlgorithm.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneticAlgorithm.swift; sourceTree = "<group>"; };
 		0E5544551AAABDF800BF5FAD /* ConstraintPropogation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstraintPropogation.swift; sourceTree = "<group>"; };
 		0E5544571AAAC58E00BF5FAD /* ConstraintPropogationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstraintPropogationTests.swift; sourceTree = "<group>"; };
@@ -294,6 +300,7 @@
 				0E02FB8C1CBC671000C32F9F /* Gaussian.swift */,
 				0E02FB921CBDD35300C32F9F /* MixtureOfGaussians.swift */,
 				0E02FB981CC1B22E00C32F9F /* NonLinearRegression.swift */,
+				0E3CB59F1CCD30AE008ABA4E /* Validation.swift */,
 				0EBA29AE1A91350C0012CEC9 /* Supporting Files */,
 			);
 			path = AIToolbox;
@@ -325,6 +332,7 @@
 				0E02FB8F1CBC7C5D00C32F9F /* GaussianTests.swift */,
 				0E02FB951CBF10E900C32F9F /* MixtureOfGaussianTests.swift */,
 				0E02FB9B1CC1B25400C32F9F /* NonLinearRegressionTests.swift */,
+				0E3CB5A21CCD30D3008ABA4E /* ValidationTests.swift */,
 				0EBA29BB1A91350C0012CEC9 /* Supporting Files */,
 			);
 			path = AIToolboxTests;
@@ -559,6 +567,7 @@
 				0E0A4FB21C1342E100AD5AAE /* ConstraintPropogation.swift in Sources */,
 				0EDA12261C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */,
 				0E0A4FC41C153D8500AD5AAE /* Kernel.swift in Sources */,
+				0E3CB5A11CCD30AE008ABA4E /* Validation.swift in Sources */,
 				0EAAFD6B1CB33D4F0062EBD5 /* LinearRegression.swift in Sources */,
 				0E0A4FBE1C14C7CF00AD5AAE /* DataSet.swift in Sources */,
 				0EAAFD481CA9F37E0062EBD5 /* MarkovDecisionProcess.swift in Sources */,
@@ -577,6 +586,7 @@
 				0E0A4FB81C1342F500AD5AAE /* NeuralNetworkTests.swift in Sources */,
 				0E02FB971CBF10E900C32F9F /* MixtureOfGaussianTests.swift in Sources */,
 				0E8C9F7E1C9BB0B000F88E34 /* KMeansTest.swift in Sources */,
+				0E3CB5A41CCD30D3008ABA4E /* ValidationTests.swift in Sources */,
 				0E0E26021CA44EA80087932B /* PCATests.swift in Sources */,
 				0E0A4FC11C14EDC100AD5AAE /* SVMTests.swift in Sources */,
 				0EAAFD4B1CA9F3BD0062EBD5 /* MDPTests.swift in Sources */,
@@ -596,6 +606,7 @@
 			files = (
 				0E0E25FE1CA119160087932B /* PrincipalComponantAnalysis.swift in Sources */,
 				0EBA29C81A91355A0012CEC9 /* Graph.swift in Sources */,
+				0E3CB5A01CCD30AE008ABA4E /* Validation.swift in Sources */,
 				0ECD88661A9C3F6300049F28 /* AlphaBeta.swift in Sources */,
 				0E0A4FBA1C14B60800AD5AAE /* SVM.swift in Sources */,
 				0EBA29D01A98311A0012CEC9 /* Queue.swift in Sources */,
@@ -626,6 +637,7 @@
 				0EA941AD1BD5F80E006BAECD /* NeuralNetworkTests.swift in Sources */,
 				0E02FB961CBF10E900C32F9F /* MixtureOfGaussianTests.swift in Sources */,
 				0E8C9F7D1C9BB0B000F88E34 /* KMeansTest.swift in Sources */,
+				0E3CB5A31CCD30D3008ABA4E /* ValidationTests.swift in Sources */,
 				0E0E26011CA44EA80087932B /* PCATests.swift in Sources */,
 				0E0A4FC01C14EDC100AD5AAE /* SVMTests.swift in Sources */,
 				0EAAFD4A1CA9F3BD0062EBD5 /* MDPTests.swift in Sources */,

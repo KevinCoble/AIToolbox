@@ -93,7 +93,56 @@ public class DataSet {
         }
     }
     
+    public init?(fromDataSet: DataSet, withEntries: ArraySlice<Int>)
+    {
+        //  Remember the data parameters
+        self.dataType = fromDataSet.dataType
+        self.inputDimension = fromDataSet.inputDimension
+        self.outputDimension = fromDataSet.outputDimension
+        
+        //  Allocate data arrays
+        inputs = []
+        if (dataType == .Regression) {
+            outputs = []
+        }
+        else {
+            classes = []
+        }
+        
+        //  Copy the entries
+        do {
+            try includeEntries(fromDataSet: fromDataSet, withEntries: withEntries)
+        }
+        catch {
+            return nil
+        }
+    }
+    
     public func includeEntries(fromDataSet fromDataSet: DataSet, withEntries: [Int]) throws
+    {
+        //  Make sure the dataset matches
+        if dataType != fromDataSet.dataType { throw DataTypeError.InvalidDataType }
+        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.WrongDimensionOnInput }
+        if outputDimension != fromDataSet.outputDimension { throw DataTypeError.WrongDimensionOnOutput }
+        
+        //  Copy the entries
+        for index in withEntries {
+            if (index  < 0) { throw DataIndexError.Negative }
+            if (index  >= fromDataSet.size) { throw DataIndexError.IndexAboveDataSetSize }
+            inputs.append(fromDataSet.inputs[index])
+            if (dataType == .Regression) {
+                outputs!.append(fromDataSet.outputs![index])
+            }
+            else {
+                classes!.append(fromDataSet.classes![index])
+                if outputs != nil {
+                    outputs!.append(fromDataSet.outputs![index])
+                }
+            }
+        }
+    }
+    
+    public func includeEntries(fromDataSet fromDataSet: DataSet, withEntries: ArraySlice<Int>) throws
     {
         //  Make sure the dataset matches
         if dataType != fromDataSet.dataType { throw DataTypeError.InvalidDataType }
@@ -232,7 +281,7 @@ public class DataSet {
     {
         //  Get the ordered array of indices
         var shuffledArray: [Int] = []
-        for i in 0..<inputs.count - 1 { shuffledArray.append(i) }
+        for i in 0..<inputs.count { shuffledArray.append(i) }
         
         // empty and single-element collections don't shuffle
         if size < 2 { return shuffledArray }

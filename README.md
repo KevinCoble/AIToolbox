@@ -32,6 +32,7 @@ Classes/Algorithms supported:
 
     Linear Regression
         arbitrary function in model
+        regularization can be used
         convenience constructor for standard polygons
         Least-squares error
 
@@ -69,6 +70,11 @@ Classes/Algorithms supported:
     Mixture Of Gaussians
         Learn density function of a mixture of gaussians from data
         EM algorithm to converge model with data
+
+    Validation
+        Use to select model or parameters of model
+        Simple validation (percentage of data becomes test data)
+        N-Fold validation
 
 ## License
 

@@ -38,9 +38,9 @@ public enum SubtermFunction { case
 public struct LinearRegressionSubTerm
 {
     let inputIndex : Int
-    var power = 1.0
-    var function = SubtermFunction.None
-    var divide = false      //  If true this term divides the previous subterm (ignored on first subterm), else multiply
+    public var power = 1.0
+    public var function = SubtermFunction.None
+    public var divide = false      //  If true this term divides the previous subterm (ignored on first subterm), else multiply
     
     public init(withInput: Int)
     {
@@ -80,6 +80,11 @@ public struct LinearRegressionSubTerm
 public struct LinearRegressionTerm
 {
     var subterms : [LinearRegressionSubTerm] = []
+    
+    public init()
+    {
+        //  Empty initializer - all terms must be added manually
+    }
     
     public init(withInput: Int, atPower: Double)
     {
