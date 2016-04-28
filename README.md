@@ -60,7 +60,7 @@ Classes/Algorithms supported:
     Markov Decision Process
         value iteration
         policy iteration
-        fitted value iteration for continuous state MDPs - uses Linear Regression class for fit
+        fitted value iteration for continuous state MDPs - uses any Regression class for fit
                 (see my MDPRobot project on github for an example use)
 
     Gaussians
@@ -79,3 +79,7 @@ Classes/Algorithms supported:
 ## License
 
 This framework is made available with the Apache license.
+
+##  Contributions
+
+See the contribution document for information on contributing to this framework
