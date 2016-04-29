@@ -78,8 +78,8 @@ Classes/Algorithms supported:
 
 ## License
 
-This framework is made available with the Apache license.
+This framework is made available with the [Apache license](LICENSE.md).
 
 ##  Contributions
 
-See the contribution document for information on contributing to this framework
+See the [contribution document](CONTRIBUTIONS.md) for information on contributing to this framework
