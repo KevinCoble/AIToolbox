@@ -12,14 +12,9 @@ import Accelerate
 
 public enum LinearRegressionError: ErrorType {
     case ModelExceedsInputDimension
-    case DataNotRegression
-    case DataWrongDimension
-    case NotEnoughData
     case MatrixSolutionError
-    case NotTrained
     case NegativeInLogOrPower
     case DivideByZero
-    case ContinuationNotSupported
 }
 
 
@@ -201,7 +196,22 @@ public class LinearRegressionModel : Regressor
     {
         var numParameters = terms.count
         if (includeBias) { numParameters += 1 }
+        numParameters *= outputDimension
         return numParameters
+    }
+    
+    public func setParameters(parameters: [Double]) throws
+    {
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        
+        var numParameters = terms.count
+        if (includeBias) { numParameters += 1 }
+        var offset = 0
+        if (Θ.count < outputDimension) { Θ = [[Double]](count: outputDimension, repeatedValue: []) }
+        for index in 0..<outputDimension {
+            Θ[index] = Array(parameters[offset..<(offset+numParameters)])
+            offset += numParameters
+        }
     }
     
     public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
@@ -211,7 +221,7 @@ public class LinearRegressionModel : Regressor
     public func trainRegressor(trainData: DataSet) throws
     {
         //  Verify that the data is regression data
-        if (trainData.dataType != DataSetType.Regression) { throw LinearRegressionError.DataNotRegression }
+        if (trainData.dataType != DataSetType.Regression) { throw MachineLearningError.DataNotRegression }
         
         //  Get the number of input values needed by the model
         var neededInputs = 0
@@ -227,7 +237,7 @@ public class LinearRegressionModel : Regressor
         
         //  Validate the data size
         if (trainData.inputDimension != inputDimension || trainData.outputDimension != outputDimension) {
-            throw LinearRegressionError.DataWrongDimension
+            throw MachineLearningError.DataWrongDimension
         }
         
         //  Get the number of terms in the matrix (columns)
@@ -235,7 +245,7 @@ public class LinearRegressionModel : Regressor
         
         //  Make sure we have enough data for a solution (at least 1 per term)
         if (trainData.size < numColumns) {
-            throw LinearRegressionError.NotEnoughData
+            throw MachineLearningError.NotEnoughData
         }
         
         //  Allocate the parameter array
@@ -370,13 +380,13 @@ public class LinearRegressionModel : Regressor
     public func continueTrainingRegressor(trainData: DataSet) throws
     {
         //  Linear regression uses one-batch training (solved analytically)
-        throw LinearRegressionError.ContinuationNotSupported
+        throw MachineLearningError.ContinuationNotSupported
     }
     
     public func predictOne(inputs: [Double]) throws ->[Double]
     {
         //  Make sure we are trained
-        if (Θ.count < 1) { throw LinearRegressionError.NotTrained }
+        if (Θ.count < 1) { throw MachineLearningError.NotTrained }
         
         //  Get the number of input values needed by the model
         var neededInputs = 0
@@ -420,9 +430,9 @@ public class LinearRegressionModel : Regressor
     public func predict(testData: DataSet) throws
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Regression) { throw LinearRegressionError.DataNotRegression }
-        if (testData.inputDimension != inputDimension) { throw LinearRegressionError.DataWrongDimension }
-        if (testData.outputDimension != outputDimension) { throw LinearRegressionError.DataWrongDimension }
+        if (testData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
+        if (testData.inputDimension != inputDimension) { throw MachineLearningError.DataWrongDimension }
+        if (testData.outputDimension != outputDimension) { throw MachineLearningError.DataWrongDimension }
         
         //  predict on each input
         testData.outputs = []

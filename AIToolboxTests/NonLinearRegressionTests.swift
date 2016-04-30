@@ -198,6 +198,11 @@ public class ExponentEquation : NonLinearEquation {
     {
         return 2
     }
+    public func setParameters(parameters: [Double]) throws
+    {
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        self.parameters = parameters
+    }
     public func getOutputs(inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
     {
         return [parameters[0] * exp(parameters[1] * inputs[0])]
@@ -224,6 +229,11 @@ public class SimpleEquation : NonLinearEquation {
     public func getParameterDimension() -> Int
     {
         return 2
+    }
+    public func setParameters(parameters: [Double]) throws
+    {
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        self.parameters = parameters
     }
     public func getOutputs(inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
     {

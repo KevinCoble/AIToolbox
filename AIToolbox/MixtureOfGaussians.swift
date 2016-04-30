@@ -11,11 +11,7 @@ import Accelerate
 
 
 public enum MixtureOfGaussianError: ErrorType {
-    case DataNotRegression
-    case DataWrongDimension
-    case NotEnoughData
     case KMeansFailed
-    case DidNotConverge
 }
 
 
@@ -65,9 +61,28 @@ public class MixtureOfGaussians : Regressor
     {
         return 1
     }
+    public func setParameters(parameters: [Double]) throws
+    {
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        
+        var offset = 0
+        for index in 0..<termCount {
+            α[index] = parameters[offset]
+            offset += 1
+            if (inputDimension == 1) {
+                try gaussians[index].setParameters(Array(parameters[offset..<offset+2]))
+                offset += 2
+            }
+            else {
+                let neededSize = mvgaussians[index].getParameterDimension()
+                try mvgaussians[index].setParameters(Array(parameters[offset..<offset+neededSize]))
+                offset += neededSize
+            }
+        }
+    }
     public func getParameterDimension() -> Int
     {
-        var parameterCount = 1      //  alpha
+        var parameterCount = 1 + inputDimension     //  alpha and mean
         if (diagonalΣ) {
             parameterCount += inputDimension    //  If diagonal, only one covariance term per input
         }
@@ -75,7 +90,7 @@ public class MixtureOfGaussians : Regressor
             parameterCount += inputDimension * inputDimension    //  If not diagonal, full matrix of covariance
         }
         
-        parameterCount *= termCount     //  alpha and covariance for each gaussian term
+        parameterCount *= termCount     //  alpha, mean, and covariance for each gaussian term
         
         return parameterCount
     }
@@ -89,10 +104,10 @@ public class MixtureOfGaussians : Regressor
     public func trainRegressor(trainData: DataSet) throws
     {
         //  Verify that the data is regression data
-        if (trainData.dataType != DataSetType.Regression) { throw LinearRegressionError.DataNotRegression }
-        if (trainData.inputDimension != inputDimension) { throw MixtureOfGaussianError.DataWrongDimension }
-        if (trainData.outputDimension != 1) { throw MixtureOfGaussianError.DataWrongDimension }
-        if (trainData.size < termCount) { throw MixtureOfGaussianError.NotEnoughData }
+        if (trainData.dataType != DataSetType.Regression) { throw MachineLearningError.DataNotRegression }
+        if (trainData.inputDimension != inputDimension) { throw MachineLearningError.DataWrongDimension }
+        if (trainData.outputDimension != 1) { throw MachineLearningError.DataWrongDimension }
+        if (trainData.size < termCount) { throw MachineLearningError.NotEnoughData }
         
         //  Initialize the gaussians and weights
         //  Algorithm from http://arxiv.org/pdf/1312.5946.pdf
@@ -249,9 +264,9 @@ public class MixtureOfGaussians : Regressor
     public func continueTrainingRegressor(trainData: DataSet) throws
     {
         //  Verify that the data is regression data
-        if (trainData.dataType != DataSetType.Regression) { throw LinearRegressionError.DataNotRegression }
-        if (trainData.inputDimension != inputDimension) { throw MixtureOfGaussianError.DataWrongDimension }
-        if (trainData.outputDimension != 1) { throw MixtureOfGaussianError.DataWrongDimension }
+        if (trainData.dataType != DataSetType.Regression) { throw MachineLearningError.DataNotRegression }
+        if (trainData.inputDimension != inputDimension) { throw MachineLearningError.DataWrongDimension }
+        if (trainData.outputDimension != 1) { throw MachineLearningError.DataWrongDimension }
         
         //  Calculate the log-likelihood with the current parameters for the convergence check
         var lastLogLikelihood = 0.0
@@ -408,7 +423,7 @@ public class MixtureOfGaussians : Regressor
     ///  Function to calculate the result from an input vector   
     public func predictOne(inputs: [Double]) throws ->[Double]
     {
-        if (inputs.count != inputDimension) { throw MixtureOfGaussianError.DataWrongDimension }
+        if (inputs.count != inputDimension) { throw MachineLearningError.DataWrongDimension }
         
         var result = 0.0
         do {
@@ -431,8 +446,8 @@ public class MixtureOfGaussians : Regressor
     public func predict(testData: DataSet) throws
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Regression) { throw MixtureOfGaussianError.DataNotRegression }
-        if (testData.inputDimension != inputDimension) { throw MixtureOfGaussianError.DataWrongDimension }
+        if (testData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
+        if (testData.inputDimension != inputDimension) { throw MachineLearningError.DataWrongDimension }
         
         //  predict on each input
         testData.outputs = []

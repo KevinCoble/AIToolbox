@@ -12,8 +12,6 @@ import Accelerate
 
 enum PCAError: ErrorType {
     case InvalidDimensions
-    case DataWrongDimension
-    case NotEnoughData
     case ErrorInSVDParameters
     case SVDDidNotConverge
     case PCANotPerformed
@@ -80,12 +78,12 @@ public class PCA {
         
         //  Verify the data set matches the initial dimension
         if (data.inputDimension != initialDimension) {
-            throw PCAError.DataWrongDimension
+            throw MachineLearningError.DataWrongDimension
         }
         
         //  Make sure we have enough data
         if (data.size < 2) {
-            throw PCAError.NotEnoughData
+            throw MachineLearningError.NotEnoughData
         }
         
         //  Get the mean of the data
@@ -149,7 +147,7 @@ public class PCA {
         if (basisVectors.count <= 0) { throw PCAError.PCANotPerformed }
         
         //  Make sure the data dimension matches
-        if (data.inputDimension != initialDimension) { throw PCAError.DataWrongDimension }
+        if (data.inputDimension != initialDimension) { throw MachineLearningError.DataWrongDimension }
         
         //  Make a new data set with the new dimension
         let result = DataSet(dataType: .Regression, inputDimension: reducedDimension, outputDimension: 1)

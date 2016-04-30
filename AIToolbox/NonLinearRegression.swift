@@ -23,12 +23,7 @@ public enum NonLinearRegressionConvergenceType {
 }
 
 public enum NonLinearRegressionError: ErrorType {
-    case DataNotRegression
-    case DataWrongDimension
-    case InitializationError
     case ConvergenceTypeNotAllowed
-    case NotTrained
-    case DidNotConverge
     case MatrixSolutionError
 }
 
@@ -108,14 +103,19 @@ public class NonLinearRegression : Regressor
     {
         return equation.getParameterDimension()
     }
+    
+    public func setParameters(parameters: [Double]) throws
+    {
+        try equation.setParameters(parameters)
+    }
 
     
     public func trainRegressor(trainData: DataSet) throws
     {
         //  Validate the training data
-        if (trainData.dataType != .Regression) { throw NonLinearRegressionError.DataNotRegression }
-        if (trainData.inputDimension != equation.getInputDimension()) { throw NonLinearRegressionError.DataWrongDimension }
-        if (trainData.outputDimension != equation.getOutputDimension()) { throw NonLinearRegressionError.DataWrongDimension }
+        if (trainData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
+        if (trainData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.DataWrongDimension }
+        if (trainData.outputDimension != equation.getOutputDimension()) { throw MachineLearningError.DataWrongDimension }
         
         //  If batch size is zero, size it for the entire data set
         if (batchSize <= 0) {batchSize = trainData.size }
@@ -124,7 +124,7 @@ public class NonLinearRegression : Regressor
         let numParameters = equation.getParameterDimension()
         if let initFunc = initializeFunction {
             let initParameters = initFunc(trainData: trainData)
-            if (initParameters.count != numParameters) { throw NonLinearRegressionError.InitializationError }
+            if (initParameters.count != numParameters) { throw MachineLearningError.InitializationError }
             equation.parameters = initParameters
         }
         else {
@@ -148,9 +148,9 @@ public class NonLinearRegression : Regressor
     public func continueTrainingRegressor(trainData: DataSet) throws
     {
         //  Validate the training data
-        if (trainData.dataType != .Regression) { throw NonLinearRegressionError.DataNotRegression }
-        if (trainData.inputDimension != equation.getInputDimension()) { throw NonLinearRegressionError.DataWrongDimension }
-        if (trainData.outputDimension != equation.getOutputDimension()) { throw NonLinearRegressionError.DataWrongDimension }
+        if (trainData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
+        if (trainData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.DataWrongDimension }
+        if (trainData.outputDimension != equation.getOutputDimension()) { throw MachineLearningError.DataWrongDimension }
 
         //  Use the specified method to converge the parameters
         do {
@@ -409,7 +409,7 @@ public class NonLinearRegression : Regressor
             vDSP_vsmulD(averageGradient, 1, &stepSize, &averageGradient, 1, vDSP_Length(numParameters))
             vDSP_vsubD(averageGradient, 1, equation.parameters, 1, &equation.parameters, 1, vDSP_Length(numParameters))
         }
-        throw NonLinearRegressionError.DidNotConverge
+        throw MachineLearningError.DidNotConverge
     }
     
     public func trainGaussNewton(trainData: DataSet) throws
@@ -532,14 +532,14 @@ public class NonLinearRegression : Regressor
                 if (sum < convergenceLimit) { return }
             }
         }
-        throw NonLinearRegressionError.DidNotConverge
+        throw MachineLearningError.DidNotConverge
     }
 
     
     public func predictOne(inputs: [Double]) throws ->[Double]
     {
-        if (inputs.count != equation.getInputDimension()) { throw NonLinearRegressionError.DataWrongDimension }
-        if (equation.parameters.count != equation.getParameterDimension()) { throw NonLinearRegressionError.NotTrained }
+        if (inputs.count != equation.getInputDimension()) { throw MachineLearningError.DataWrongDimension }
+        if (equation.parameters.count != equation.getParameterDimension()) { throw MachineLearningError.NotTrained }
         
         do {
             return try equation.getOutputs(inputs)
@@ -552,8 +552,8 @@ public class NonLinearRegression : Regressor
     public func predict(testData: DataSet) throws
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Regression) { throw NonLinearRegressionError.DataNotRegression }
-        if (testData.inputDimension != equation.getInputDimension()) { throw NonLinearRegressionError.DataWrongDimension }
+        if (testData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
+        if (testData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.DataWrongDimension }
         
         //  predict on each input
         testData.outputs = []

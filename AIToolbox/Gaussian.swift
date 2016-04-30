@@ -46,6 +46,19 @@ public class Gaussian {
         multiplier = 1.0 / sqrt(σsquared * 2.0 * M_PI)
     }
     
+    public func setParameters(parameters: [Double]) throws
+    {
+        if (parameters.count < 2) { throw MachineLearningError.NotEnoughData }
+        
+        mean = parameters[0]
+        setVariance(parameters[1])
+        
+    }
+    public func getParameterDimension() -> Int
+    {
+        return 2  //  Mean and variance
+    }
+    
     ///  Function to get the probability of an input value
     public func getProbability(input: Double) -> Double {
         let exponent = (input - mean) * (input - mean) / (-2.0 * σsquared)
@@ -198,6 +211,28 @@ public class MultivariateGaussian {
         if (!diagonalΣ && matrix.count != dimension * dimension) { throw GaussianError.DimensionError }
         Σ = matrix
         haveCalcValues = false
+    }
+    
+    public func setParameters(parameters: [Double]) throws
+    {
+        let requiredSize = getParameterDimension()
+        if (parameters.count < requiredSize) { throw MachineLearningError.NotEnoughData }
+        
+        μ = Array(parameters[0..<dimension])
+        try setCovarianceMatrix(Array(parameters[dimension..<requiredSize]))
+        
+    }
+    public func getParameterDimension() -> Int
+    {
+        var numParameters = dimension   //  size of the mean
+        if (diagonalΣ) {
+            numParameters += dimension      //  size of diagonal covariance matrix
+        }
+        else {
+            numParameters += dimension * dimension      //  size of full covariance matrix
+        }
+        
+        return numParameters
     }
     
     ///  Function to get the probability of an input vector

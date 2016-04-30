@@ -406,6 +406,29 @@ public class NeuralNetwork: Classifier, Regressor {
         return layerInputs
     }
     
+    public func setParameters(parameters: [Double]) throws
+    {
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        
+        //  If enough for all parameters, split and send to layers
+        if (getParameterDimension() >= parameters.count) {
+            var startIndex = 0
+            for layer in layers {
+                let numWeightsForLayer = layer.nodes.count * layer.nodes[0].weights.count
+                let subArray = Array(parameters[startIndex...(startIndex+numWeightsForLayer-1)])
+                layer.initWeights(subArray)
+                startIndex += numWeightsForLayer
+            }
+        }
+        else {
+            //  Otherwise, send the same set to each layer
+            for layer in layers {
+                layer.initWeights(parameters)
+            }
+        }
+    }
+
+    
     ///  Method to set a custom function to initialize the parameters.  If not set, random parameters are used
     public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
     {

@@ -8,10 +8,25 @@
 
 import Foundation
 
+public enum MachineLearningError: ErrorType {
+    case DataNotRegression
+    case DataWrongDimension
+    case NotEnoughData
+    case ModelNotRegression
+    case ModelNotClassification
+    case NotTrained
+    case InitializationError
+    case DidNotConverge
+    case ContinuationNotSupported
+    case OperationTimeout
+}
+
+
 public protocol Classifier {
     func getInputDimension() -> Int
     func getParameterDimension() -> Int     //  May only be valid after training
     func getNumberOfClasses() -> Int        //  May only be valid after training
+    func setParameters(parameters: [Double]) throws
     func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
     func trainClassifier(trainData: DataSet) throws
     func continueTrainingClassifier(trainData: DataSet) throws      //  Trains without initializing parameters first
@@ -23,6 +38,7 @@ public protocol Regressor {
     func getInputDimension() -> Int
     func getOutputDimension() -> Int
     func getParameterDimension() -> Int
+    func setParameters(parameters: [Double]) throws
     func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
     func trainRegressor(trainData: DataSet) throws
     func continueTrainingRegressor(trainData: DataSet) throws      //  Trains without initializing parameters first
@@ -37,6 +53,7 @@ public protocol NonLinearEquation {
     func getInputDimension() -> Int
     func getOutputDimension() -> Int
     func getParameterDimension() -> Int     //  This must be an integer multiple of output dimension
+    func setParameters(parameters: [Double]) throws
     func getOutputs(inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
     func getGradient(inputs: [Double]) throws -> [Double]       //  Returns vector gradient sized for parameters - can be stubbed for ParameterDelta method
 }

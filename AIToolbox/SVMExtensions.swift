@@ -13,8 +13,6 @@ import Foundation
 
 enum SVMError: ErrorType {
     case InvalidModelType
-    case ModelNotTrained
-    case ContinuationNotSupported
 }
 
 
@@ -26,11 +24,15 @@ extension SVMModel : Classifier {
     }
     public func getParameterDimension() -> Int
     {
-        return totalSupportVectors
+        return totalSupportVectors      //!!  This needs to be calculated correctly
     }
     public func getNumberOfClasses() -> Int
     {
         return numClasses
+    }
+    public func setParameters(parameters: [Double]) throws
+    {
+        //!!   This needs to be filled in
     }
     
     public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
@@ -52,7 +54,7 @@ extension SVMModel : Classifier {
     public func continueTrainingClassifier(trainData: DataSet) throws
     {
         //  Linear regression uses one-batch training (solved analytically)
-        throw SVMError.ContinuationNotSupported
+        throw MachineLearningError.ContinuationNotSupported
     }
     
     public func classifyOne(inputs: [Double]) ->Int
@@ -113,7 +115,7 @@ extension SVMModel : Classifier {
         
         //  Verify the data set is the right type
         if (testData.dataType == .Classification) { throw DataTypeError.InvalidDataType }
-        if (supportVector.count <= 0) { throw SVMError.ModelNotTrained }
+        if (supportVector.count <= 0) { throw MachineLearningError.NotTrained }
         if (testData.inputDimension != supportVector[0].count) { throw DataTypeError.WrongDimensionOnInput }
         
         predictValues(testData)

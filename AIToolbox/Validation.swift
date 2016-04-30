@@ -9,11 +9,7 @@
 import Foundation
 
 public enum ValidationError: ErrorType {
-    case ModelNotRegression
-    case ModelNotClassification
-    case NotEnoughData
     case ComputationError
-    case OperationTimeout
 }
 
 ///  Class for using validation techniques for model/parameter selection
@@ -32,14 +28,14 @@ public class Validation
     
     public func addModel(model: Classifier) throws
     {
-        if (validationType == .Regression) { throw ValidationError.ModelNotRegression }
+        if (validationType == .Regression) { throw MachineLearningError.ModelNotRegression }
         
         classifiers.append(model)
     }
     
     public func addModel(model: Regressor) throws
     {
-        if (validationType == .Classification) { throw ValidationError.ModelNotClassification }
+        if (validationType == .Classification) { throw MachineLearningError.ModelNotClassification }
         
         regressors.append(model)
     }
@@ -52,8 +48,8 @@ public class Validation
     {
         //  Get the size of the training and testing sets
         let testSize = Int(fractionForTest * Double(data.size))
-        if (testSize < 1) { throw ValidationError.NotEnoughData }
-        if (testSize == data.size) { throw ValidationError.NotEnoughData }
+        if (testSize < 1) { throw MachineLearningError.NotEnoughData }
+        if (testSize == data.size) { throw MachineLearningError.NotEnoughData }
         
         //  Split the data into a training and a testing set
         let indices = data.getRandomIndexSet()
@@ -84,7 +80,7 @@ public class Validation
             //  Wait for the models to finish calculating
             let timeoutTime = dispatch_time(DISPATCH_TIME_NOW, timeout)
             if (dispatch_group_wait(group, timeoutTime) != 0) {
-                throw ValidationError.OperationTimeout
+                throw MachineLearningError.OperationTimeout
             }
             
             //  Rescale errors to have minimum error = 1.0
@@ -119,7 +115,7 @@ public class Validation
             //  Wait for the models to finish calculating
             let timeoutTime = dispatch_time(DISPATCH_TIME_NOW, timeout)
             if (dispatch_group_wait(group, timeoutTime) != 0) {
-                throw ValidationError.OperationTimeout
+                throw MachineLearningError.OperationTimeout
             }
             
             //  Check for an error during multithreading
@@ -146,7 +142,7 @@ public class Validation
     ///  Uses Grand-Central-Dispatch to run in parallel
     public func NFoldCrossValidation(data: DataSet, numberOfFolds: Int) throws -> Int
     {
-        if (numberOfFolds > data.size) { throw ValidationError.NotEnoughData }
+        if (numberOfFolds > data.size) { throw MachineLearningError.NotEnoughData }
         
         //  Get a concurrent GCD queue to run this all in
         let queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
@@ -208,7 +204,7 @@ public class Validation
             //  Wait for the models to finish calculating before the next fold
             let timeoutTime = dispatch_time(DISPATCH_TIME_NOW, timeout)
             if (dispatch_group_wait(group, timeoutTime) != 0) {
-                throw ValidationError.OperationTimeout
+                throw MachineLearningError.OperationTimeout
             }
         }
         

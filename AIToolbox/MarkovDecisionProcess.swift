@@ -180,7 +180,14 @@ public class MDP {
         if (fitModel.getInputDimension() != sample.count) {throw MDPErrors.ModelInputDimensionError}
         if (fitModel.getOutputDimension() != 1) {throw MDPErrors.ModelOutputDimensionError}
         
-        //  It is recommended that the model starts with parameters as the null vector so initial inresults are 'no expected reward for each position'.  Initialization is done on first iteration
+        //  It is recommended that the model starts with parameters as the null vector so initial inresults are 'no expected reward for each position'.
+        let initParameters = [Double](count:fitModel.getParameterDimension(), repeatedValue: 0.0)
+        do {
+            try fitModel.setParameters(initParameters)
+        }
+        catch let error {
+            throw error
+        }
         
         var difference = convergenceLimit + 1.0
         while (difference > convergenceLimit) {    //  Go till convergence
