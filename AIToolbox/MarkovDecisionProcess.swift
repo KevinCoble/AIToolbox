@@ -306,4 +306,49 @@ public class MDP {
         
         return bestAction
     }
+    
+    ///  Once fittedValueIteration has been used, use this function to get the ordered list of actions, from best to worst
+    public func getActionOrder(forState: [Double],
+                          getResultingState: ((fromState: [Double], action : Int) -> [Double]),
+                          getReward: ((fromState: [Double], action:Int, toState: [Double]) -> Double),
+                          fitModel: Regressor) -> [Int]
+    {
+        var actionTuple : [(action: Int, expectedReward: Double)] = []
+        if (deterministicModel) {
+            for action in 0..<numActions {
+                let resultState = getResultingState(fromState: forState, action: action)
+                do {
+                    let Vprime = try fitModel.predictOne(resultState)
+                    let expectedReward = getReward(fromState: forState, action:action, toState: resultState) + Vprime[0]
+                    actionTuple.append((action: action, expectedReward: expectedReward))
+                }
+                catch {
+                    
+                }
+            }
+        }
+        else {
+            for action in 0..<numActions {
+                var expectedReward = 0.0
+                for _ in 0..<nonDeterministicSampleSize {
+                    let resultState = getResultingState(fromState: forState, action: action)
+                    do {
+                        let Vprime = try fitModel.predictOne(resultState)
+                        expectedReward += getReward(fromState: forState, action:action, toState: resultState) +  Vprime[0]
+                    }
+                    catch {
+                        expectedReward = 0.0    //  Error in system that should be caught elsewhere
+                    }
+                }
+                expectedReward /= Double(nonDeterministicSampleSize)
+                actionTuple.append((action: action, expectedReward: expectedReward))
+            }
+        }
+        
+        //  Get the ordered list of actions
+        actionTuple.sortInPlace({$0.expectedReward > $1.expectedReward})
+        var actionList : [Int] = []
+        for tuple in actionTuple { actionList.append(tuple.action) }
+        return actionList
+    }
 }
