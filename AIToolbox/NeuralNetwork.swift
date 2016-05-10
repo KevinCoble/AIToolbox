@@ -9,6 +9,11 @@
 import Foundation
 import Accelerate
 
+public enum NeuronLayerType {
+    case SimpleFeedForward
+    case SimpleRecurrent
+}
+
 public enum NeuralActivationFunction {
     case None
     case HyberbolicTangent
@@ -19,13 +24,33 @@ public enum NeuralActivationFunction {
     case SoftMax        //  Only valid on output (last) layer
 }
 
-final class NeuralNode {
+protocol NeuralLayer {
+    func getNodeCount() -> Int
+    func getWeightsPerNode()-> Int
+    func getActivation()-> NeuralActivationFunction
+    func getLayerOutputs(inputs: [Double]) -> [Double]
+    func initWeights(startWeights: [Double]!)
+    func getFinalLayerDelta(expectedOutputs: [Double])
+    func getLayerDelta(nextLayer: NeuralLayer)
+    func getSumOfWeightsTimesDelta(weightIndex: Int) ->Double
+    func clearWeightChanges()
+    func updateWeights(inputs: [Double], trainingRate: Double, weightDecay: Double) -> [Double]
+    func appendWeightChanges(inputs: [Double]) -> [Double]
+    func updateWeightsFromAccumulations(averageTrainingRate: Double, weightDecay: Double)
+    func decayWeights(decayFactor : Double)
+    func resetSequence()
+    func storeRecurrentValues()
+    func retrieveRecurrentValues()
+}
+
+final class SimpleNeuralNode {
     //  Activation function
     let activation : NeuralActivationFunction
-    let numWeights : Int
+    let numWeights : Int        //  Includes bias weight
     var weights : [Double]
     var lastWeightedSum : Double //  Last weights dot-producted with inputs - remembered for training purposes
     var lastOutput : Double //  Last result calculated
+    var outputHistory : [Double] //  History of output for the sequence
     var delta : Double      //  Difference in expected output to calculated result - weighted sum from all nodes this node outputs too
     var accumulatedWeightChanges : [Double]?
     
@@ -37,6 +62,7 @@ final class NeuralNode {
         weights = []
         lastWeightedSum = 0.0
         lastOutput = 0.0
+        outputHistory = []
         delta = 0.0
     }
     
@@ -210,18 +236,35 @@ final class NeuralNode {
         var x = decayFactor     //  Needed for unsafe pointer conversion
         vDSP_vsmulD(weights, 1, &x, &weights, 1, vDSP_Length(weights.count-1))
     }
+    
+    func resetSequence()
+    {
+        lastOutput = 0.0
+        outputHistory = [0.0]       //  first 'previous' value is zero
+        delta = 0.0                 //  Backward propogation previous delta (delta from next time step in sequence) is zero
+    }
+    
+    func storeRecurrentValues()
+    {
+        outputHistory.append(lastOutput)
+    }
+    
+    func getLastRecurrentValue()
+    {
+        lastOutput = outputHistory.removeLast()
+    }
 }
 
-final class NeuralLayer {
+final class SimpleNeuralLayer: NeuralLayer {
     //  Nodes
-    var nodes : [NeuralNode]
+    var nodes : [SimpleNeuralNode]
     
     ///  Create the neural network layer based on a tuple (number of nodes, activation function)
-    init(numInputs : Int, layerDefinition: (numNodes: Int, activation: NeuralActivationFunction))
+    init(numInputs : Int, layerDefinition: (layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?))
     {
         nodes = []
         for _ in 0..<layerDefinition.numNodes {
-            nodes.append(NeuralNode(numInputs: numInputs, activationFunction: layerDefinition.activation))
+            nodes.append(SimpleNeuralNode(numInputs: numInputs, activationFunction: layerDefinition.activation))
         }
     }
     
@@ -251,6 +294,21 @@ final class NeuralLayer {
                 node.initWeights(nil)
             }
         }
+    }
+    
+    func getNodeCount() -> Int
+    {
+        return nodes.count
+    }
+    
+    func getWeightsPerNode()-> Int
+    {
+        return nodes[0].numWeights
+    }
+    
+    func getActivation()-> NeuralActivationFunction
+    {
+        return nodes[0].activation
     }
     
     func getLayerOutputs(inputs: [Double]) -> [Double]
@@ -290,11 +348,18 @@ final class NeuralLayer {
         for nNodeIndex in 0..<nodes.count {
             nodes[nNodeIndex].resetDelta()
             //  Add each portion from the nodes in the next forward layer
-            for forwardNode in nextLayer.nodes {
-                nodes[nNodeIndex].addToDelta(forwardNode.getWeightTimesDelta(nNodeIndex))
-            }
+            nodes[nNodeIndex].addToDelta(nextLayer.getSumOfWeightsTimesDelta(nNodeIndex))
             nodes[nNodeIndex].multiplyDeltaByNonLinearityDerivitive()
         }
+    }
+    
+    func getSumOfWeightsTimesDelta(weightIndex: Int) ->Double
+    {
+        var sum = 0.0
+        for node in nodes {
+            sum += node.getWeightTimesDelta(weightIndex)
+        }
+        return sum
     }
     
     func updateWeights(inputs: [Double], trainingRate: Double, weightDecay: Double) -> [Double]
@@ -344,6 +409,28 @@ final class NeuralLayer {
             node.decayWeights(decayFactor)
         }
     }
+    
+    func resetSequence()
+    {
+        for node in nodes {
+            node.resetSequence()
+        }
+    }
+    
+    func storeRecurrentValues()
+    {
+        for node in nodes {
+            node.storeRecurrentValues()
+        }
+    }
+    
+    func retrieveRecurrentValues()
+    {
+        //  Set the last recurrent value in the history array to the last output
+        for node in nodes {
+            node.getLastRecurrentValue()
+        }
+    }
 }
 
 public class NeuralNetwork: Classifier, Regressor {
@@ -353,20 +440,28 @@ public class NeuralNetwork: Classifier, Regressor {
     var trainingRate = 0.3
     var weightDecay = 1.0
     var initializeFunction : ((trainData: DataSet)->[Double])!
+    var hasRecurrentLayers = false
     
     ///  Create the neural network based on an array of tuples, one for each non-input layer (number of nodes, activation function)
     ///     There must be at least two layers (hidden layer and output layer), but can have more
     ///     The input layer is defined by the number of inputs only.  The network is fully connected, including a bias term
     ///     If being used for classification, have the output (last) layer have the number of nodes equal to the number of classes
-    public init(numInputs : Int, layerDefinitions: [(numNodes: Int, activation: NeuralActivationFunction)])
+    public init(numInputs : Int, layerDefinitions: [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)])
     {
         self.numInputs = numInputs
         layers = []
         var numInputsFromPreviousLayer = numInputs
         for layerDefinition in layerDefinitions {
-            let layer = NeuralLayer(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
+            var layer : NeuralLayer
+            switch (layerDefinition.layerType) {
+            case .SimpleFeedForward:
+                layer = SimpleNeuralLayer(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
+            case .SimpleRecurrent:
+                layer = RecurrentNeuralLayer(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
+            }
             layers.append(layer)
             numInputsFromPreviousLayer = layerDefinition.numNodes
+            if (layerDefinition.layerType == .SimpleRecurrent) { hasRecurrentLayers = true }
         }
     }
     
@@ -376,19 +471,19 @@ public class NeuralNetwork: Classifier, Regressor {
     }
     public func getOutputDimension() -> Int
     {
-        return layers.last!.nodes.count
+        return layers.last!.getNodeCount()
     }
     public func getParameterDimension() -> Int
     {
         var count = 0
         for layer in layers {
-            count += layer.nodes.count * layer.nodes[0].weights.count
+            count += layer.getNodeCount() * layer.getWeightsPerNode()
         }
         return count
     }
     public func getNumberOfClasses() -> Int
     {
-        return layers.last!.nodes.count
+        return layers.last!.getNodeCount()
     }
     ///  FeedForward routine
     public func feedForward(inputs: [Double]) -> [Double] {
@@ -414,7 +509,7 @@ public class NeuralNetwork: Classifier, Regressor {
         if (getParameterDimension() >= parameters.count) {
             var startIndex = 0
             for layer in layers {
-                let numWeightsForLayer = layer.nodes.count * layer.nodes[0].weights.count
+                let numWeightsForLayer = layer.getNodeCount() * layer.getWeightsPerNode()
                 let subArray = Array(parameters[startIndex...(startIndex+numWeightsForLayer-1)])
                 layer.initWeights(subArray)
                 startIndex += numWeightsForLayer
@@ -444,7 +539,7 @@ public class NeuralNetwork: Classifier, Regressor {
             if (getParameterDimension() == startWeights.count) {
                 var startIndex = 0
                 for layer in layers {
-                    let numWeightsForLayer = layer.nodes.count * layer.nodes[0].weights.count
+                    let numWeightsForLayer = layer.getNodeCount() * layer.getWeightsPerNode()
                     let subArray = Array(startWeights[startIndex...(startIndex+numWeightsForLayer-1)])
                     layer.initWeights(subArray)
                     startIndex += numWeightsForLayer
@@ -540,13 +635,26 @@ public class NeuralNetwork: Classifier, Regressor {
         //  Verify the data set is the right type
         if (testData.dataType != .Regression) { throw DataTypeError.InvalidDataType }
         if (testData.inputDimension != numInputs) { throw DataTypeError.WrongDimensionOnInput }
-        if (testData.outputDimension != layers.last?.nodes.count) { throw DataTypeError.WrongDimensionOnOutput }
+        if (testData.outputDimension != layers.last?.getNodeCount()) { throw DataTypeError.WrongDimensionOnOutput }
         
         //  predict on each input
         testData.outputs = []
         for index in 0..<testData.size {
             testData.outputs!.append(predictOne(testData.inputs[index]))
         }
+    }
+    
+    
+    ///  Train on a sequence of data.  Be sure to initialize the weights before using the first time
+    public func predictSequence(sequence: DataSet) throws
+    {
+        //  Start the sequence
+        for layer in layers {
+            layer.resetSequence()
+        }
+        
+        //  Feed each item to the network
+        try predict(sequence)
     }
 
     ///  Train on one data item.  Be sure to initialize the weights before using the first time
@@ -576,6 +684,65 @@ public class NeuralNetwork: Classifier, Regressor {
             
             //  Calculate the outputs from the layer
             layerInputs = layer.updateWeights(layerInputs, trainingRate: trainingRate, weightDecay: weightDecay)
+        }
+    }
+    
+    ///  Train on a sequence of data.  Be sure to initialize the weights before using the first time
+    public func trainSequence(sequence: DataSet, trainingRate: Double, weightDecay: Double)
+    {
+        //  Start the sequence
+        //  Clear the weight change accumulations
+        for layer in layers {
+            layer.resetSequence()
+            layer.clearWeightChanges()
+        }
+        
+        //  Train on each element of the sequence, as if it was a batch
+        
+        //  Iterate through each training datum in the batch, feeding forward, but remembering the recurrent values
+        for dataIndex in 0..<sequence.size {
+            //  Get the results of a feedForward run (each node remembers its own output)
+            feedForward(sequence.inputs[dataIndex])
+            for layer in layers {
+                layer.storeRecurrentValues()
+            }
+        }
+        
+        //  Iterate backwards through each training datum in the batch, backpropogating
+        for dataIndex in (sequence.size - 1).stride(through: 0, by: -1) {
+            //  Back the output value for all layers off the stack
+            for layer in layers {
+                layer.retrieveRecurrentValues()
+            }
+            
+            //  Calculate the delta for the final layer
+            layers.last!.getFinalLayerDelta(sequence.outputs![dataIndex])
+            
+            //  Get the deltas for the other layers
+            if (layers.count > 1) {
+                for nLayerIndex in (layers.count - 2).stride(through: 0, by: -1)
+                {
+                    layers[nLayerIndex].getLayerDelta(layers[nLayerIndex+1])
+                }
+            }
+            
+            //  Set the inputs for calculating the weight changes
+            var layerInputs = sequence.inputs[dataIndex]
+            
+            //  Go through each layer
+            for layer in layers {
+                //  Add a bias constant 1.0 to the input array
+                layerInputs.append(1.0)
+                
+                //  Append the weight changes for the layer
+                layerInputs = layer.appendWeightChanges(layerInputs)
+            }
+        }
+        
+        //  Update the weights based on the weight change accumulations
+        let averageTrainingRate = trainingRate * -1.0 / Double(sequence.size)  //  Make negative so we can use DSP to vectorize equation
+        for layer in layers {
+            layer.updateWeightsFromAccumulations(averageTrainingRate, weightDecay: weightDecay)
         }
     }
     
@@ -646,11 +813,11 @@ public class NeuralNetwork: Classifier, Regressor {
     {
         //  Get the false level for the output layer
         var falseLevel = 0.0
-        if (layers.last!.nodes[0].activation == .HyberbolicTangent) {falseLevel = -1.0}
+        if (layers.last!.getActivation() == .HyberbolicTangent) {falseLevel = -1.0}
         
         //  Create the expected output array for expected class
         var expectedOutputs : [Double] = []
-        for classIndex in 0..<layers.last!.nodes.count {
+        for classIndex in 0..<layers.last!.getNodeCount() {
             expectedOutputs.append(classIndex == expectedOutput ? 1.0 : falseLevel)
         }
         
@@ -666,14 +833,14 @@ public class NeuralNetwork: Classifier, Regressor {
         
         //  Get the false level for the output layer
         var falseLevel = 0.0
-        if (layers.last!.nodes[0].activation == .HyberbolicTangent) {falseLevel = -1.0}
+        if (layers.last!.getActivation() == .HyberbolicTangent) {falseLevel = -1.0}
         
         //  Create the expected output array for expected class
         trainData.outputs = [[]]
         var sampleIndex = 0
         for classValue in trainData.classes! {
             trainData.outputs!.append([])
-            for classIndex in 0..<layers.last!.nodes.count {
+            for classIndex in 0..<layers.last!.getNodeCount() {
                 trainData.outputs![sampleIndex].append(classIndex == classValue ? 1.0 : falseLevel)
             }
             sampleIndex += 1
