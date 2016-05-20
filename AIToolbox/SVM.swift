@@ -204,8 +204,8 @@ public class SVMModel
             //  Group training data of the same class
             do {
                 //  Group the data into classes
-                try groupClasses(data)
-                let classificationData = data.optionalData as! SVMClassificationData
+                try data.groupClasses()
+                let classificationData = data.optionalData as! ClassificationData
                 if (classificationData.numClasses <= 1) {
                     print("Invalid number of classes in data")
                     return
@@ -431,8 +431,8 @@ public class SVMModel
             //  Group the classes
             do {
                 //  Group the data into classes
-                try groupClasses(data)
-                let classificationData = data.optionalData as! SVMClassificationData
+                try data.groupClasses()
+                let classificationData = data.optionalData as! ClassificationData
                 
                 //  Get a random shuffle of the data in each class
                 var shuffledIndices = classificationData.classOffsets
@@ -719,40 +719,6 @@ public class SVMModel
         return mae
     }
     
-    func groupClasses(data: DataSet) throws
-    {
-        if (data.dataType != .Classification)  { throw DataTypeError.InvalidDataType }
-        
-        //  If the data already has classification data, skip
-        if (data.optionalData != nil) {
-            if data.optionalData is SVMClassificationData { return }
-        }
-        
-        //  Create a classification data addendum
-        let classificationData = SVMClassificationData()
-        
-        //  Get the different data labels
-        for index in 0..<data.size {
-            let thisClass = data.classes![index]
-            let thisClassIndex = classificationData.foundLabels.indexOf(thisClass)
-            if let classIndex = thisClassIndex {
-                //  Class label found, increment count
-                classificationData.classCount[classIndex] += 1
-                //  Add offset of data point
-                classificationData.classOffsets[classIndex].append(index)
-            }
-            else {
-                //  Class label not found, add it
-                classificationData.foundLabels.append(thisClass)
-                classificationData.classCount.append(1)     //  Start count at 1 - this instance
-                classificationData.classOffsets.append([index]) //  First offset is this point
-            }
-        }
-        
-        //  Set the classification data as the optional data for the data set
-        data.optionalData = classificationData
-    }
-    
     public func predictValues(data: DataSet)
     {
         //  Initialize the output variables
@@ -997,17 +963,6 @@ public class SVMModel
         //  Convert to a property list (NSDictionary) and write
         let pList = NSDictionary(dictionary: modelDictionary)
         if !pList.writeToFile(path, atomically: false) { throw SVMWriteErrors.failedWriting }
-    }
-}
-
-internal class SVMClassificationData {
-    var foundLabels: [Int] = []
-    var classCount: [Int] = []
-    var classOffsets: [[Int]] = []
-    
-    var numClasses: Int
-    {
-        return foundLabels.count
     }
 }
 

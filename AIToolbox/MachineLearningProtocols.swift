@@ -19,6 +19,7 @@ public enum MachineLearningError: ErrorType {
     case DidNotConverge
     case ContinuationNotSupported
     case OperationTimeout
+    case ContinueTrainingClassesNotSame
 }
 
 
@@ -105,3 +106,15 @@ extension Regressor {
     }
     
 }
+
+internal class ClassificationData {
+    var foundLabels: [Int] = []
+    var classCount: [Int] = []
+    var classOffsets: [[Int]] = []
+    
+    var numClasses: Int
+    {
+        return foundLabels.count
+    }
+}
+

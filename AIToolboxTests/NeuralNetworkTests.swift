@@ -362,7 +362,8 @@ class NeuralNetworkTests: XCTestCase {
         network.initializeWeights(nil)
 
         //  Create and train on a number of sequences where output is high if the current or last value is > 5
-        for index in 0..<5000 {
+//        for index in 0..<5000 {
+        for _ in 0..<5000 {
             //  Create a data set with the sequence
             let sequenceData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
             do {
@@ -381,8 +382,8 @@ class NeuralNetworkTests: XCTestCase {
             //  Train on the sequence
             network.trainSequence(sequenceData, trainingRate: 0.5, weightDecay: 1.0)
             
-//            //!!  Test every 500
-//            if ((index % 500) == 0) {
+//            //  Test every 500
+//            if ((index % 500) == 0) {     //
 //                let sequenceData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
 //                do {
 //                    try sequenceData.addTestDataPoint(input: [-5.0])        //  Not high

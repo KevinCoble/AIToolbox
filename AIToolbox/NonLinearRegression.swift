@@ -151,6 +151,9 @@ public class NonLinearRegression : Regressor
         if (trainData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
         if (trainData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.DataWrongDimension }
         if (trainData.outputDimension != equation.getOutputDimension()) { throw MachineLearningError.DataWrongDimension }
+        
+        //  If batch size is zero, size it for the entire data set
+        if (batchSize <= 0) {batchSize = trainData.size }
 
         //  Use the specified method to converge the parameters
         do {

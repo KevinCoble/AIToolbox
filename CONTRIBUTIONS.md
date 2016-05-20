@@ -29,8 +29,8 @@ Here is a list of things I would like to see added to the library.  Items marked
   1.  **Algorithms**
     * Convolutional Network Layers (ktc - I have started this, but haven't gotten that far)
     * LSTM Recurrent Network Layers (ktc - I have put in simple RNN layers).  I would like both this and the CNN layers to be part of the general NN class, so that a general NN of all types (intermixed) can be configured
+    * GRU Recurrent Network layers
     * More non-linear regression solutions (I had started on a Levenberg-Marquardt solver, but went on to Validation instead)
-    * Logistic Regression
     * Multiclass Logistic Regression as a classifier
     * Locally weighted least-squares
     * Weight dropping in Neural Networks
@@ -44,6 +44,7 @@ Here is a list of things I would like to see added to the library.  Items marked
     *  Benchmarking
     *  Profiling and optimizing the code
     *  Explore more parallelization using GCD
+    *  NN Layers without node classes (matrix weights, etc.)
     *  More use of Metal (although this obscures the algorithms)
 
   3.  **Data I/O**

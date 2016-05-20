@@ -24,13 +24,10 @@ class NonLinearRegressionTests: XCTestCase {
     
     func testParameterDelta() {
         //  Create the model equation
-//!!        let equation = ExponentEquation()
         let equation = SimpleEquation()
         
         //  Set it with random parameters
         equation.parameters = [Double(arc4random()) * 100.0 / Double(UInt32.max) - 50.0, Double(arc4random()) * 4.0 / Double(UInt32.max) - 2.0]
-//!!
-print("target parameters = \(equation.parameters)")
         
         //  Create a dataset to train on
         let trainData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)

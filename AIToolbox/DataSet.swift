@@ -118,6 +118,7 @@ public class DataSet {
         }
     }
     
+    ///  Get entries from another matching dataset
     public func includeEntries(fromDataSet fromDataSet: DataSet, withEntries: [Int]) throws
     {
         //  Make sure the dataset matches
@@ -142,6 +143,7 @@ public class DataSet {
         }
     }
     
+    ///  Get entries from another matching dataset
     public func includeEntries(fromDataSet fromDataSet: DataSet, withEntries: ArraySlice<Int>) throws
     {
         //  Make sure the dataset matches
@@ -162,6 +164,46 @@ public class DataSet {
                 if outputs != nil {
                     outputs!.append(fromDataSet.outputs![index])
                 }
+            }
+        }
+    }
+    
+    ///  Get inputs from another matching dataset, initializing outputs to 0
+    public func includeEntryInputs(fromDataSet fromDataSet: DataSet, withEntries: [Int]) throws
+    {
+        //  Make sure the dataset inputs match
+        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.WrongDimensionOnInput }
+        
+        //  Copy the inputs
+        for index in withEntries {
+            if (index  < 0) { throw DataIndexError.Negative }
+            if (index  >= fromDataSet.size) { throw DataIndexError.IndexAboveDataSetSize }
+            inputs.append(fromDataSet.inputs[index])
+            if (dataType == .Regression) {
+                outputs!.append([Double](count:outputDimension, repeatedValue: 0.0))
+            }
+            else {
+                classes!.append(0)
+            }
+        }
+    }
+    
+    ///  Get inputs from another matching dataset, initializing outputs to 0
+    public func includeEntryInputs(fromDataSet fromDataSet: DataSet, withEntries: ArraySlice<Int>) throws
+    {
+        //  Make sure the dataset inputs match
+        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.WrongDimensionOnInput }
+        
+        //  Copy the inputs
+        for index in withEntries {
+            if (index  < 0) { throw DataIndexError.Negative }
+            if (index  >= fromDataSet.size) { throw DataIndexError.IndexAboveDataSetSize }
+            inputs.append(fromDataSet.inputs[index])
+            if (dataType == .Regression) {
+                outputs!.append([Double](count:outputDimension, repeatedValue: 0.0))
+            }
+            else {
+                classes!.append(0)
             }
         }
     }
@@ -332,6 +374,41 @@ public class DataSet {
         
         return results
     }
+    
+    public func groupClasses() throws
+    {
+        if (dataType != .Classification)  { throw DataTypeError.InvalidDataType }
+        
+        //  If the data already has classification data, skip
+        if (optionalData != nil) {
+            if optionalData is ClassificationData { return }
+        }
+        
+        //  Create a classification data addendum
+        let classificationData = ClassificationData()
+        
+        //  Get the different data labels
+        for index in 0..<size {
+            let thisClass = classes![index]
+            let thisClassIndex = classificationData.foundLabels.indexOf(thisClass)
+            if let classIndex = thisClassIndex {
+                //  Class label found, increment count
+                classificationData.classCount[classIndex] += 1
+                //  Add offset of data point
+                classificationData.classOffsets[classIndex].append(index)
+            }
+            else {
+                //  Class label not found, add it
+                classificationData.foundLabels.append(thisClass)
+                classificationData.classCount.append(1)     //  Start count at 1 - this instance
+                classificationData.classOffsets.append([index]) //  First offset is this point
+            }
+        }
+        
+        //  Set the classification data as the optional data for the data set
+        optionalData = classificationData
+    }
+
     
     //  Leave here in case it is used by other methods
     public static func gaussianRandom(mean : Double, standardDeviation : Double) -> Double

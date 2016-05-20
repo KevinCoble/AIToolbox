@@ -1,5 +1,5 @@
 # AIToolbox
-A toolbox of AI modules written in Swift:  Graphs/Trees, Linear Regression, Support Vector Machines, Neural Networks, PCA, KMeans, Genetic Algorithms, MDP, Mixture of Gaussians
+A toolbox of AI modules written in Swift:  Graphs/Trees, Linear Regression, Support Vector Machines, Neural Networks, PCA, KMeans, Genetic Algorithms, MDP, Mixture of Gaussians, Logistic Regression
 
 This framework uses the Accelerate library to speed up computations.
 Written for Swift 2.2.  Will update to 3 when officially released
@@ -40,6 +40,10 @@ Classes/Algorithms supported:
         parameter-delta
         Gradient-Descent
         Gauss-Newton
+
+    Logistic Regression
+        Use any non-linear solution method
+        Multi-class capability
 
     Neural Networks
         multiple layers, several non-linearity models
