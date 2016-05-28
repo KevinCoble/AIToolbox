@@ -30,9 +30,9 @@ final class RecurrentNeuralNode {
     init(numInputs : Int, numFeedbacks : Int,  activationFunction: NeuralActivationFunction)
     {
         activation = activationFunction
-        self.numInputs = numInputs + 1
+        self.numInputs = numInputs + 1  //  Add one weight for the bias term
         self.numFeedback = numFeedbacks
-        numWeights = self.numInputs + self.numFeedback  //  Add one weight for the bias term
+        numWeights = self.numInputs + self.numFeedback
         inputWeights = []
         feedbackWeights = []
         lastWeightedSum = 0.0
@@ -47,21 +47,28 @@ final class RecurrentNeuralNode {
     {
         if let startWeights = startWeights {
             if (startWeights.count == 1) {
-                inputWeights = [Double](count: numWeights, repeatedValue: startWeights[0])
+                inputWeights = [Double](count: numInputs, repeatedValue: startWeights[0])
+                feedbackWeights = [Double](count: numFeedback, repeatedValue: startWeights[0])
+            }
+            else if (startWeights.count == numInputs+numFeedback) {
+                //  Full weight array, just split into the two weight arrays
+                inputWeights = Array(startWeights[0..<numInputs])
+                feedbackWeights = Array(startWeights[numInputs..<numInputs+numFeedback])
             }
             else {
                 inputWeights = []
-                var index = 1 //  First number (if more than 1) goes into the bias weight, then repeat the remaining
+                var index = 0 //  First number (if more than 1) goes into the bias weight, then repeat the initial
                 for _ in 0..<numInputs-1  {
-                    if (index >= startWeights.count) { index = 1 }      //  Wrap if necessary
+                    if (index >= startWeights.count-1) { index = 0 }      //  Wrap if necessary
                     inputWeights.append(startWeights[index])
                     index += 1
                 }
-                inputWeights.append(startWeights[0])     //  Add the bias term
+                inputWeights.append(startWeights[startWeights.count-1])     //  Add the bias term
                 
+                index = 0
                 feedbackWeights = []
                 for _ in 0..<numFeedback  {
-                    if (index >= startWeights.count) { index = 1 }      //  Wrap if necessary
+                    if (index >= startWeights.count-1) { index = 1 }      //  Wrap if necessary
                     feedbackWeights.append(startWeights[index])
                     index += 1
                 }
@@ -70,13 +77,13 @@ final class RecurrentNeuralNode {
         else {
             inputWeights = []
             for _ in 0..<numInputs-1  {
-                inputWeights.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numWeights-1)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+                inputWeights.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numInputs-1)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
             }
             inputWeights.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
             
             feedbackWeights = []
             for _ in 0..<numFeedback  {
-                feedbackWeights.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numWeights-1)))    //  feedback weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+                feedbackWeights.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numFeedback)))    //  feedback weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
             }
         }
     }
@@ -85,8 +92,8 @@ final class RecurrentNeuralNode {
     {
         //  Get the weighted sum
         var sum = 0.0
-        vDSP_dotprD(inputWeights, 1, inputs, 1, &lastWeightedSum, vDSP_Length(inputWeights.count))
-        vDSP_dotprD(feedbackWeights, 1, feedback, 1, &sum, vDSP_Length(feedbackWeights.count))
+        vDSP_dotprD(inputWeights, 1, inputs, 1, &lastWeightedSum, vDSP_Length(numInputs))
+        vDSP_dotprD(feedbackWeights, 1, feedback, 1, &sum, vDSP_Length(numFeedback))
         lastWeightedSum += sum
         
         //  Use the activation function function for the nonlinearity
@@ -305,6 +312,16 @@ final class RecurrentNeuralLayer: NeuralLayer {
                 node.initWeights(nil)
             }
         }
+    }
+    
+    func getWeights() -> [Double]
+    {
+        var weights: [Double] = []
+        for node in nodes {
+            weights += node.inputWeights
+            weights += node.feedbackWeights
+        }
+        return weights
     }
     
     func getNodeCount() -> Int

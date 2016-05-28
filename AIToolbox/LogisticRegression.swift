@@ -53,6 +53,11 @@ public class LogisticRegression : Regressor, Classifier
         initializeFunction = function
     }
     
+    public func getParameters() throws -> [Double]
+    {
+        return parameters
+    }
+    
     ///  Method to initialize the weights - call before any training other than 'trainClassifier' or 'trainRegressor', which call this
     public func initializeWeights(trainData: DataSet!)
     {

@@ -100,6 +100,20 @@ public class MixtureOfGaussians : Regressor
         initializeFunction = function
     }
     
+    public func getParameters() throws -> [Double]
+    {
+        var parameters : [Double] = []
+        for index in 0..<termCount {
+            if (inputDimension == 1) {
+                parameters += try gaussians[index].getParameters()
+            }
+            else {
+                parameters += try mvgaussians[index].getParameters()
+            }
+        }
+        return parameters
+    }
+    
     ///  Function to calculate the parameters of the model
     public func trainRegressor(trainData: DataSet) throws
     {

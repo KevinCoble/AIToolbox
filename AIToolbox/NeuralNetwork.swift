@@ -30,6 +30,7 @@ protocol NeuralLayer {
     func getActivation()-> NeuralActivationFunction
     func getLayerOutputs(inputs: [Double]) -> [Double]
     func initWeights(startWeights: [Double]!)
+    func getWeights() -> [Double]
     func getFinalLayerDelta(expectedOutputs: [Double])
     func getLayerDelta(nextLayer: NeuralLayer)
     func getSumOfWeightsTimesDelta(weightIndex: Int) ->Double
@@ -75,12 +76,13 @@ final class SimpleNeuralNode {
             }
             else {
                 weights = []
-                var index = 1 //  First number (if more than 1) goes into the bias weight, then repeat the remaining
+                var index = 0 //  Last number (if more than 1) goes into the bias weight, then repeat the ones that come before
                 for _ in 0..<numWeights-1  {
-                    if (index >= startWeights.count) { index = 1 }      //  Wrap if necessary
+                    if (index >= startWeights.count-1) { index = 0 }      //  Wrap if necessary
                     weights.append(startWeights[index])
+                    index += 1
                 }
-                weights.append(startWeights[0])     //  Add the bias term
+                weights.append(startWeights[startWeights.count-1])     //  Add the bias term
             }
         }
         else {
@@ -294,6 +296,15 @@ final class SimpleNeuralLayer: NeuralLayer {
                 node.initWeights(nil)
             }
         }
+    }
+    
+    func getWeights() -> [Double]
+    {
+        var weights: [Double] = []
+        for node in nodes {
+            weights += node.weights
+        }
+        return weights
     }
     
     func getNodeCount() -> Int
@@ -528,6 +539,15 @@ public class NeuralNetwork: Classifier, Regressor {
     public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
     {
         initializeFunction = function
+    }
+    
+    public func getParameters() throws -> [Double]
+    {
+        var parameters : [Double] = []
+        for layer in layers {
+            parameters += layer.getWeights()
+        }
+        return parameters
     }
     
     ///  Method to initialize the weights - call before any training other than 'trainClassifier' or 'trainRegressor', which call this

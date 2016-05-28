@@ -82,6 +82,11 @@ public class NonLinearRegression : Regressor
         initializeFunction = function
     }
     
+    public func getParameters() throws -> [Double]
+    {
+        return equation.parameters
+    }
+    
     ///  Method to set convergence criteria
     public func setConvergence(type: NonLinearRegressionConvergenceType, limit: Double)
     {

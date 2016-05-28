@@ -34,6 +34,11 @@ extension SVMModel : Classifier {
     {
         //!!   This needs to be filled in
     }
+    public func getParameters() throws  -> [Double]
+    {
+        //!!   This needs to be filled in
+        return []
+    }
     
     public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
         //  Ignore, as SVM doesn't use an initialization
