@@ -11,7 +11,7 @@ The Metal Neural Network uses the Metal framework for a Neural Network using the
 
 Use the XCTest files for examples on how to use the classes
 
-###NEW - Playground for Linear Regression!
+###NEW - Playgrounds for Linear Regression and SVM!
 
 Classes/Algorithms supported:
 
@@ -84,8 +84,9 @@ Classes/Algorithms supported:
         N-Fold validation
 
     Plotting
-        NSView based MLView for displaying regression data and functions - classification coming soon!
-![Plot Image](PlotImage.png)
+        NSView based MLView for displaying regression data, classification data, functions, and classifier areas!
+![Regression Plot Image](PlotImage.png)
+![Classification Plot Image](PlotImage2.png)
 
 ## License
 
