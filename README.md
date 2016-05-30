@@ -11,7 +11,7 @@ The Metal Neural Network uses the Metal framework for a Neural Network using the
 
 Use the XCTest files for examples on how to use the classes
 
-###NEW - Playgrounds for Linear Regression and SVM!
+###NEW - Playgrounds for Linear Regression, SVM, and Neural Networks!
 
 Classes/Algorithms supported:
 

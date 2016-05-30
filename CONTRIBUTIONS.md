@@ -59,7 +59,7 @@ Here is a list of things I would like to see added to the library.  Items marked
   5.  **Ease-of-Use additions**
     *  Manual?
     *  Better markup in the classes for use patterns and auto-complete
-    *  Playgrounds showing the use of some of the algorithms for education purposes (two created!  Many more needed)
+    *  Playgrounds showing the use of some of the algorithms for education purposes (three created!  Many more needed)
 
 And this is just what came to mind for now.  If you have other things you would like to see added or changed, you can email me at kevinc@macrobotics.com or open an issue
 
