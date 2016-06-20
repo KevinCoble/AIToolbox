@@ -52,6 +52,7 @@ Classes/Algorithms supported:
         on-line and batch training
         feed-forward or simple recurrent layers can be mixed in one network
         simple network training using GPU via Apple's Metal
+        LSTM network layer implemented - needs more testing
 
     Support Vector Machine
         Classification

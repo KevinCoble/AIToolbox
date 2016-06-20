@@ -100,7 +100,7 @@ final class MetalNeuralLayer {
         switch (activationFunction) {
         case .None:
             programName = "sumForward"
-        case .HyberbolicTangent:
+        case .HyperbolicTangent:
             programName = "tanhForward"
         case .Sigmoid:
             programName = "sigmoidForward"
@@ -214,7 +214,7 @@ final class MetalNeuralLayer {
         switch (activationFunction) {
         case .None:
             programName = "sumFinal"
-        case .HyberbolicTangent:
+        case .HyperbolicTangent:
             programName = "tanhFinal"
         case .Sigmoid:
             programName = "sigmoidFinal"
@@ -287,7 +287,7 @@ final class MetalNeuralLayer {
         switch (activationFunction) {
         case .None:
             programName = "sumDelta"
-        case .HyberbolicTangent:
+        case .HyperbolicTangent:
             programName = "tanhDelta"
         case .Sigmoid:
             programName = "sigmoidDelta"

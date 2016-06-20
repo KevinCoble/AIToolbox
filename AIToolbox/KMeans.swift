@@ -47,7 +47,8 @@ public class KMeans {
             //  1. Choose one center uniformly at random from among the data points.
             centroids = []
             var pointIndex = Int(arc4random_uniform(UInt32(data.size)))
-            centroids.append(data.inputs[pointIndex])
+            let inputs = try data.getInput(pointIndex)
+            centroids.append(inputs)
             data.classes![pointIndex] = 0
             
             while (centroids.count < numClasses) {
@@ -63,7 +64,8 @@ public class KMeans {
                     var distanceSquared = 0.0
                     var minDistanceSquared = Double.infinity
                     for centroid in centroids {
-                        vDSP_distancesqD(data.inputs[point], 1, centroid, 1, &distanceSquared, vDSP_Length(data.inputDimension))
+                        let inputs = try data.getInput(point)
+                        vDSP_distancesqD(inputs, 1, centroid, 1, &distanceSquared, vDSP_Length(data.inputDimension))
                         if (distanceSquared < minDistanceSquared) {
                             minDistanceSquared = distanceSquared
                         }
@@ -86,7 +88,8 @@ public class KMeans {
                     if (selectionDistance < totalDistanceToIndex) {break}
                 }
                 data.classes![pointIndex] = centroids.count
-                centroids.append(data.inputs[pointIndex])
+                let inputs = try data.getInput(pointIndex)
+                centroids.append(inputs)
                 
                 //  4. Repeat Steps 2 and 3 until k centers have been chosen.
             }
@@ -107,7 +110,8 @@ public class KMeans {
             //  Set the centroids to those point values
             centroids = []
             for classIndex in 0..<numClasses {
-                centroids.append(data.inputs[initialSet[classIndex]])
+                let inputs = try data.getInput(initialSet[classIndex])
+                centroids.append(inputs)
             }
         }
         
@@ -118,19 +122,23 @@ public class KMeans {
             //  Assign each point to the nearest mean
             changedClass = false
             for point in 0..<data.size {
-                var newClass = -1
-                var closestDistanceSquared = Double.infinity
-                for testClass in 0..<numClasses {
-                    vDSP_distancesqD(data.inputs[point], 1, centroids[testClass], 1, &distanceSquared, vDSP_Length(data.inputDimension))
-                    if (distanceSquared < closestDistanceSquared) {
-                        newClass = testClass
-                        closestDistanceSquared = distanceSquared
+                do {
+                    let inputs = try data.getInput(point)
+                    var newClass = -1
+                    var closestDistanceSquared = Double.infinity
+                    for testClass in 0..<numClasses {
+                        vDSP_distancesqD(inputs, 1, centroids[testClass], 1, &distanceSquared, vDSP_Length(data.inputDimension))
+                        if (distanceSquared < closestDistanceSquared) {
+                            newClass = testClass
+                            closestDistanceSquared = distanceSquared
+                        }
+                    }
+                    if (newClass != data.classes![point]) {
+                        data.classes![point] = newClass
+                        changedClass = true
                     }
                 }
-                if (newClass != data.classes![point]) {
-                    data.classes![point] = newClass
-                    changedClass = true
-                }
+                catch { print("error indexing input array") }
             }
         
             //  Move the centroid of each class to the mean of all the points assigned to the class
@@ -139,10 +147,15 @@ public class KMeans {
                 var startLoc = [Double](count: data.inputDimension, repeatedValue: 0.0)
                 centroids[testClass] = [Double](count: data.inputDimension, repeatedValue: 0.0)
                 for point in 0..<data.size {
-                    if (data.classes![point] == testClass) {
-                        vDSP_vaddD(data.inputs[point], 1, startLoc, 1, &startLoc, 1, vDSP_Length(data.inputDimension))
-                        count += 1
+                    do {
+                        let inputs = try data.getInput(point)
+                        let currentClass = try data.getClass(point)
+                        if (currentClass == testClass) {
+                            vDSP_vaddD(inputs, 1, startLoc, 1, &startLoc, 1, vDSP_Length(data.inputDimension))
+                            count += 1
+                        }
                     }
+                    catch { print("error indexing class array") }
                 }
                 if (count > 0) {
                     var scale = 1.0 / Double(count)

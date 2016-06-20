@@ -148,8 +148,14 @@ class Kernel {
     func dotProduct(vector1Index : Int, _ vector2Index : Int) -> Double
     {
         var sum = 0.0
-        vDSP_dotprD(problemData.inputs[vector1Index], 1, problemData.inputs[vector2Index], 1, &sum, vDSP_Length(problemData.inputDimension))
-        
+        do {
+            let vector1 = try problemData.getInput(vector1Index)
+            let vector2 = try problemData.getInput(vector2Index)
+            vDSP_dotprD(vector1, 1, vector2, 1, &sum, vDSP_Length(problemData.inputDimension))
+        }
+        catch {
+            print("invalid index in kernel dotProduct - \(vector1Index) or \(vector2Index)")
+        }
         return sum
     }
     

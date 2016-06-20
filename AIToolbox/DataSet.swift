@@ -256,11 +256,22 @@ public class DataSet {
         //  Validate the data
         if (dataType != .Regression) { throw DataTypeError.DataWrongForType }
         if (index < 0) { throw  DataIndexError.Negative }
-        if (index > inputs.count) { throw  DataIndexError.Negative }
+        if (index > inputs.count) { throw  DataIndexError.IndexAboveDimension }
         if (newOutput.count != outputDimension) { throw DataTypeError.WrongDimensionOnOutput }
         
-        //  Add the new output item
-        outputs![index] = newOutput
+        //  Make sure we have outputs up until this index (we have the inputs already)
+        if (index >= outputs!.count) {
+            while (index > outputs!.count) {    //  Insert any uncreated data between this index and existing values
+                outputs!.append([Double](count:outputDimension, repeatedValue: 0.0))
+            }
+            //  Append the new data
+            outputs!.append(newOutput)
+        }
+        
+        else {
+            //  Replace the new output item
+            outputs![index] = newOutput
+        }
     }
     
     public func setClass(index: Int, newClass : Int) throws
