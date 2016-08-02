@@ -23,14 +23,14 @@ class SVMTests: XCTestCase {
 
     func testClassification() {
         //  Create a data set
-        let data = DataSet(dataType: .Classification, inputDimension: 2, outputDimension: 1)
+        let data = DataSet(dataType: .RealAndClass, inputDimension: 2, outputDimension: 1)
         do {
-            try data.addDataPoint(input: [0.0, 1.0], output:1)
-            try data.addDataPoint(input: [0.0, 0.9], output:1)
-            try data.addDataPoint(input: [0.1, 1.0], output:1)
-            try data.addDataPoint(input: [1.0, 0.0], output:0)
-            try data.addDataPoint(input: [1.0, 0.1], output:0)
-            try data.addDataPoint(input: [0.9, 0.0], output:0)
+            try data.addDataPoint(input: [0.0, 1.0], dataClass:1)
+            try data.addDataPoint(input: [0.0, 0.9], dataClass:1)
+            try data.addDataPoint(input: [0.1, 1.0], dataClass:1)
+            try data.addDataPoint(input: [1.0, 0.0], dataClass:0)
+            try data.addDataPoint(input: [1.0, 0.1], dataClass:0)
+            try data.addDataPoint(input: [0.9, 0.0], dataClass:0)
         }
         catch {
             print("Invalid data set created")
@@ -42,7 +42,7 @@ class SVMTests: XCTestCase {
         svm.train(data)
         
         //  Create a test dataset
-        let testData = DataSet(dataType: .Classification, inputDimension: 2, outputDimension: 1)
+        let testData = DataSet(dataType: .RealAndClass, inputDimension: 2, outputDimension: 1)
         do {
             try testData.addTestDataPoint(input: [0.0, 0.1])    //  Expect 1
             try testData.addTestDataPoint(input: [0.1, 0.0])    //  Expect 0
@@ -114,17 +114,17 @@ class SVMTests: XCTestCase {
     
     func testThreeStateClassification() {
         //  Create a data set
-        let data = DataSet(dataType: .Classification, inputDimension: 2, outputDimension: 1)
+        let data = DataSet(dataType: .RealAndClass, inputDimension: 2, outputDimension: 1)
         do {
-            try data.addDataPoint(input: [0.2, 0.9], output:0)
-            try data.addDataPoint(input: [0.8, 0.3], output:0)
-            try data.addDataPoint(input: [0.5, 0.6], output:0)
-            try data.addDataPoint(input: [0.2, 0.7], output:1)
-            try data.addDataPoint(input: [0.2, 0.3], output:1)
-            try data.addDataPoint(input: [0.4, 0.5], output:1)
-            try data.addDataPoint(input: [0.5, 0.4], output:2)
-            try data.addDataPoint(input: [0.3, 0.2], output:2)
-            try data.addDataPoint(input: [0.7, 0.2], output:2)
+            try data.addDataPoint(input: [0.2, 0.9], dataClass:0)
+            try data.addDataPoint(input: [0.8, 0.3], dataClass:0)
+            try data.addDataPoint(input: [0.5, 0.6], dataClass:0)
+            try data.addDataPoint(input: [0.2, 0.7], dataClass:1)
+            try data.addDataPoint(input: [0.2, 0.3], dataClass:1)
+            try data.addDataPoint(input: [0.4, 0.5], dataClass:1)
+            try data.addDataPoint(input: [0.5, 0.4], dataClass:2)
+            try data.addDataPoint(input: [0.3, 0.2], dataClass:2)
+            try data.addDataPoint(input: [0.7, 0.2], dataClass:2)
         }
         catch {
             print("Invalid data set created")
@@ -136,7 +136,7 @@ class SVMTests: XCTestCase {
         svm.train(data)
         
         //  Create a test dataset
-        let testData = DataSet(dataType: .Classification, inputDimension: 2, outputDimension: 1)
+        let testData = DataSet(dataType: .RealAndClass, inputDimension: 2, outputDimension: 3)
         do {
             try testData.addTestDataPoint(input: [0.7, 0.6])    //  Expect 0
             try testData.addTestDataPoint(input: [0.5, 0.7])    //  Expect 0

@@ -27,7 +27,7 @@ I want to stick to the following rules for additions:
 Here is a list of things I would like to see added to the library.  Items marked with an 'ktc' are ones I have started playing with, or hope to get to soon.  This does not mean you cannot contribute that item yourself - I unfortunately have limited time to work on this, and my attention often wanders (squirrel!)
 
   1.  **Algorithms**
-    * Convolutional Network Layers (ktc - I have started this, but haven't gotten that far)
+    * Add DeepNetwork algorithms from Convolution source
     * LSTM Recurrent Network Layers (ktc - I have put in simple RNN layers).  I would like both this and the CNN layers to be part of the general NN class, so that a general NN of all types (intermixed) can be configured
     * GRU Recurrent Network layers
     * More non-linear regression solutions (I had started on a Levenberg-Marquardt solver, but went on to Validation instead)
@@ -49,7 +49,7 @@ Here is a list of things I would like to see added to the library.  Items marked
 
   3.  **Data I/O**
     *  Persistance for all models (write and read parameters to/from persistant storage).  SVM has a version of this now
-    *  Subclass of DataSet that uses sparse storage
+    *  Subclass of DataSet that uses sparse storage (have added protocols to allow this)
     *  Possible add-ins to read data from publicly known data set types
 
   4.  **Data Viewing**

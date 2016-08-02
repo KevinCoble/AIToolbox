@@ -16,7 +16,7 @@ public class LogisticRegression : Regressor, Classifier
     var numClasses = 2      //  Set after initial training
     let solveType : NonLinearRegressionType
     public var parameters : [Double]
-    var initializeFunction : ((trainData: DataSet)->[Double])!
+    var initializeFunction : ((trainData: MLDataSet)->[Double])!
     var classData : ClassificationData!
 
     ///  Initializer - specify the dimension of the input data
@@ -48,7 +48,7 @@ public class LogisticRegression : Regressor, Classifier
         self.parameters = parameters
     }
     ///  Method to set a custom function to initialize the parameters.  If not set, random parameters are used
-    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
+    public func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!)
     {
         initializeFunction = function
     }
@@ -59,7 +59,7 @@ public class LogisticRegression : Regressor, Classifier
     }
     
     ///  Method to initialize the weights - call before any training other than 'trainClassifier' or 'trainRegressor', which call this
-    public func initializeWeights(trainData: DataSet!)
+    public func initializeWeights(trainData: MLDataSet!)
     {
         let numPairs = numClasses * (numClasses - 1) / 2
         if let initFunc = initializeFunction, data = trainData {
@@ -98,11 +98,11 @@ public class LogisticRegression : Regressor, Classifier
         }
     }
     
-    public func trainClassifier(trainData: DataSet) throws
+    public func trainClassifier(trainData: MLClassificationDataSet) throws
     {
         //  Get the class labels
-        try trainData.groupClasses()
-        classData = trainData.optionalData as? ClassificationData
+        classData = try trainData.groupClasses()
+        trainData.optionalData = classData
         numClasses = classData.numClasses
         
         //  Initialize the weights
@@ -112,16 +112,16 @@ public class LogisticRegression : Regressor, Classifier
         try trainingClassifier(trainData)
     }
     
-    public func continueTrainingClassifier(trainData: DataSet) throws      //  Trains without initializing parameters first
+    public func continueTrainingClassifier(trainData: MLClassificationDataSet) throws      //  Trains without initializing parameters first
     {
         //  Verify the class labels match the initial set
-        try trainData.groupClasses()
-        let continueClassData = trainData.optionalData as? ClassificationData
-        if (continueClassData!.classCount != classData.classCount) {        //  Must have same number of classes so all pairs can be trained
+        let continueClassData = try trainData.groupClasses()
+        trainData.optionalData = continueClassData
+        if (continueClassData.classCount != classData.classCount) {        //  Must have same number of classes so all pairs can be trained
             throw MachineLearningError.ContinueTrainingClassesNotSame
         }
         for label in classData.foundLabels {
-            if (!continueClassData!.foundLabels.contains(label)) {
+            if (!continueClassData.foundLabels.contains(label)) {
                 throw MachineLearningError.ContinueTrainingClassesNotSame
             }
         }
@@ -130,7 +130,7 @@ public class LogisticRegression : Regressor, Classifier
         try trainingClassifier(trainData)
     }
     
-    func trainingClassifier(trainData: DataSet) throws      //  Continues training on a data set.  Assumes class labels have been set
+    func trainingClassifier(trainData: MLClassificationDataSet) throws      //  Continues training on a data set.  Assumes class labels have been set
     {
         //  Create a non-linear solution
         let logit = LogitFunction(numInputs: numInputs)
@@ -174,13 +174,13 @@ public class LogisticRegression : Regressor, Classifier
     }
     
     //  Training is done with classification data
-    public func trainRegressor(trainData: DataSet) throws
+    public func trainRegressor(trainData: MLRegressionDataSet) throws
     {
-        try trainClassifier(trainData)
+        throw MachineLearningError.DataNotClassification
     }
-    public func continueTrainingRegressor(trainData: DataSet) throws      //  Trains without initializing parameters first
+    public func continueTrainingRegressor(trainData: MLRegressionDataSet) throws      //  Trains without initializing parameters first
     {
-        try continueTrainingClassifier(trainData)
+        throw MachineLearningError.DataNotClassification
     }
     
     ///  Return the class with the highest probability
@@ -231,16 +231,16 @@ public class LogisticRegression : Regressor, Classifier
     }
     
     ///  Set the class label to the class with the highest probability for each data point
-    public func classify(testData: DataSet) throws
+    public func classify(testData: MLClassificationDataSet) throws
     {
         //  Verify the data set is the right type
         if (testData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
         if (testData.inputDimension != numInputs) { throw DataTypeError.WrongDimensionOnInput }
         
         //  Classify each input
-        testData.classes = []
         for index in 0..<testData.size {
-            try testData.classes!.append(classifyOne(testData.inputs[index]))
+            let inputs = try testData.getInput(index)
+            try testData.setClass(index, newClass: classifyOne(inputs))
         }
     }
     
@@ -262,16 +262,16 @@ public class LogisticRegression : Regressor, Classifier
     }
     
     ///  Set the probablility for each class for each data point
-    public func predict(testData: DataSet) throws
+    public func predict(testData: MLRegressionDataSet) throws
     {
         //  Verify the data set is the right type
         if (testData.inputDimension != numInputs) { throw DataTypeError.WrongDimensionOnInput }
         if (testData.outputDimension != getOutputDimension()) { throw DataTypeError.WrongDimensionOnOutput }
         
         //  predict on each input
-        testData.outputs = []
         for index in 0..<testData.size {
-            try testData.outputs!.append(predictOne(testData.inputs[index]))
+            let inputs = try testData.getInput(index)
+            try testData.setOutput(index, newOutput: predictOne(inputs))
         }
     }
 }

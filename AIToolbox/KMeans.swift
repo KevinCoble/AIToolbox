@@ -27,20 +27,19 @@ public class KMeans {
     }
     
     //  Method to classify a dataset
-    public func train(data: DataSet) throws
+    public func train(data: MLClassificationDataSet) throws
     {
         //  If there are not enough points for the classes, throw
         if (data.size < numClasses) { throw KMeansError.TwoFewPointsForClasses }
         
         //  If the number of points exactly matches the number of classes, just assign in order
         if (data.size == numClasses) {
-            data.classes = [];
-            for classIndex in 0..<numClasses { data.classes!.append(classIndex) }
+            for classIndex in 0..<numClasses { try data.setClass(classIndex, newClass: classIndex) }
             return
         }
         
         //  Set all the classes to -1 to force initial assignment
-        data.classes = [Int](count: data.size, repeatedValue: -1)
+        for index in 0..<data.size { try data.setClass(index, newClass: -1) }
         
         //  If a kmeans++, set the centroids to the a point that has a randomly chosen using weighted largest distance from all other centroids
         if (initWithKPlusPlus) {
@@ -49,7 +48,7 @@ public class KMeans {
             var pointIndex = Int(arc4random_uniform(UInt32(data.size)))
             let inputs = try data.getInput(pointIndex)
             centroids.append(inputs)
-            data.classes![pointIndex] = 0
+            try data.setClass(pointIndex, newClass: 0)
             
             while (centroids.count < numClasses) {
                 //  2. For each data point x, compute D(x), the distance between x and the nearest center that has already been chosen.
@@ -57,7 +56,8 @@ public class KMeans {
                 var totalDistance = 0.0
                 for point in 0..<data.size {
                     //  Skip points already assigned
-                    if (data.classes![point] >= 0) {
+                    let currentClass = try data.getClass(point)
+                    if (currentClass >= 0) {
                         continue;
                     }
                     //  Get this points distance to the nearest centroid already determined
@@ -87,7 +87,7 @@ public class KMeans {
                     totalDistanceToIndex += distance.distanceSquared
                     if (selectionDistance < totalDistanceToIndex) {break}
                 }
-                data.classes![pointIndex] = centroids.count
+                try data.setClass(pointIndex, newClass: centroids.count)
                 let inputs = try data.getInput(pointIndex)
                 centroids.append(inputs)
                 
@@ -133,8 +133,9 @@ public class KMeans {
                             closestDistanceSquared = distanceSquared
                         }
                     }
-                    if (newClass != data.classes![point]) {
-                        data.classes![point] = newClass
+                    let currentClass = try data.getClass(point)
+                    if (newClass != currentClass) {
+                        try data.setClass(point, newClass: newClass)
                         changedClass = true
                     }
                 }

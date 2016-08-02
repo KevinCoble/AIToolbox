@@ -88,7 +88,7 @@ public protocol MLViewItem {
 ///  Class for drawing a regression style data set onto a plot
 public class MLViewRegressionDataSet: MLViewItem {
     //  DataSet to be drawn
-    let dataset : DataSet
+    let dataset : MLRegressionDataSet
 
     //  Axis data source
     var sourceTypeXAxis = MLViewAxisSource.DataInput
@@ -109,7 +109,7 @@ public class MLViewRegressionDataSet: MLViewItem {
     var minY = 0.0
     var maxY = 100.0
     
-    public init(dataset: DataSet) throws {
+    public init(dataset: MLRegressionDataSet) throws {
         if (dataset.dataType != .Regression) {throw MLViewError.DataSetNotRegression}
         self.dataset = dataset
     }
@@ -261,7 +261,7 @@ public class MLViewRegressionDataSet: MLViewItem {
 ///  Class for drawing a classification style data set onto a plot
 public class MLViewClassificationDataSet: MLViewItem {
     //  DataSet to be drawn
-    let dataset : DataSet
+    var dataset : MLClassificationDataSet
     
     //  Axis data source
     var sourceTypeXAxis = MLViewAxisSource.DataInput
@@ -282,13 +282,13 @@ public class MLViewClassificationDataSet: MLViewItem {
     var minY = 0.0
     var maxY = 100.0
     
-    public init(dataset: DataSet) throws {
+    public init(dataset: MLClassificationDataSet) throws {
         if (dataset.dataType != .Classification) {throw MLViewError.DataSetNotClassification}
         self.dataset = dataset
         
         //  Get the classes
-        try dataset.groupClasses()
-        let optionalData = dataset.optionalData as! ClassificationData
+        let optionalData = try dataset.groupClasses()
+        self.dataset.optionalData = optionalData
         
         //  Set a symbol for each of them
         symbols = []
@@ -328,8 +328,8 @@ public class MLViewClassificationDataSet: MLViewItem {
     public convenience init(dataset: DataSet, symbols: [MLPlotSymbol]) throws {
         try self.init(dataset: dataset)
         
-        try dataset.groupClasses()
-        let optionalData = dataset.optionalData as! ClassificationData
+        let optionalData = try dataset.groupClasses()
+        dataset.optionalData = optionalData
         if (symbols.count < optionalData.numClasses) {throw MLViewError.AllClassificationLabelsNotCovered}
         
         self.symbols = symbols
@@ -358,7 +358,8 @@ public class MLViewClassificationDataSet: MLViewItem {
     public func draw(bounds: CGRect) {
         //  Get the classes
         do {
-            try dataset.groupClasses()
+            let optionalData = try dataset.groupClasses()
+            dataset.optionalData = optionalData
         }
         catch {
             //  Error getting class information for data set, return
@@ -379,7 +380,8 @@ public class MLViewClassificationDataSet: MLViewItem {
                     x_source = try dataset.getInput(point)
                 }
                 else {
-                    x_source = try dataset.getOutput(point)
+                    let pointClass = try dataset.getClass(point)
+                    x_source = [Double(pointClass)]
                 }
                 //  Get the source of the Y axis value
                 var y_source : [Double]
@@ -387,7 +389,8 @@ public class MLViewClassificationDataSet: MLViewItem {
                     y_source = try dataset.getInput(point)
                 }
                 else {
-                    y_source = try dataset.getOutput(point)
+                    let pointClass = try dataset.getClass(point)
+                    y_source = [Double(pointClass)]
                 }
                 //  Calculate the plot position
                 let x = (CGFloat(x_source[sourceIndexXAxis] - minX) * scaleFactorX) * bounds.width + bounds.origin.x
@@ -423,7 +426,14 @@ public class MLViewClassificationDataSet: MLViewItem {
                 x_range = dataset.getInputRange()
             }
             else {
-                x_range = dataset.getOutputRange()
+                do {
+                    let classificationData = try dataset.groupClasses()
+                    x_range = [(minimum: 0.0, maximum: Double(classificationData.numClasses-1))]
+                }
+                catch {
+                    //  Error getting classification data
+                    x_range = [(minimum: 0.0, maximum: 1.0)]
+                }
             }
             
             //  Get the x axis range
@@ -443,7 +453,14 @@ public class MLViewClassificationDataSet: MLViewItem {
                 y_range = dataset.getInputRange()
             }
             else {
-                y_range = dataset.getOutputRange()
+                do {
+                    let classificationData = try dataset.groupClasses()
+                    y_range = [(minimum: 0.0, maximum: Double(classificationData.numClasses-1))]
+                }
+                catch {
+                    //  Error getting classification data
+                    y_range = [(minimum: 0.0, maximum: 1.0)]
+                }
             }
             
             //  Get the y axis range
@@ -470,10 +487,9 @@ public class MLViewClassificationDataSet: MLViewItem {
         case .DataInput:
             if (index > dataset.inputDimension) { throw MLViewError.InputIndexOutsideOfRange }
         case .DataOutput:
-            if (dataset.dataType != .Regression) { throw MLViewError.DataSetNotRegression }
-            if (index > dataset.outputDimension) { throw MLViewError.OutputIndexOutsideOfRange }
+            throw MLViewError.DataSetNotRegression
         case .ClassLabel:     //  Ignores index
-            throw MLViewError.DataSetNotClassification
+            if (index > 0) { throw MLViewError.OutputIndexOutsideOfRange }
         }
         sourceTypeXAxis = source
         sourceIndexXAxis = index
@@ -483,10 +499,9 @@ public class MLViewClassificationDataSet: MLViewItem {
         case .DataInput:
             if (index > dataset.inputDimension) { throw MLViewError.InputIndexOutsideOfRange }
         case .DataOutput:
-            if (dataset.dataType != .Regression) { throw MLViewError.DataSetNotRegression }
-            if (index > dataset.outputDimension) { throw MLViewError.OutputIndexOutsideOfRange }
+            throw MLViewError.DataSetNotRegression
         case .ClassLabel:     //  Ignores index
-            throw MLViewError.DataSetNotClassification
+            if (index > 0) { throw MLViewError.OutputIndexOutsideOfRange }
         }
         sourceTypeYAxis = source
         sourceIndexYAxis = index

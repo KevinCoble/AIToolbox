@@ -433,7 +433,7 @@ public class NeuralNetwork: Classifier, Regressor {
     var layers : [NeuralLayer]
     var trainingRate = 0.3
     var weightDecay = 1.0
-    var initializeFunction : ((trainData: DataSet)->[Double])!
+    var initializeFunction : ((trainData: MLDataSet)->[Double])!
     var hasRecurrentLayers = false
     
     ///  Create the neural network based on an array of tuples, one for each non-input layer (number of nodes, activation function)
@@ -527,7 +527,7 @@ public class NeuralNetwork: Classifier, Regressor {
 
     
     ///  Method to set a custom function to initialize the parameters.  If not set, random parameters are used
-    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
+    public func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!)
     {
         initializeFunction = function
     }
@@ -542,7 +542,7 @@ public class NeuralNetwork: Classifier, Regressor {
     }
     
     ///  Method to initialize the weights - call before any training other than 'trainClassifier' or 'trainRegressor', which call this
-    public func initializeWeights(trainData: DataSet!)
+    public func initializeWeights(trainData: MLDataSet!)
     {
         if let initFunc = initializeFunction, data = trainData {
             let startWeights = initFunc(trainData: data)
@@ -571,7 +571,7 @@ public class NeuralNetwork: Classifier, Regressor {
         }
     }
     
-    public func trainClassifier(trainData: DataSet) throws
+    public func trainClassifier(trainData: MLClassificationDataSet) throws
     {
         initializeWeights(trainData)
         
@@ -586,7 +586,7 @@ public class NeuralNetwork: Classifier, Regressor {
         try classificationSGDBatchTrain(trainData, epochSize: epochSize, epochCount : epochCount, trainingRate: trainingRate, weightDecay: weightDecay)
     }
     
-    public func continueTrainingClassifier(trainData: DataSet) throws
+    public func continueTrainingClassifier(trainData: MLClassificationDataSet) throws
     {
 
         let epochCount = trainData.size * 2
@@ -627,13 +627,12 @@ public class NeuralNetwork: Classifier, Regressor {
     }
     
     ///  Set the 0 based index of the best neuron output (giving the most probable class for the input), for each point in a data set
-    public func classify(testData: DataSet) throws {
+    public func classify(testData: MLClassificationDataSet) throws {
         //  Verify the data set is the right type
         if (testData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
         if (testData.inputDimension != numInputs) { throw DataTypeError.WrongDimensionOnInput }
         
         //  Classify each input
-        testData.classes = []
         for point in 0..<testData.size {
             do {
                 let inputs = try testData.getInput(point)
@@ -643,7 +642,7 @@ public class NeuralNetwork: Classifier, Regressor {
         }
     }
     
-    public func trainRegressor(trainData: DataSet) throws
+    public func trainRegressor(trainData: MLRegressionDataSet) throws
     {
         initializeWeights(trainData)
         
@@ -652,7 +651,7 @@ public class NeuralNetwork: Classifier, Regressor {
         SGDBatchTrain(trainData, epochSize: epochSize, epochCount : epochCount, trainingRate: trainingRate, weightDecay: weightDecay)
     }
     
-    public func continueTrainingRegressor(trainData: DataSet) throws
+    public func continueTrainingRegressor(trainData: MLRegressionDataSet) throws
     {
         let epochCount = trainData.size * 2
         let epochSize = trainData.size / 10
@@ -664,7 +663,7 @@ public class NeuralNetwork: Classifier, Regressor {
         return feedForward(inputs)
     }
     
-    public func predict(testData: DataSet) throws
+    public func predict(testData: MLRegressionDataSet) throws
     {
         //  Verify the data set is the right type
         if (testData.dataType != .Regression) { throw DataTypeError.InvalidDataType }
@@ -683,7 +682,7 @@ public class NeuralNetwork: Classifier, Regressor {
     
     
     ///  Train on a sequence of data.  Be sure to initialize the weights before using the first time
-    public func predictSequence(sequence: DataSet) throws
+    public func predictSequence(sequence: MLRegressionDataSet) throws
     {
         //  Start the sequence
         for layer in layers {
@@ -732,7 +731,7 @@ public class NeuralNetwork: Classifier, Regressor {
     }
     
     ///  Train on a sequence of data.  Be sure to initialize the weights before using the first time
-    public func trainSequence(sequence: DataSet, trainingRate: Double, weightDecay: Double)
+    public func trainSequence(sequence: MLRegressionDataSet, trainingRate: Double, weightDecay: Double)
     {
         //  Start the sequence
         //  Clear the weight change accumulations
@@ -807,7 +806,7 @@ public class NeuralNetwork: Classifier, Regressor {
     }
     
     ///  Train on a batch data item.  Be sure to initialize the weights before using the first time
-    public func batchTrain(trainData: DataSet, epochIndices : [Int], trainingRate: Double, weightDecay: Double)
+    public func batchTrain(trainData: MLRegressionDataSet, epochIndices : [Int], trainingRate: Double, weightDecay: Double)
     {
         //  Clear the weight change accumulations
         for layer in layers {
@@ -862,7 +861,7 @@ public class NeuralNetwork: Classifier, Regressor {
     }
 
     ///  Train a network on a set of data.  Be sure to initialize the weights before using the first time
-    public func SGDBatchTrain(trainData: DataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double)
+    public func SGDBatchTrain(trainData: MLRegressionDataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double)
     {
         //  Create the batch indices array
         var batchIndices = [Int](count: epochSize, repeatedValue: 0)
@@ -897,7 +896,7 @@ public class NeuralNetwork: Classifier, Regressor {
     }
     
     ///  Train a classification network on a set of data.  Be sure to initialize the weights before using the first time
-    public func classificationSGDBatchTrain(trainData: DataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double) throws
+    public func classificationSGDBatchTrain(trainData: MLClassificationDataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double) throws
     {
         //  Verify the data set is the right type
         if (trainData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
@@ -909,26 +908,58 @@ public class NeuralNetwork: Classifier, Regressor {
         //  Get the number of nodes in the last layer
         let numOutputNodes = layers.last!.getNodeCount()
         
-        //  Create the expected output array for expected class
-        do {
-            var sampleIndex = 0
-            for classValue in trainData.classes! {
-                var outputs  : [Double] = []
-                if (numOutputNodes > 1) {
-                    for classIndex in 0..<numOutputNodes {
-                        outputs.append(classIndex == classValue ? 1.0 : falseLevel)
+        if let combinedData = trainData as? MLCombinedDataSet {
+            //  Create the expected output array for expected class
+            do {
+                var sampleIndex = 0
+                for index in 0..<trainData.size {
+                    let classValue = try trainData.getClass(index)
+                    var outputs  : [Double] = []
+                    if (numOutputNodes > 1) {
+                        for classIndex in 0..<numOutputNodes {
+                            outputs.append(classIndex == classValue ? 1.0 : falseLevel)
+                        }
+                    }
+                    else {
+                        outputs.append(classValue == 1 ? 1.0 : falseLevel)
+                    }
+                    try combinedData.setOutput(sampleIndex, newOutput: outputs)
+                    sampleIndex += 1
+                }
+            }
+            
+            //  Train using the normal routine
+            SGDBatchTrain(combinedData, epochSize : epochSize, epochCount : epochCount, trainingRate : trainingRate, weightDecay: weightDecay)
+        }
+        else {
+            //  We have a classification data set.  We need to convert it to a regression data set
+            if let regressionData = DataSet(dataType: .Regression, withInputsFrom: trainData) {
+                //  Create the expected output array for expected class
+                do {
+                    var sampleIndex = 0
+                    for index in 0..<trainData.size {
+                        let classValue = try trainData.getClass(index)
+                        var outputs  : [Double] = []
+                        if (numOutputNodes > 1) {
+                            for classIndex in 0..<numOutputNodes {
+                                outputs.append(classIndex == classValue ? 1.0 : falseLevel)
+                            }
+                        }
+                        else {
+                            outputs.append(classValue == 1 ? 1.0 : falseLevel)
+                        }
+                        try regressionData.setOutput(sampleIndex, newOutput: outputs)
+                        sampleIndex += 1
                     }
                 }
-                else {
-                    outputs.append(classValue == 1 ? 1.0 : falseLevel)
-                }
-                try trainData.setOutput(sampleIndex, newOutput: outputs)
-                sampleIndex += 1
+                
+                //  Train using the normal routine
+                SGDBatchTrain(regressionData, epochSize : epochSize, epochCount : epochCount, trainingRate : trainingRate, weightDecay: weightDecay)
+            }
+            else {
+                throw MachineLearningError.DataWrongDimension       //  Only error that can come out of DataSet creation
             }
         }
-        
-        //  Train using the normal routine
-        SGDBatchTrain(trainData, epochSize : epochSize, epochCount : epochCount, trainingRate : trainingRate, weightDecay: weightDecay)
     }
     
     ///  Decay weights for regularization.  All weights are multiplied by the constant supplied as the parameter

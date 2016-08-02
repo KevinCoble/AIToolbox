@@ -68,7 +68,7 @@ class PCATests: XCTestCase {
         //  Transorm the data set
         do {
             let transformedData = try pca.transformDataSet(data)
-            let range = transformedData.getInputRange()
+            let range = (transformedData as MLRegressionDataSet).getInputRange()
             XCTAssert(range.count == 1, "PCA transformed data")
         }
         catch {

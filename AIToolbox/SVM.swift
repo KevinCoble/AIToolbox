@@ -133,21 +133,27 @@ public class SVMModel
         probabilityB = probBArray! as! [Double]
     }
     
-    public func isνFeasableForData(data: DataSet) -> Bool
+    public func isνFeasableForData(data: MLClassificationDataSet) -> Bool
     {
         if (type != .ν_SVM_Classification) { return true }
         
         var label : [Int] = []
         var count : [Int] = []
         for i in 0..<data.size {
-            if let index = label.indexOf(data.classes![i]) {
-                //  label already found
-                count[index] += 1
+            do {
+                let pointLabel = try data.getClass(i)
+                if let index = label.indexOf(pointLabel) {
+                    //  label already found
+                    count[index] += 1
+                }
+                else {
+                    //  new label - add to list
+                    label.append(pointLabel)
+                    count.append(1)
+                }
             }
-            else {
-                //  new label - add to list
-                label.append(data.classes![i])
-                count.append(1)
+            catch {
+                //  Error getting class
             }
         }
         
@@ -163,7 +169,7 @@ public class SVMModel
     }
     
     ///  Method to 'train' the SVM
-    public func train(data: DataSet)
+    public func train(data: MLCombinedDataSet)
     {
         //  Training depends on the problem type
         switch (type) {
@@ -191,9 +197,15 @@ public class SVMModel
             coefficients = [[]]
             for index in 0..<data.size {    //  Get the support vector points and save them
                 if (fabs(f.α[index]) > 0.0) {
-                    totalSupportVectors += 1
-                    supportVector.append(data.inputs[index])
-                    coefficients[0].append(f.α[index])
+                    do {
+                        let inputs = try data.getInput(index)
+                        totalSupportVectors += 1
+                        supportVector.append(inputs)
+                        coefficients[0].append(f.α[index])
+                    }
+                    catch {
+                        //  Error getting inputs
+                    }
                 }
             }
             
@@ -204,8 +216,8 @@ public class SVMModel
             //  Group training data of the same class
             do {
                 //  Group the data into classes
-                try data.groupClasses()
-                let classificationData = data.optionalData as! ClassificationData
+                let classificationData = try data.groupClasses()
+                data.optionalData = classificationData
                 if (classificationData.numClasses <= 1) {
                     print("Invalid number of classes in data")
                     return
@@ -292,7 +304,13 @@ public class SVMModel
                 supportVector = []
                 for index in 0..<data.size {    //  Get the support vector points and save them
                     if (nonZero[index]) {
-                        supportVector.append(data.inputs[index])
+                        do {
+                            let inputs = try data.getInput(index)
+                            supportVector.append(inputs)
+                        }
+                        catch {
+                            //  Error getting inputs
+                        }
                     }
                 }
                 
@@ -335,7 +353,7 @@ public class SVMModel
         }
     }
     
-    private func trainOne(data: DataSet, costPositive : Double, costNegative : Double, display : Bool = false) -> DecisionFunction
+    private func trainOne(data: MLCombinedDataSet, costPositive : Double, costNegative : Double, display : Bool = false) -> DecisionFunction
     {
         var solver : Solver?
         
@@ -412,7 +430,7 @@ public class SVMModel
         return f
     }
     
-    public func crossValidation(data: DataSet, numberOfFolds: Int) -> [Double]
+    public func crossValidation(data: MLCombinedDataSet, numberOfFolds: Int) -> [Double]
     {
         var target = [Double](count: data.size, repeatedValue: 0.0)
         
@@ -431,8 +449,8 @@ public class SVMModel
             //  Group the classes
             do {
                 //  Group the data into classes
-                try data.groupClasses()
-                let classificationData = data.optionalData as! ClassificationData
+                let classificationData = try data.groupClasses()
+                data.optionalData = classificationData
                 
                 //  Get a random shuffle of the data in each class
                 var shuffledIndices = classificationData.classOffsets
@@ -494,15 +512,22 @@ public class SVMModel
             if let subProblem = DataSet(fromDataSet: data, withEntries: subIndices) {
                 let subModel = SVMModel(copyFrom:self)
                 subModel.train(subProblem)
-                if (probability && (type == .C_SVM_Classification || type == .ν_SVM_Classification)) {
-                    for j in foldStart[i]..<foldStart[i+1] {
-                        target[perm[j]] = subModel.predictProbability(data.inputs[perm[j]])
+                do {
+                    if (probability && (type == .C_SVM_Classification || type == .ν_SVM_Classification)) {
+                        for j in foldStart[i]..<foldStart[i+1] {
+                            let inputs = try data.getInput(perm[j])
+                            target[perm[j]] = subModel.predictProbability(inputs)
+                        }
+                    }
+                    else {
+                        for j in foldStart[i]..<foldStart[i+1] {
+                            let inputs = try data.getInput(perm[j])
+                            target[perm[j]] = subModel.predictOne(inputs)
+                        }
                     }
                 }
-                else {
-                    for j in foldStart[i]..<foldStart[i+1] {
-                        target[perm[j]] = subModel.predictOne(data.inputs[perm[j]])
-                    }
+                catch {
+                    //  Error getting inputs
                 }
             }
         }
@@ -510,7 +535,7 @@ public class SVMModel
         return target
     }
     
-    func binarySVCProbability(data: DataSet, positiveLabel: Int, costPositive: Double, costNegative: Double) -> (A: Double, B: Double)
+    func binarySVCProbability(data: MLCombinedDataSet, positiveLabel: Int, costPositive: Double, costNegative: Double) -> (A: Double, B: Double)
     {
         //  Get a shuffled index set
         var perm = data.getRandomIndexSet()
@@ -533,13 +558,19 @@ public class SVMModel
                 var positiveLabel = 0
                 var negativeLabel = 0
                 for index in 0..<subProblem.size {
-                    if (subProblem.classes![index] == positiveLabel) {
-                        countPositive += 1
-                        positiveLabel = subProblem.classes![index]
+                    do {
+                        let itemClass = try subProblem.getClass(index)
+                        if (itemClass == positiveLabel) {
+                            countPositive += 1
+                            positiveLabel = itemClass
+                        }
+                        else {
+                            countNegative += 1
+                            negativeLabel = itemClass
+                        }
                     }
-                    else {
-                        countNegative += 1
-                        negativeLabel = subProblem.classes![index]
+                    catch {
+                        //  Error getting class
                     }
                 }
                 
@@ -562,13 +593,26 @@ public class SVMModel
                     
                     //  Set the decision values based on the predictions from the sub-model
                     for index in begin..<end {
-                        decisionValues[perm[index]] = Double(subModel.predictOneFromBinaryClass(data.inputs[index]))
+                        do {
+                            let inputs = try data.getInput(index)
+                            decisionValues[perm[index]] = Double(subModel.predictOneFromBinaryClass(inputs))
+                        }
+                        catch {
+                            //  Error getting inputs
+                        }
                     }
                 }
             }
         }
         
-        return sigmoidTrain(decisionValues, labels: data.classes!)
+        var labels : [Int] = []
+        do {
+            for index in 0..<data.size { labels.append(try data.getClass(index)) }
+        }
+        catch {
+            //  Error getting labels
+        }
+        return sigmoidTrain(decisionValues, labels: labels)
     }
 
     func sigmoidTrain(decisionValues: [Double], labels: [Int]) -> (A: Double, B: Double)
@@ -688,7 +732,7 @@ public class SVMModel
         return (A: A, B: B)
     }
     
-    func svrProbability(data: DataSet) -> Double
+    func svrProbability(data: MLCombinedDataSet) -> Double
     {
         //  Run cross-validation without calculating probabilities
         let oldProbabilityFlag = probability
@@ -699,9 +743,15 @@ public class SVMModel
         //  Calculate the final probability estimate
         var mae = 0.0
         for i in 0..<data.size {
-            ymv[i] = data.outputs![i][0] - ymv[i]
+            do {
+                let outputs = try data.getOutput(i)
+                ymv[i] = outputs[0] - ymv[i]
+            }
+            catch {
+                ymv[i] = 0.0        //  Error getting output from data set
+            }
             mae += fabs(ymv[i])
-        }		
+        }
         mae /= Double(data.size)
         let std = sqrt(2 * mae * mae)
         var count=0
@@ -719,12 +769,8 @@ public class SVMModel
         return mae
     }
     
-    public func predictValues(data: DataSet)
+    public func predictValues(data: MLCombinedDataSet)
     {
-        //  Initialize the output variables
-        data.outputs = []
-        if (type == .C_SVM_Classification || type == .ν_SVM_Classification) {data.classes = []}
-        
         //  Get the support vector start index for each class
         var coeffStart = [0]
         for index in 0..<numClasses-1 {
@@ -733,66 +779,78 @@ public class SVMModel
         
         //  Determine each value based on the input
         for index in 0..<data.size {
-            switch (type) {
-                //  Predict for one-class classification or regression
-            case .OneClassSVM, .ϵSVMRegression, .νSVMRegression:
-                var sum = 0.0
-                for i in 0..<totalSupportVectors {
-                    let kernelValue = Kernel.calcKernelValue(kernelParams, x: data.inputs[index], y: supportVector[i])
-                    sum += coefficients[0][i] * kernelValue
-                }
-                sum -= ρ[0]
-                data.outputs!.append([sum])
-                if (type == .OneClassSVM) {
-                    data.classes!.append((sum>0) ? 1: -1)
-                }
-                break
-                
-                //  Predict for classification
-            case .C_SVM_Classification, .ν_SVM_Classification:
-                //  Get the kernel value for each support vector at the input value
-                var kernelValue: [Double] = []
-                for sv in 0..<totalSupportVectors {
-                    kernelValue.append(Kernel.calcKernelValue(kernelParams, x: data.inputs[index], y: supportVector[sv]))
-                }
-                
-                //  Allocate vote space for the classification
-                var vote = [Int](count: numClasses, repeatedValue: 0)
-                
-                //  Initialize the decision value storage in the data set
-                var decisionValues: [Double] = []
-                
-                //  Get the seperation info between each class pair
-                var permutation = 0
-                for i in 0..<numClasses {
-                    for j in i+1..<numClasses {
-                        var sum = 0.0
-                        for k in 0..<supportVectorCount[i] {
-                            sum += coefficients[j-1][coeffStart[i]+k] * kernelValue[coeffStart[i]+k]
-                        }
-                        for k in 0..<supportVectorCount[j] {
-                            sum += coefficients[i][coeffStart[j]+k] * kernelValue[coeffStart[j]+k]
-                        }
-                        sum -= ρ[permutation]
-                        decisionValues.append(sum)
-                        permutation += 1
-                        if (sum > 0) {
-                            vote[i] += 1
-                        }
-                        else {
-                            vote[j] += 1
+            do {
+                let inputs = try data.getInput(index)
+                switch (type) {
+                    //  Predict for one-class classification or regression
+                case .OneClassSVM, .ϵSVMRegression, .νSVMRegression:
+                    var sum = 0.0
+                    for i in 0..<totalSupportVectors {
+                        let kernelValue = Kernel.calcKernelValue(kernelParams, x: inputs, y: supportVector[i])
+                        sum += coefficients[0][i] * kernelValue
+                    }
+                    sum -= ρ[0]
+                    do {
+                        try data.setOutput(index, newOutput: [sum])
+                    }
+                    catch { break }
+                    if (type == .OneClassSVM) {
+                        try data.setClass(index, newClass: ((sum>0) ? 1: -1))
+                    }
+                    break
+                    
+                    //  Predict for classification
+                case .C_SVM_Classification, .ν_SVM_Classification:
+                    //  Get the kernel value for each support vector at the input value
+                    var kernelValue: [Double] = []
+                    for sv in 0..<totalSupportVectors {
+                        kernelValue.append(Kernel.calcKernelValue(kernelParams, x: inputs, y: supportVector[sv]))
+                    }
+                    
+                    //  Allocate vote space for the classification
+                    var vote = [Int](count: numClasses, repeatedValue: 0)
+                    
+                    //  Initialize the decision value storage in the data set
+                    var decisionValues: [Double] = []
+                    
+                    //  Get the seperation info between each class pair
+                    var permutation = 0
+                    for i in 0..<numClasses {
+                        for j in i+1..<numClasses {
+                            var sum = 0.0
+                            for k in 0..<supportVectorCount[i] {
+                                sum += coefficients[j-1][coeffStart[i]+k] * kernelValue[coeffStart[i]+k]
+                            }
+                            for k in 0..<supportVectorCount[j] {
+                                sum += coefficients[i][coeffStart[j]+k] * kernelValue[coeffStart[j]+k]
+                            }
+                            sum -= ρ[permutation]
+                            decisionValues.append(sum)
+                            permutation += 1
+                            if (sum > 0) {
+                                vote[i] += 1
+                            }
+                            else {
+                                vote[j] += 1
+                            }
                         }
                     }
+                    do {
+                        try data.setOutput(index, newOutput: decisionValues)
+                    }
+                    catch { break }
+                    
+                    //  Get the most likely class, and set it
+                    var maxIndex = 0
+                    for index in 1..<numClasses {
+                        if (vote[index] > vote[maxIndex]) { maxIndex = index }
+                    }
+                    try data.setClass(index, newClass: labels[maxIndex])
+                    break
                 }
-                data.outputs!.append(decisionValues)
-                
-                //  Get the most likely class, and set it
-                var maxIndex = 0
-                for index in 1..<numClasses {
-                    if (vote[index] > vote[maxIndex]) { maxIndex = index }
-                }
-                data.classes!.append(labels[maxIndex])
-                break
+            }
+            catch {
+                //  Error getting inputs
             }
         }
     }
@@ -845,12 +903,19 @@ public class SVMModel
             }
             predictValues(data)
             let minProbability = 1e-7
-            var pairwiseProbability : [[Double]] = []
+            var pairwiseProbability = [[Double]](count: numClasses, repeatedValue: [])
+            for i in 0..<numClasses { pairwiseProbability[i] = [Double](count: numClasses, repeatedValue: 0.0) }
             var k = 0
             for i in 0..<numClasses-1 {
                 for j in i+1..<numClasses {
-                    pairwiseProbability[i][j] = min(max(SVMModel.sigmoidPredict(data.outputs![0][k], probA: probabilityA[k], probB: probabilityB[k]), minProbability), 1.0-minProbability)
-                    pairwiseProbability[j][i] = 1.0 - pairwiseProbability[i][j]
+                    do {
+                        let outputs = try data.getOutput(k)
+                        pairwiseProbability[i][j] = min(max(SVMModel.sigmoidPredict(outputs[0], probA: probabilityA[k], probB: probabilityB[k]), minProbability), 1.0-minProbability)
+                        pairwiseProbability[j][i] = 1.0 - pairwiseProbability[i][j]
+                    }
+                    catch {
+                        break   //  error in getting outputs
+                    }
                     k += 1
                 }
             }
@@ -994,7 +1059,7 @@ internal enum AlphaState {
 // solution will be put in \alpha, objective value will be put in obj
 internal class Solver {
     //  Keep a reference to the data set
-    var problemData : DataSet?
+    var problemData : MLCombinedDataSet?
     var outputs: [Double]
     
     //  parameters
@@ -1035,7 +1100,7 @@ internal class Solver {
     }
     
     //  Solve a classification problem
-    func solveClassification(data: DataSet, display : Bool = false)
+    func solveClassification(data: MLCombinedDataSet, display : Bool = false)
     {
         //  Let all routines have access to the data
         problemData = data
@@ -1392,7 +1457,7 @@ internal class Solver {
         return returnValue
     }
     
-    func solveOneClass(data: DataSet, ν: Double, display : Bool = false)
+    func solveOneClass(data: MLCombinedDataSet, ν: Double, display : Bool = false)
     {
         //  Let all routines have access to the data
         problemData = data
@@ -1426,7 +1491,7 @@ internal class Solver {
         solve()
     }
     
-    func solveRegression(data: DataSet, p: Double, display : Bool = false)
+    func solveRegression(data: MLCombinedDataSet, p: Double, display : Bool = false)
     {
         //  Let all routines have access to the data
         problemData = data
@@ -1482,7 +1547,7 @@ internal class Solver_ν : Solver
         super.init(kernelParams: kernelParams, ϵ: ϵ)
     }
     
-    override func solveClassification(data: DataSet, display: Bool) {
+    override func solveClassification(data: MLCombinedDataSet, display: Bool) {
         //  Let all routines have access to the data
         problemData = data
         
@@ -1500,15 +1565,21 @@ internal class Solver_ν : Solver
         var sum_neg = ν * Double(data.size / 2)
         
         for i in 0..<data.size {
-            if(data.classes![i] == +1) {
-                let newα = min(1.0, sum_pos)
-                α.append(newα)
-                sum_pos -= newα
+            do {
+                let itemClass = try data.getClass(i)
+                if(itemClass == +1) {
+                    let newα = min(1.0, sum_pos)
+                    α.append(newα)
+                    sum_pos -= newα
+                }
+                else {
+                    let newα = min(1.0, sum_pos)
+                    α.append(newα)
+                    sum_neg -= newα
+                }
             }
-            else {
-                let newα = min(1.0, sum_pos)
-                α.append(newα)
-                sum_neg -= newα
+            catch {
+                //  Error getting class
             }
         }
         
@@ -1694,7 +1765,7 @@ internal class Solver_ν : Solver
         return last_ρ
     }
     
-    override func solveRegression(data: DataSet, p: Double, display : Bool = false)
+    override func solveRegression(data: MLCombinedDataSet, p: Double, display : Bool = false)
     {
         //  Let all routines have access to the data
         problemData = data

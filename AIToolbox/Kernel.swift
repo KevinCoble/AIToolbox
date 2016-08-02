@@ -36,7 +36,7 @@ public struct KernelParameters {
 class Kernel {
     
     //  Problem data
-    var problemData : DataSet
+    var problemData : MLCombinedDataSet
     
     //  Diagonal items squared (for RBF)
     let x_square: [Double]!
@@ -49,7 +49,7 @@ class Kernel {
     let gamma: Double
     let coef0: Double
     
-    init(parameters: KernelParameters, data: DataSet)
+    init(parameters: KernelParameters, data: MLCombinedDataSet)
     {
         kernalType = parameters.type
         problemData = data
@@ -194,7 +194,7 @@ class Kernel {
 class SVCKernel : Kernel {
     let outputs : [Double]
     
-    init(parameters: KernelParameters, data: DataSet, outputs: [Double])
+    init(parameters: KernelParameters, data: MLCombinedDataSet, outputs: [Double])
     {
         self.outputs = outputs
         
@@ -229,7 +229,7 @@ class SVRKernel : Kernel {
     
     var sign : [Double]
     
-    override init(parameters: KernelParameters, data: DataSet) {
+    override init(parameters: KernelParameters, data: MLCombinedDataSet) {
         sign = [Double](count: data.size, repeatedValue: 1.0)
         sign += [Double](count: data.size, repeatedValue: -1.0)
         

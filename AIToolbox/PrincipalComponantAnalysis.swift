@@ -69,7 +69,7 @@ public class PCA {
     }
     
     ///  Routine to get the reduced eigenvector set that is the basis for the reduced dimension subspace
-    public func getReducedBasisVectorSet(data: DataSet) throws
+    public func getReducedBasisVectorSet(data: MLDataSet) throws
     {
         //  Verify we have a valid setup
         if (initialDimension < 2 || reducedDimension < 1 || initialDimension < reducedDimension) {
@@ -89,7 +89,8 @@ public class PCA {
         //  Get the mean of the data
         μ = [Double](count: initialDimension, repeatedValue: 0.0)
         for point in 0..<data.size {
-            vDSP_vaddD(data.inputs[point], 1, μ, 1, &μ, 1, vDSP_Length(initialDimension))
+            let inputs = try data.getInput(point)
+            vDSP_vaddD(inputs, 1, μ, 1, &μ, 1, vDSP_Length(initialDimension))
         }
         var scale = 1.0 / Double(data.size)
         vDSP_vsmulD(μ, 1, &scale, &μ, 1, vDSP_Length(initialDimension))
@@ -98,7 +99,8 @@ public class PCA {
         var X = [Double](count: initialDimension * data.size, repeatedValue: 0.0)
         var row : [Double] = [Double](count: initialDimension, repeatedValue: 0.0)
         for point in 0..<data.size {
-            vDSP_vsubD(μ, 1, data.inputs[point], 1, &row, 1, vDSP_Length(initialDimension))
+            let inputs = try data.getInput(point)
+            vDSP_vsubD(μ, 1, inputs, 1, &row, 1, vDSP_Length(initialDimension))
             for column in 0..<initialDimension {
                 X[column * data.size + point] = row[column]
             }
@@ -141,7 +143,7 @@ public class PCA {
     }
     
     ///  Routine to transform the given dataset into a new dataset using the basis vectors calculated
-    public func transformDataSet(data: DataSet) throws ->DataSet
+    public func transformDataSet(data: MLDataSet) throws ->DataSet
     {
         //  Make sure we have the PCA results to use
         if (basisVectors.count <= 0) { throw PCAError.PCANotPerformed }
@@ -157,7 +159,8 @@ public class PCA {
         var transformed = [Double](count: reducedDimension, repeatedValue: 0.0)
         for point in 0..<data.size {
             //  Move relative to the mean of the training data
-            vDSP_vsubD(data.inputs[point], 1, μ, 1, &centered, 1, vDSP_Length(initialDimension))
+            let inputs = try data.getInput(point)
+            vDSP_vsubD(inputs, 1, μ, 1, &centered, 1, vDSP_Length(initialDimension))
             
             //  Convert to the new basis vector
             vDSP_mmulD(basisVectors, 1, centered, 1, &transformed, 1, vDSP_Length(reducedDimension), vDSP_Length(1), vDSP_Length(initialDimension))

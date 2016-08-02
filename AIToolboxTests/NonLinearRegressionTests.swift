@@ -166,7 +166,7 @@ class NonLinearRegressionTests: XCTestCase {
             print("Non-Linear Regression Training error")
         }
     }
-    func GNInitializer(trainData: DataSet) -> [Double] {
+    func GNInitializer(trainData: MLDataSet) -> [Double] {
         return [6.0, 0.3]
     }
 

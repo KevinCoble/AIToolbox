@@ -40,23 +40,31 @@ extension SVMModel : Classifier {
         return []
     }
     
-    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
+    public func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!) {
         //  Ignore, as SVM doesn't use an initialization
     }
 
-    public func trainClassifier(trainData: DataSet) throws
+    public func trainClassifier(trainData: MLClassificationDataSet) throws
     {
         //  Verify the SVMModel is the right type
         if type != .C_SVM_Classification || type != .ν_SVM_Classification { throw SVMError.InvalidModelType }
         
         //  Verify the data set is the right type
-        if (trainData.dataType == .Classification) { throw DataTypeError.InvalidDataType }
+        if (trainData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
         
         //  Train on the data (ignore initialization, as SVM's do single-batch training)
-        train(trainData)
+        if (trainData is DataSet) {
+            train(trainData as! DataSet)
+        }
+        else {
+            //  Convert the data set to a DataSet class, as the SVM was ported from a public domain code that used specific properties that were added to the DataSet class but are not in the MLDataSet protocols
+            if let convertedData = DataSet(fromClassificationDataSet: trainData) {
+                train(convertedData)
+            }
+        }
     }
     
-    public func continueTrainingClassifier(trainData: DataSet) throws
+    public func continueTrainingClassifier(trainData: MLClassificationDataSet) throws
     {
         //  Linear regression uses one-batch training (solved analytically)
         throw MachineLearningError.ContinuationNotSupported
@@ -113,16 +121,30 @@ extension SVMModel : Classifier {
         return labels[maxIndex]
     }
     
-    public func classify(testData: DataSet) throws
+    public func classify(testData: MLClassificationDataSet) throws
     {
         //  Verify the SVMModel is the right type
         if type != .C_SVM_Classification || type != .ν_SVM_Classification { throw SVMError.InvalidModelType }
         
         //  Verify the data set is the right type
-        if (testData.dataType == .Classification) { throw DataTypeError.InvalidDataType }
+        if (testData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
         if (supportVector.count <= 0) { throw MachineLearningError.NotTrained }
         if (testData.inputDimension != supportVector[0].count) { throw DataTypeError.WrongDimensionOnInput }
         
-        predictValues(testData)
+        //  Put the data into a DataSet for SVM (it uses a DataSet so that it can be both regressor and classifier)
+        if let data = DataSet(dataType: .Classification, withInputsFrom: testData) {
+        
+            //  Predict
+            predictValues(data)
+        
+            //  Transfer the predictions back to the classifier data set
+            for index in 0..<testData.size {
+                let resultClass = try data.getClass(index)
+                try testData.setClass(index, newClass: resultClass)
+            }
+        }
+        else {
+            throw MachineLearningError.DataWrongDimension
+        }
     }
 }

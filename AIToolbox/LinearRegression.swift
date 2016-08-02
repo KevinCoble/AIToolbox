@@ -214,7 +214,7 @@ public class LinearRegressionModel : Regressor
         }
     }
     
-    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
+    public func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!) {
         //  Ignore, as Linear Regression doesn't use an initialization
     }
     
@@ -227,7 +227,7 @@ public class LinearRegressionModel : Regressor
         return parameters
     }
 
-    public func trainRegressor(trainData: DataSet) throws
+    public func trainRegressor(trainData: MLRegressionDataSet) throws
     {
         //  Verify that the data is regression data
         if (trainData.dataType != DataSetType.Regression) { throw MachineLearningError.DataNotRegression }
@@ -275,7 +275,8 @@ public class LinearRegressionModel : Regressor
             for parameter in 0..<terms.count {
                 for index in 0..<trainData.size {
                     do {
-                        A[offset] = try terms[parameter].getTermValue(trainData.inputs[index])
+                        let inputs = try trainData.getInput(index)
+                        A[offset] = try terms[parameter].getTermValue(inputs)
                     }
                     catch let error {
                         throw error
@@ -289,7 +290,8 @@ public class LinearRegressionModel : Regressor
             var y = [Double](count: trainData.size * outputDimension, repeatedValue: 0.0)
             for column in 0..<outputDimension {
                 for index in 0..<trainData.size {
-                    y[offset] = trainData.outputs![index][column]
+                    let outputs = try trainData.getOutput(index)
+                    y[offset] = outputs[column]
                     offset += 1
                 }
             }
@@ -339,7 +341,8 @@ public class LinearRegressionModel : Regressor
                 }
                 for parameter in 0..<terms.count {
                     do {
-                        dA[offset] = try terms[parameter].getTermValue(trainData.inputs[point])
+                        let inputs = try trainData.getInput(point)
+                        dA[offset] = try terms[parameter].getTermValue(inputs)
                     }
                     catch let error {
                         throw error
@@ -348,7 +351,7 @@ public class LinearRegressionModel : Regressor
                 }
             }
             
-            //  Convert into Linear Algebra objects`
+            //  Convert into Linear Algebra objects
             let A = la_matrix_from_double_buffer(dA, M, N,
                                                  N, la_hint_t(LA_NO_HINT), la_attribute_t(LA_DEFAULT_ATTRIBUTES))
             
@@ -366,7 +369,8 @@ public class LinearRegressionModel : Regressor
             for solution in 0..<outputDimension {
                 //  Generate the Y vector
                 for point in 0..<nNumPoints {
-                    Y[point] = trainData.outputs![point][solution]
+                    let outputs = try trainData.getOutput(point)
+                    Y[point] = outputs[solution]
                 }
                 
                 //  Calculate A'Y
@@ -386,7 +390,7 @@ public class LinearRegressionModel : Regressor
         }
     }
     
-    public func continueTrainingRegressor(trainData: DataSet) throws
+    public func continueTrainingRegressor(trainData: MLRegressionDataSet) throws
     {
         //  Linear regression uses one-batch training (solved analytically)
         throw MachineLearningError.ContinuationNotSupported
@@ -436,7 +440,7 @@ public class LinearRegressionModel : Regressor
         return results
     }
     
-    public func predict(testData: DataSet) throws
+    public func predict(testData: MLRegressionDataSet) throws
     {
         //  Verify the data set is the right type
         if (testData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
@@ -444,10 +448,10 @@ public class LinearRegressionModel : Regressor
         if (testData.outputDimension != outputDimension) { throw MachineLearningError.DataWrongDimension }
         
         //  predict on each input
-        testData.outputs = []
         for index in 0..<testData.size {
             do {
-                try testData.outputs!.append(predictOne(testData.inputs[index]))
+                let inputs = try testData.getInput(index)
+                try testData.setOutput(index, newOutput: predictOne(inputs))
             }
             catch let error {
                 throw error

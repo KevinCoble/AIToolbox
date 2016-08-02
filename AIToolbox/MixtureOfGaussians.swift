@@ -28,7 +28,7 @@ public class MixtureOfGaussians : Regressor
     public var α : [Double]
     public var initWithKMeans = true        //  if true initial probability distributions are computed with kmeans of training data, else random
     public var convergenceLimit = 0.0000001
-    var initializeFunction : ((trainData: DataSet)->[Double])!
+    var initializeFunction : ((trainData: MLDataSet)->[Double])!
     
     public init(inputSize: Int, numberOfTerms: Int, diagonalCoVariance: Bool) throws
     {
@@ -96,7 +96,7 @@ public class MixtureOfGaussians : Regressor
     }
     
     ///  A custom initializer for Mixture-of-Gaussians must assign the training data to classes [the 'classes' member of the dataset]
-    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
+    public func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!) {
         initializeFunction = function
     }
     
@@ -115,10 +115,10 @@ public class MixtureOfGaussians : Regressor
     }
     
     ///  Function to calculate the parameters of the model
-    public func trainRegressor(trainData: DataSet) throws
+    public func trainRegressor(trainData: MLRegressionDataSet) throws
     {
         //  Verify that the data is regression data
-        if (trainData.dataType != DataSetType.Regression) { throw MachineLearningError.DataNotRegression }
+        if (trainData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
         if (trainData.inputDimension != inputDimension) { throw MachineLearningError.DataWrongDimension }
         if (trainData.outputDimension != 1) { throw MachineLearningError.DataWrongDimension }
         if (trainData.size < termCount) { throw MachineLearningError.NotEnoughData }
@@ -130,137 +130,141 @@ public class MixtureOfGaussians : Regressor
             centroids.append([Double](count: inputDimension, repeatedValue: 0.0))
         }
         
-        if (initWithKMeans) {
-            //  Group the points using KMeans
-            let kmeans = KMeans(classes: termCount)
-            do {
-                try kmeans.train(trainData)
-            }
-            catch {
-                throw MixtureOfGaussianError.KMeansFailed
-            }
-            centroids = kmeans.centroids
-        }
-        else {
-            //  Assign each point to a random term
-            if let initFunc = initializeFunction {
-                //  If a custom initializer has been provided, use it to assign the initial classes
-                initFunc(trainData: trainData)
-            }
-            else {
-                //  No initializer, assign to random classes
-                var classes = [Int](count: trainData.size, repeatedValue: 0)
-                for index in 0..<termCount {        //  Assign first few points to each class to guarantee at least one point per term
-                    classes[index] = index
-                }
-                for index in termCount..<trainData.size {
-                    classes[index] = Int(arc4random_uniform(UInt32(termCount)))
-                }
-                trainData.classes = classes
-            }
+        //  Make a classification data set from the regression set
+        if let classificationDataSet = DataSet(dataType : .Classification, withInputsFrom: trainData) {
             
-            //  Calculate centroids
-            var counts = [Int](count: termCount, repeatedValue: 0)
-            for point in 0..<trainData.size {
-                let pointClass = trainData.classes![point]
-                counts[pointClass] += 1
-                let ptr = UnsafeMutablePointer<Double>(centroids[pointClass])      //  Swift bug!  can't put this in line!
-                vDSP_vaddD(trainData.inputs[point], 1, centroids[pointClass], 1, ptr, 1, vDSP_Length(inputDimension))
-            }
-            for term in 0..<termCount {
-                var inverse = 1.0 / Double(counts[term])
-                let ptr = UnsafeMutablePointer<Double>(centroids[term])      //  Swift bug!  can't put this in line!
-                vDSP_vsmulD(centroids[term], 1, &inverse, ptr, 1, vDSP_Length(inputDimension * inputDimension))
-            }
-        }
-        
-        //  Get the counts and sum the covariance terms
-        var counts = [Int](count: termCount, repeatedValue: 0)
-        var covariance : [[Double]] = []
-        var sphericalCovariance = [Double](count: inputDimension, repeatedValue: 0.0)
-        for _ in 0..<termCount { covariance.append([Double](count: inputDimension * inputDimension, repeatedValue: 0.0))}
-        var offset = [Double](count: inputDimension, repeatedValue: 0.0)
-        var matrix = [Double](count: inputDimension * inputDimension, repeatedValue: 0.0)
-        for point in 0..<trainData.size {
-            //  Count
-            let pointClass = trainData.classes![point]
-            counts[pointClass] += 1
-            //  Get the distance from the mean
-            vDSP_vsubD(centroids[pointClass], 1, trainData.inputs[point], 1, &offset, 1, vDSP_Length(inputDimension))
-            if (!diagonalΣ) {   //  We will force into spherical if diagonal covariance
-                //  Multiply into covariance matrix and sum
-                vDSP_mmulD(offset, 1, offset, 1, &matrix, 1, vDSP_Length(inputDimension), vDSP_Length(inputDimension), vDSP_Length(1))
-                let ptr = UnsafeMutablePointer<Double>(covariance[pointClass])      //  Swift bug!  can't put this in line!
-                vDSP_vaddD(matrix, 1, covariance[pointClass], 1, ptr, 1, vDSP_Length(inputDimension * inputDimension))
-            }
-            //  Get dot product and sum into spherical in case covariance matrix is not positive definite  (dot product of offset is distance squared
-            var dotProduct = 0.0
-            vDSP_dotprD(offset, 1, offset, 1, &dotProduct, vDSP_Length(inputDimension))
-            sphericalCovariance[pointClass] += dotProduct
-        }
-        
-        //  If multivariate, verify positive-definite covariance matrix, or do same processing for diagonal covariance
-        if (inputDimension > 1 || diagonalΣ) {
-            var nonSPD = false
-            if (!diagonalΣ) {
-                //  If not diagonal, check for positive definite
-                for term in 0..<termCount {
-                    let uploChar = "U" as NSString
-                    var uplo : Int8 = Int8(uploChar.characterAtIndex(0))          //  use upper triangle
-                    var A = covariance[term]       //  Make a copy so it isn't mangled
-                    var n : Int32 = Int32(inputDimension)
-                    var info : Int32 = 0
-                    dpotrf_(&uplo, &n, &A, &n, &info)
-                    if (info != 0) {
-                        nonSPD = true
-                        break
-                    }
-                }
-            }
-            
-            //  If not positive-definite (or diagonal covariance), use spherical covariance
-            if (nonSPD || diagonalΣ) {
-                //  Set each covariance matrix to the identity matrix times the sum of dotproduct of distances
-                for term in 0..<termCount {
-                    covariance[term] = [Double](count: inputDimension * inputDimension, repeatedValue: 0.0)
-                    let scale = 1.0 / Double(inputDimension)
-                    for row in 0..<inputDimension {
-                        covariance[term][row * inputDimension + row] = sphericalCovariance[term] * scale
-                    }
-                }
-            }
-            
-            //  The stated algorithm continues with another positive-definite check, but a positive constant times the identity matrix should always be positive definite, so I am stopping here
-        }
-        
-        //  Assign the value to the gaussians
-        for term in 0..<termCount {
-            α[term] = Double(counts[term]) / Double(trainData.size)
-            if (counts[term] > 1) {
-                var inverse = 1.0 / Double(counts[term])
-                let ptr = UnsafeMutablePointer<Double>(covariance[term])      //  Swift bug!  can't put this in line!
-                vDSP_vsmulD(covariance[term], 1, &inverse, ptr, 1, vDSP_Length(inputDimension * inputDimension))
-            }
-            if (inputDimension == 1) {
-                gaussians[term].setMean(centroids[term][0])
-                gaussians[term].setVariance(covariance[term][0])
-            }
-            else {
+            if (initWithKMeans) {
+                //  Group the points using KMeans
+                let kmeans = KMeans(classes: termCount)
                 do {
-                    try mvgaussians[term].setMean(centroids[term])
-                    if (diagonalΣ) {
-                        var diagonalTerms : [Double] = []
-                        for row in 0..<inputDimension {
-                            diagonalTerms.append(covariance[term][row * inputDimension + row])
-                        }
-                        try mvgaussians[term].setCovarianceMatrix(diagonalTerms)
+                    try kmeans.train(classificationDataSet)
+                }
+                catch {
+                    throw MixtureOfGaussianError.KMeansFailed
+                }
+                centroids = kmeans.centroids
+            }
+            else {
+                //  Assign each point to a random term
+                if let initFunc = initializeFunction {
+                    //  If a custom initializer has been provided, use it to assign the initial classes
+                    initFunc(trainData: trainData)
+                }
+                else {
+                    //  No initializer, assign to random classes
+                    for index in 0..<termCount {        //  Assign first few points to each class to guarantee at least one point per term
+                        try classificationDataSet.setClass(index, newClass: index)
                     }
-                    else {
-                        try mvgaussians[term].setCovarianceMatrix(covariance[term])
+                    for index in termCount..<trainData.size {
+                        try classificationDataSet.setClass(index, newClass: Int(arc4random_uniform(UInt32(termCount))))
                     }
                 }
-                catch let error {
-                    throw error
+                
+                //  Calculate centroids
+                var counts = [Int](count: termCount, repeatedValue: 0)
+                for point in 0..<trainData.size {
+                    let pointClass = try classificationDataSet.getClass(point)
+                    let inputs = try trainData.getInput(point)
+                    counts[pointClass] += 1
+                    let ptr = UnsafeMutablePointer<Double>(centroids[pointClass])      //  Swift bug!  can't put this in line!
+                    vDSP_vaddD(inputs, 1, centroids[pointClass], 1, ptr, 1, vDSP_Length(inputDimension))
+                }
+                for term in 0..<termCount {
+                    var inverse = 1.0 / Double(counts[term])
+                    let ptr = UnsafeMutablePointer<Double>(centroids[term])      //  Swift bug!  can't put this in line!
+                    vDSP_vsmulD(centroids[term], 1, &inverse, ptr, 1, vDSP_Length(inputDimension * inputDimension))
+                }
+            }
+            
+            //  Get the counts and sum the covariance terms
+            var counts = [Int](count: termCount, repeatedValue: 0)
+            var covariance : [[Double]] = []
+            var sphericalCovariance = [Double](count: inputDimension, repeatedValue: 0.0)
+            for _ in 0..<termCount { covariance.append([Double](count: inputDimension * inputDimension, repeatedValue: 0.0))}
+            var offset = [Double](count: inputDimension, repeatedValue: 0.0)
+            var matrix = [Double](count: inputDimension * inputDimension, repeatedValue: 0.0)
+            for point in 0..<trainData.size {
+                //  Count
+                let pointClass = try classificationDataSet.getClass(point)
+                let inputs = try trainData.getInput(point)
+                counts[pointClass] += 1
+                //  Get the distance from the mean
+                vDSP_vsubD(centroids[pointClass], 1, inputs, 1, &offset, 1, vDSP_Length(inputDimension))
+                if (!diagonalΣ) {   //  We will force into spherical if diagonal covariance
+                    //  Multiply into covariance matrix and sum
+                    vDSP_mmulD(offset, 1, offset, 1, &matrix, 1, vDSP_Length(inputDimension), vDSP_Length(inputDimension), vDSP_Length(1))
+                    let ptr = UnsafeMutablePointer<Double>(covariance[pointClass])      //  Swift bug!  can't put this in line!
+                    vDSP_vaddD(matrix, 1, covariance[pointClass], 1, ptr, 1, vDSP_Length(inputDimension * inputDimension))
+                }
+                //  Get dot product and sum into spherical in case covariance matrix is not positive definite  (dot product of offset is distance squared
+                var dotProduct = 0.0
+                vDSP_dotprD(offset, 1, offset, 1, &dotProduct, vDSP_Length(inputDimension))
+                sphericalCovariance[pointClass] += dotProduct
+            }
+            
+            //  If multivariate, verify positive-definite covariance matrix, or do same processing for diagonal covariance
+            if (inputDimension > 1 || diagonalΣ) {
+                var nonSPD = false
+                if (!diagonalΣ) {
+                    //  If not diagonal, check for positive definite
+                    for term in 0..<termCount {
+                        let uploChar = "U" as NSString
+                        var uplo : Int8 = Int8(uploChar.characterAtIndex(0))          //  use upper triangle
+                        var A = covariance[term]       //  Make a copy so it isn't mangled
+                        var n : Int32 = Int32(inputDimension)
+                        var info : Int32 = 0
+                        dpotrf_(&uplo, &n, &A, &n, &info)
+                        if (info != 0) {
+                            nonSPD = true
+                            break
+                        }
+                    }
+                }
+                
+                //  If not positive-definite (or diagonal covariance), use spherical covariance
+                if (nonSPD || diagonalΣ) {
+                    //  Set each covariance matrix to the identity matrix times the sum of dotproduct of distances
+                    for term in 0..<termCount {
+                        covariance[term] = [Double](count: inputDimension * inputDimension, repeatedValue: 0.0)
+                        let scale = 1.0 / Double(inputDimension)
+                        for row in 0..<inputDimension {
+                            covariance[term][row * inputDimension + row] = sphericalCovariance[term] * scale
+                        }
+                    }
+                }
+                
+                //  The stated algorithm continues with another positive-definite check, but a positive constant times the identity matrix should always be positive definite, so I am stopping here
+            }
+            
+            //  Assign the value to the gaussians
+            for term in 0..<termCount {
+                α[term] = Double(counts[term]) / Double(trainData.size)
+                if (counts[term] > 1) {
+                    var inverse = 1.0 / Double(counts[term])
+                    let ptr = UnsafeMutablePointer<Double>(covariance[term])      //  Swift bug!  can't put this in line!
+                    vDSP_vsmulD(covariance[term], 1, &inverse, ptr, 1, vDSP_Length(inputDimension * inputDimension))
+                }
+                if (inputDimension == 1) {
+                    gaussians[term].setMean(centroids[term][0])
+                    gaussians[term].setVariance(covariance[term][0])
+                }
+                else {
+                    do {
+                        try mvgaussians[term].setMean(centroids[term])
+                        if (diagonalΣ) {
+                            var diagonalTerms : [Double] = []
+                            for row in 0..<inputDimension {
+                                diagonalTerms.append(covariance[term][row * inputDimension + row])
+                            }
+                            try mvgaussians[term].setCovarianceMatrix(diagonalTerms)
+                        }
+                        else {
+                            try mvgaussians[term].setCovarianceMatrix(covariance[term])
+                        }
+                    }
+                    catch let error {
+                        throw error
+                    }
                 }
             }
         }
@@ -275,7 +279,7 @@ public class MixtureOfGaussians : Regressor
     }
     
     ///  Function to continue calculating the parameters of the model with more data, without initializing parameters
-    public func continueTrainingRegressor(trainData: DataSet) throws
+    public func continueTrainingRegressor(trainData: MLRegressionDataSet) throws
     {
         //  Verify that the data is regression data
         if (trainData.dataType != DataSetType.Regression) { throw MachineLearningError.DataNotRegression }
@@ -286,7 +290,8 @@ public class MixtureOfGaussians : Regressor
         var lastLogLikelihood = 0.0
         for point in 0..<trainData.size {
             do {
-                let sum = try predictOne(trainData.inputs[point])
+                let inputs = try trainData.getInput(point)
+                let sum = try predictOne(inputs)
                 lastLogLikelihood += log(sum[0])
             }
             catch let error {
@@ -316,11 +321,12 @@ public class MixtureOfGaussians : Regressor
             for point in 0..<trainData.size {
                 total = 0.0
                 for term in 0..<termCount {
+                    let inputs = try trainData.getInput(point)
                     if (inputDimension == 1) {
-                        probability = α[term] * gaussians[term].getProbability(trainData.inputs[point][0])
+                        probability = α[term] * gaussians[term].getProbability(inputs[0])
                     }
                     else {
-                        probability = try α[term] * mvgaussians[term].getProbability(trainData.inputs[point])
+                        probability = try α[term] * mvgaussians[term].getProbability(inputs)
                     }
                     total += probability
                     membershipWeights[term][point] = probability
@@ -339,8 +345,9 @@ public class MixtureOfGaussians : Regressor
             for term in 0..<termCount {
                 centroids.append([Double](count: inputDimension, repeatedValue: 0.0))
                 for point in 0..<trainData.size {
+                    let inputs = try trainData.getInput(point)
                     weightTotals[term] += membershipWeights[term][point]
-                    vDSP_vsmulD(trainData.inputs[point], 1, &membershipWeights[term][point], &vector, 1, vDSP_Length(inputDimension))
+                    vDSP_vsmulD(inputs, 1, &membershipWeights[term][point], &vector, 1, vDSP_Length(inputDimension))
                     let ptr = UnsafeMutablePointer<Double>(centroids[term])      //  Swift bug!  can't put this in line!
                     vDSP_vaddD(vector, 1, centroids[term], 1, ptr, 1, vDSP_Length(inputDimension))
                 }
@@ -367,7 +374,8 @@ public class MixtureOfGaussians : Regressor
                     var sphericalCovarianceValue = 0.0
                     for point in 0..<trainData.size {
                         //  Get difference vector
-                        vDSP_vsubD(trainData.inputs[point], 1, centroids[term], 1, &vector, 1, vDSP_Length(inputDimension))
+                        let inputs = try trainData.getInput(point)
+                        vDSP_vsubD(inputs, 1, centroids[term], 1, &vector, 1, vDSP_Length(inputDimension))
                         var dotProduct = 0.0
                         vDSP_dotprD(vector, 1, vector, 1, &dotProduct, vDSP_Length(inputDimension))
                         sphericalCovarianceValue += membershipWeights[term][point] * dotProduct
@@ -392,7 +400,8 @@ public class MixtureOfGaussians : Regressor
                     var Σ = [Double](count: inputDimension * inputDimension, repeatedValue: 0.0)
                     for point in 0..<trainData.size {
                         //  Get difference vector
-                        vDSP_vsubD(trainData.inputs[point], 1, centroids[term], 1, &vector, 1, vDSP_Length(inputDimension))
+                        let inputs = try trainData.getInput(point)
+                        vDSP_vsubD(inputs, 1, centroids[term], 1, &vector, 1, vDSP_Length(inputDimension))
                         //  Multiply by transpose to get covariance factor
                         vDSP_mmulD(vector, 1, vector, 1, &matrix, 1, vDSP_Length(inputDimension), vDSP_Length(inputDimension), vDSP_Length(1))
                         //  Weight by the point's membership
@@ -421,7 +430,8 @@ public class MixtureOfGaussians : Regressor
             var logLikelihood = 0.0
             for point in 0..<trainData.size {
                 do {
-                    let sum = try predictOne(trainData.inputs[point])
+                    let inputs = try trainData.getInput(point)
+                    let sum = try predictOne(inputs)
                     logLikelihood += log(sum[0])
                 }
                 catch let error {
@@ -457,17 +467,17 @@ public class MixtureOfGaussians : Regressor
         return [result]
     }
     
-    public func predict(testData: DataSet) throws
+    public func predict(testData: MLRegressionDataSet) throws
     {
         //  Verify the data set is the right type
         if (testData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
         if (testData.inputDimension != inputDimension) { throw MachineLearningError.DataWrongDimension }
         
         //  predict on each input
-        testData.outputs = []
         for index in 0..<testData.size {
             do {
-                try testData.outputs!.append(predictOne(testData.inputs[index]))
+                let inputs = try testData.getInput(index)
+                try testData.setOutput(index, newOutput: predictOne(inputs))
             }
             catch let error {
                 throw error
