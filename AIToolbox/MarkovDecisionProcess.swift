@@ -11,11 +11,29 @@ import Accelerate
 
 ///  Errors that MDP routines can throw
 public enum MDPErrors: ErrorType {
+    case MDPNotSolved
     case FailedSolving
     case ErrorCreatingSampleSet
     case ErrorCreatingSampleTargetValues
     case ModelInputDimensionError
     case ModelOutputDimensionError
+    case InvalidState
+}
+
+///  Structure that defines an episode for a MDP
+public struct MDPEpisode {
+    public let startState : Int
+    public var events : [(action: Int, resultState: Int, reward: Double)]
+    
+    public init(startState: Int) {
+        self.startState = startState
+        events = []
+    }
+    
+    public mutating func addEvent(event: (action: Int, resultState: Int, reward: Double))
+    {
+        events.append(event)
+    }
 }
 
 ///  Class to solve Markov Decision Process problems
@@ -25,11 +43,15 @@ public class MDP {
     var discountFactor : Double
     public var convergenceLimit = 0.0000001
     
-    //  Continuos state variables
+    //  Continuous state variables
     var numSamples = 10000
     var deterministicModel = true       //  If true, we don't need to sample end states
     var nonDeterministicSampleSize = 20  //  Number of samples to take if resulting model state is not deterministic
     
+    //  Calculation results for discrete state/actions
+    var π : [Int]!
+    var V : [Double]!
+    var sampleCount : [Int]!      //  Number of samples for state
     
     ///  Init MDP.  Set states to 0 for continuous states
     public init(states: Int, actions: Int, discount: Double)
@@ -53,8 +75,8 @@ public class MDP {
             getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
             getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) -> [Int]
     {
-        var π = [Int](count: numStates, repeatedValue: 0)
-        var V = [Double](count: numStates, repeatedValue: 0.0)
+        π = [Int](count: numStates, repeatedValue: 0)
+        V = [Double](count: numStates, repeatedValue: 0.0)
         
         var difference = convergenceLimit + 1.0
         while (difference > convergenceLimit) {    //  Go till convergence
@@ -89,15 +111,14 @@ public class MDP {
         return π
     }
     
-    
     ///  Method to solve using policy iteration
     ///  Returns array of actions for each state
     public func policyIteration(getActions: ((fromState: Int) -> [Int]),
                                getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
                                getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) throws -> [Int]
     {
-        var π = [Int](count: numStates, repeatedValue: -1)
-        var V = [Double](count: numStates, repeatedValue: 0.0)
+        π = [Int](count: numStates, repeatedValue: -1)
+        V = [Double](count: numStates, repeatedValue: 0.0)
         
         var policyChanged = true
         while (policyChanged) {    //  Go till convergence
@@ -154,6 +175,154 @@ public class MDP {
         }
         
         return π
+    }
+    
+    ///  Once valueIteration or policyIteration has been used, use this function to get the action for any particular state
+    public func getAction(forState: Int) throws -> Int
+    {
+        if (π == nil) { throw MDPErrors.MDPNotSolved }
+        if (forState < 0 || forState >= numStates) { throw MDPErrors.InvalidState }
+        return π[forState]
+    }
+    
+    
+    ///  Initialize MDP for a discrete state Monte Carlo evaluation
+    public func initDiscreteStateMonteCarlo()
+    {
+        V = [Double](count: numStates, repeatedValue: 0.0)
+        sampleCount  = [Int](count: numStates, repeatedValue: 0)
+    }
+    
+    ///  Evaluate an episode of a discrete state Monte Carlo evaluation using 'every-visit'
+    public func evaluateMonteCarloEpisodeEveryVisit(episode: MDPEpisode)
+    {
+        //  Iterate backwards through the episode, accumulating reward and assigning to V
+        var accumulatedReward = 0.0
+        for item in episode.events.reverse() {
+            //  Get the reward
+            accumulatedReward *= discountFactor
+            accumulatedReward += item.reward
+            
+            //  Update the value
+            V[item.resultState] += accumulatedReward
+            sampleCount[item.resultState] += 1
+        }
+    }
+    
+    ///  Evaluate an episode of a discrete state Monte Carlo evaluation using 'first-visit'
+    public func evaluateMonteCarloEpisodeFirstVisit(episode: MDPEpisode)
+    {
+        //  Find the first instance of each state in the episode
+        var firstInstance  = [Int](count: numStates, repeatedValue: -1)
+        for index in 0..<episode.events.count {
+            if (firstInstance[episode.events[index].resultState] < 0) {
+                firstInstance[episode.events[index].resultState] = index
+            }
+        }
+        
+        //  Iterate backwards through the episode, accumulating reward and assigning to V
+        var accumulatedReward = 0.0
+        for item in episode.events.reverse() {
+            //  Get the reward
+            accumulatedReward *= discountFactor
+            accumulatedReward += item.reward
+            
+            //  If this was the first instance of the state, update
+            if (firstInstance[item.resultState] >= 0) {
+                V[item.resultState] += accumulatedReward
+                sampleCount[item.resultState] += 1
+            }
+        }
+    }
+    
+    ///  Once Monte Carlo episodes have been evaluated, use this function to get the current best (greedy) action for any particular state
+    ///  Unvisited states can be given a specified expected reward
+    public func getAction(forState: Int, getActions: ((fromState: Int) -> [Int]),
+                          getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
+                          unvisitedStateReward : Double = 0.0) throws -> Int
+    {
+        //  Validate inputs
+        if (V == nil) { throw MDPErrors.MDPNotSolved }
+        if (forState < 0 || forState >= numStates) { throw MDPErrors.InvalidState }
+        
+        //  Get the actions that can result from this state
+        let actions = getActions(fromState: forState)
+        
+        //  Allocate evaluation values
+        var expectedReward = [Double](count: actions.count, repeatedValue: 0.0)
+        
+        //  Get the expected reward for each action
+        for index in 0..<actions.count {
+            //  Get the resulting states taking this action
+            let resultingStates = getResults(fromState: forState, action: actions[index])
+            for result in resultingStates {
+                if (sampleCount[result.state] > 0) {
+                    expectedReward[index] += V[result.state] * result.probability / Double(sampleCount[result.state])
+                }
+                else {
+                    expectedReward[index] += unvisitedStateReward * result.probability
+                }
+            }
+        }
+        
+        //  Get the action that has the most expected reward
+        var bestAction = 0
+        var bestReward = -Double.infinity
+        for index in 0..<actions.count {
+            if (expectedReward[index] > bestReward) {
+                bestAction = index
+                bestReward = expectedReward[index]
+            }
+        }
+        return actions[bestAction]
+    }
+    
+    ///  Method to generate an episode, assuming there is an internal model
+    public func generateEpisode(getStartingState: (() -> Int),
+                                getActions: ((fromState: Int) -> [Int]),
+                                getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
+                                getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) throws -> MDPEpisode
+    {
+        //  Get the start state
+        var currentState = getStartingState()
+        
+        //  Initialize the return struct
+        var episode = MDPEpisode(startState: currentState)
+        
+        //  Iterate until we get to a termination state
+        while true {
+            let actions = getActions(fromState: currentState)
+            if (actions.count == 0) { break }
+            
+            //  Pick an action at random
+            let action = Int(arc4random_uniform(UInt32(actions.count)))
+            
+            //  Get the results
+            let results = getResults(fromState: currentState, action: action)
+            
+            //  Get the result based on the probability
+            let resultProbability = Double(arc4random()) / Double(RAND_MAX)
+            var accumulatedProbablility = 0.0
+            var selectedResult = 0
+            for index in 0..<results.count {
+                if (resultProbability < (accumulatedProbablility + results[index].probability)) {
+                    selectedResult = index
+                    break
+                }
+                accumulatedProbablility += results[index].probability
+            }
+            
+            //  Get the reward
+            let reward = getReward(fromState: currentState, action: action, toState: results[selectedResult].state)
+            
+            //  update the state
+            currentState = results[selectedResult].state
+            
+            //  Add the move
+            episode.addEvent((action: action, resultState: currentState, reward: reward))
+        }
+        
+        return episode
     }
     
     ///  Computes a regression model that translates the state feature mapping to V

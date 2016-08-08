@@ -21,6 +21,14 @@ class MDPTests: XCTestCase {
     //     10% chance of missing direction and going to neighboring square of target.  No movement if goes off board or to 1, 1
     let mdp = MDP(states: 11, actions: 4, discount: 0.98)
     
+    //  Routine to get the start state (skip 6 and 10)
+    func getStartState() -> Int
+    {
+        var startState = Int(arc4random_uniform(9))
+        if (startState > 5) { startState += 1}
+        return startState
+    }
+    
     //  Routine to get the actions possible from each state.  Return an empty list at ending states.  This can be from a table or calculated
     func getActions(fromState: Int) -> [Int] {
         var actions : [[Int]] = [
@@ -173,6 +181,114 @@ class MDPTests: XCTestCase {
         XCTAssert(results[7] == 3, "MDP valueIteration.  Result for state 7")
         XCTAssert(results[8] == 3, "MDP valueIteration.  Result for state 8")
         XCTAssert(results[9] == 3, "MDP valueIteration.  Result for state 9")
+    }
+    
+    func testMonteCarloEveryVisit() {
+        //  Initialize the Monte Carlo parameters
+        mdp.initDiscreteStateMonteCarlo()
+        
+        //  Train on 1000 episodes
+        do {
+            for _ in 0..<1000 {
+                let episode = try mdp.generateEpisode(getStartState,
+                                                      getActions: getActions,
+                                                      getResults: getActionResults,
+                                                      getReward: getReward)
+                mdp.evaluateMonteCarloEpisodeEveryVisit(episode)
+            }
+        }
+        catch {
+            print("Error training Monte Carlo MDP")
+        }
+        
+        //  Verify the result
+        do {
+            var bestAction: Int
+            bestAction = try mdp.getAction(0, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 0, "MDP Monte Carlo Every Visit.  Result for state 0")
+            bestAction = try mdp.getAction(1, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 1, "MDP Monte Carlo Every Visit.  Result for state 1")
+            bestAction = try mdp.getAction(2, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 1, "MDP Monte Carlo Every Visit.  Result for state 2")
+            bestAction = try mdp.getAction(3, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 1, "MDP Monte Carlo Every Visit.  Result for state 3")
+            bestAction = try mdp.getAction(4, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 0, "MDP Monte Carlo Every Visit.  Result for state 4")
+            bestAction = try mdp.getAction(5, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 0, "MDP Monte Carlo Every Visit.  Result for state 5")
+            bestAction = try mdp.getAction(7, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 3, "MDP Monte Carlo Every Visit.  Result for state 7")
+            bestAction = try mdp.getAction(8, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 3, "MDP Monte Carlo Every Visit.  Result for state 8")
+            bestAction = try mdp.getAction(9, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 3, "MDP Monte Carlo Every Visit.  Result for state 9")
+        }
+        catch {
+            print("Error training Monte Carlo MDP")
+        }
+    }
+    
+    func testMonteCarloFirstVisit() {
+        //  Initialize the Monte Carlo parameters
+        mdp.initDiscreteStateMonteCarlo()
+        
+        //  Train on 1000 episodes
+        do {
+            for _ in 0..<1000 {
+                let episode = try mdp.generateEpisode(getStartState,
+                                                  getActions: getActions,
+                                                  getResults: getActionResults,
+                                                  getReward: getReward)
+                mdp.evaluateMonteCarloEpisodeFirstVisit(episode)
+            }
+        }
+        catch {
+            print("Error training Monte Carlo MDP")
+        }
+        
+        //  Verify the result
+        do {
+            var bestAction: Int
+            bestAction = try mdp.getAction(0, getActions: getActions,
+                                       getResults: getActionResults)
+            XCTAssert(bestAction == 0, "MDP Monte Carlo First Visit.  Result for state 0")
+            bestAction = try mdp.getAction(1, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 1, "MDP Monte Carlo First Visit.  Result for state 1")
+            bestAction = try mdp.getAction(2, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 1, "MDP Monte Carlo First Visit.  Result for state 2")
+            bestAction = try mdp.getAction(3, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 1, "MDP Monte Carlo First Visit.  Result for state 3")
+            bestAction = try mdp.getAction(4, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 0, "MDP Monte Carlo First Visit.  Result for state 4")
+            bestAction = try mdp.getAction(5, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 0, "MDP Monte Carlo First Visit.  Result for state 5")
+            bestAction = try mdp.getAction(7, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 3, "MDP Monte Carlo First Visit.  Result for state 7")
+            bestAction = try mdp.getAction(8, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 3, "MDP Monte Carlo First Visit.  Result for state 8")
+            bestAction = try mdp.getAction(9, getActions: getActions,
+                                           getResults: getActionResults)
+            XCTAssert(bestAction == 3, "MDP Monte Carlo First Visit.  Result for state 9")
+        }
+        catch {
+            print("Error training Monte Carlo MDP")
+        }
     }
 
     func testPerformanceExample() {
