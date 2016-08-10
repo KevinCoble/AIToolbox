@@ -17,7 +17,7 @@ I want to stick to the following rules for additions:
   2.  The code will become Swift 3.0 compliant when it is released.  Have any additions ready for that.  Swift 2.2 is used now.
   3.  Base algorithm classes should be configurable, rather than subclassed or repeated:  i.e. no NeuralNetLayerTanh, NeuralNetLayerSigmoid, NeuralNetLayerRectLinear classes - the nonlinearity is configurable.
   4.  Good coding practices - well commented, clearly indented, etc. (Of course, I could use more attention to this myself!)
-  5.  If the algorithm uses a set of data, it must take the DataSet class, not just an array of numbers
+  5.  If the algorithm uses a set of data, it must take a data protocal implementation, not just an array of numbers
   6.  If the algorithm classifies input sets, it should adhere to the Classifier protocol
   7.  If the algorithm performs any sort of regression, it should adhere to the Regressor protocol.  If possible, it should regress multiple values in the output at once (i.e. a NN can have more than 1 node in the output layer)
   8.  All work should use Double precision values.  The one exception is the MetalNeuralNetwork class.  Unfortunately, Metal does not (yet) support double precision floats.

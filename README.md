@@ -73,6 +73,7 @@ Classes/Algorithms supported:
         fitted value iteration for continuous state MDPs - uses any Regression class for fit
                 (see my MDPRobot project on github for an example use)
         Monte-Carlo (every-visit, and first-visit)
+        SARSA
 
     Gaussians
         Single variable
