@@ -302,22 +302,19 @@ class MDPTests: XCTestCase {
     
     func testTemporalDifferenceSARSA() {
         //  Initialize the TD parameters
-        mdp.initDiscreteStateTD(0.5)
+        mdp.initDiscreteStateTD(0.3)
         
         //  Train on 3000 episodes
         let numEpisodes = 3000
-        var ε = 1.0
+        let ε = 1.0
         do {
-            for index in 0..<numEpisodes {
+            for _ in 0..<numEpisodes {
                 let episode = try mdp.generateεEpisode(getStartState,
                                                       ε: ε,
                                                       getResults: getActionResults,
                                                       getReward: getReward)
                 mdp.evaluateTDEpisodeSARSA(episode)
                 
-                if ((index % 100) == 0) {
-                    ε = Double(numEpisodes - index) / Double(numEpisodes)
-                }
             }
         }
         catch {
@@ -347,7 +344,58 @@ class MDPTests: XCTestCase {
             XCTAssert(bestAction == 3, "MDP TD SARSA.  Result for state 9")
         }
         catch {
-            print("Error training TD SARSA MDP")
+            print("Error testing TD SARSA MDP")
+        }
+    }
+    
+    func testQLearning() {
+        //  Initialize the TD parameters
+        mdp.initDiscreteStateTD(0.1)
+        
+        //  Train on 5000 episodes
+        let numEpisodes = 5000
+        var ε = 1.0
+        do {
+            for index in 0..<numEpisodes {
+                let episode = try mdp.generateεEpisode(getStartState,
+                                                        ε: ε,
+                                                        getResults: getActionResults,
+                                                        getReward: getReward)
+                mdp.evaluateTDEpisodeQLearning(episode)
+                
+                if ((index % 100) == 0) {
+                    ε = Double(numEpisodes - index) / Double(numEpisodes)
+                }
+            }
+        }
+        catch {
+            print("Error training Q-Learning MDP")
+        }
+        
+        //  Verify the result
+        do {
+            var bestAction: Int
+            bestAction = try mdp.getGreedyAction(0)
+            XCTAssert(bestAction == 0, "MDP TD Q-Learning.  Result for state 0")
+            bestAction = try mdp.getGreedyAction(1)
+            XCTAssert(bestAction == 1, "MDP TD Q-Learning.  Result for state 1")
+            bestAction = try mdp.getGreedyAction(2)
+            XCTAssert(bestAction == 1, "MDP TD Q-Learning.  Result for state 2")
+            bestAction = try mdp.getGreedyAction(3)
+            XCTAssert(bestAction == 1, "MDP TD Q-Learning.  Result for state 3")
+            bestAction = try mdp.getGreedyAction(4)
+            XCTAssert(bestAction == 0, "MDP TD Q-Learning.  Result for state 4")
+            bestAction = try mdp.getGreedyAction(5)
+            XCTAssert(bestAction == 0, "MDP TD Q-Learning.  Result for state 5")
+            bestAction = try mdp.getGreedyAction(7)
+            XCTAssert(bestAction == 3, "MDP TD Q-Learning.  Result for state 7")
+            bestAction = try mdp.getGreedyAction(8)
+            XCTAssert(bestAction == 3, "MDP TD Q-Learning.  Result for state 8")
+            bestAction = try mdp.getGreedyAction(9)
+            XCTAssert(bestAction == 3, "MDP TD Q-Learning.  Result for state 9")
+        }
+        catch {
+            print("Error testing TD Q-Learning MDP")
         }
     }
     
@@ -430,7 +478,40 @@ class MDPTests: XCTestCase {
             XCTAssert(bestAction == 1, "MDP TD SARSA.  Result for state 3")
         }
         catch {
-            print("Error training TD SARSA MDP")
+            print("Error testing TD SARSA MDP")
+        }
+        
+        
+        //  Test Q-Learming
+        RWmdp.initDiscreteStateTD(0.5)
+        let numQLEpisodes = 1000
+        ε = 1.0
+        do {
+            for index in 0..<numQLEpisodes {
+                let episode = try RWmdp.generateεEpisode(getRWStartState,
+                                                          ε: ε,
+                                                          getResults: getRWActionResults,
+                                                          getReward: getRWReward)
+                RWmdp.evaluateTDEpisodeQLearning(episode)
+                if ((index % 100) == 0) { ε = Double(numQLEpisodes - index) / Double(numQLEpisodes) }
+            }
+        }
+        catch {
+            print("Error training Q-Learning MDP")
+        }
+        
+        //  Verify the result
+        do {
+            var bestAction: Int
+            bestAction = try RWmdp.getGreedyAction(1)
+            XCTAssert(bestAction == 1, "MDP TD Q-Learning.  Result for state 1")
+            bestAction = try RWmdp.getGreedyAction(2)
+            XCTAssert(bestAction == 1, "MDP TD Q-Learning.  Result for state 2")
+            bestAction = try RWmdp.getGreedyAction(3)
+            XCTAssert(bestAction == 1, "MDP TD Q-Learning.  Result for state 3")
+        }
+        catch {
+            print("Error testing TD Q-Learning MDP")
         }
     }
 

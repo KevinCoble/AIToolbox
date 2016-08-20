@@ -41,7 +41,7 @@ public struct MDPEpisode {
 public class MDP {
     var numStates : Int         //  If discrete states
     var numActions : Int
-    var discountFactor : Double
+    var γ : Double
     public var convergenceLimit = 0.0000001
     
     //  Continuous state variables
@@ -60,7 +60,7 @@ public class MDP {
     {
         numStates = states
         numActions = actions
-        discountFactor = discount
+        γ = discount
     }
     
     ///  Method to set the parameters for continuous state fittedValueIteration MDP's
@@ -94,7 +94,7 @@ public class MDP {
                     var newValue = 0.0
                     let results = getResults(fromState: state, action: action)
                     for result in results {
-                        newValue += result.probability * (getReward(fromState: state, action: action, toState: result.state) + (discountFactor * V[result.state]))
+                        newValue += result.probability * (getReward(fromState: state, action: action, toState: result.state) + (γ * V[result.state]))
                     }
                     
                     //  If this is the best so far, store it
@@ -137,7 +137,7 @@ public class MDP {
                         var expectedReward = 0.0
                         let results = getResults(fromState: state, action: action)
                         for result in results {
-                            expectedReward += result.probability * (getReward(fromState: state, action: action, toState: result.state) + (discountFactor * V[result.state]))
+                            expectedReward += result.probability * (getReward(fromState: state, action: action, toState: result.state) + (γ * V[result.state]))
                         }
                         if (expectedReward > bestReward) {
                             bestReward = expectedReward
@@ -158,7 +158,7 @@ public class MDP {
                 if π[state] >= 0 {
                     let results = getResults(fromState: state, action: π[state])
                     for result in results {
-                        matrix[result.state * numStates + state] -= result.probability * discountFactor
+                        matrix[result.state * numStates + state] -= result.probability * γ
                         constants[state] += result.probability * getReward(fromState: state, action: π[state], toState: result.state)
                     }
                 }
@@ -225,7 +225,7 @@ public class MDP {
         var accumulatedReward = 0.0
         for index in (episode.events.count-1).stride(to: 0, by: -1) {
             //  Get the reward
-            accumulatedReward *= discountFactor
+            accumulatedReward *= γ
             accumulatedReward += episode.events[index].reward
             
             //  Get the start state
@@ -254,7 +254,7 @@ public class MDP {
         var accumulatedReward = 0.0
         for index in (episode.events.count-1).stride(to: 0, by: -1) {
             //  Get the reward
-            accumulatedReward *= discountFactor
+            accumulatedReward *= γ
             accumulatedReward += episode.events[index].reward
             
             //  If this was the first instance of the state, update
@@ -301,7 +301,29 @@ public class MDP {
             }
             
             //  Update Q
-            Q[S][A].q_a += α * (R + (discountFactor * Q[Sp][Ap].q_a) - Q[S][A].q_a)
+            Q[S][A].q_a += α * (R + (γ * Q[Sp][Ap].q_a) - Q[S][A].q_a)
+            
+            //  Advance S
+            S = Sp
+        }
+    }
+    
+    ///  Evaluate an episode of a discrete state Temporal difference evaluation using 'Q-Learning'
+    ///  Assumes actions taken during episode are 'exploratory', not just greedy
+    public func evaluateTDEpisodeQLearning(episode: MDPEpisode)
+    {
+        var S = episode.startState
+        for index in 0..<episode.events.count {
+            let A = episode.events[index].action
+            let R = episode.events[index].reward
+            let Sp = episode.events[index].resultState
+            
+            //  Update Q
+            var maxQ = -Double.infinity
+            for action in 0..<numActions {
+                if (Q[Sp][action].q_a > maxQ) { maxQ = Q[Sp][action].q_a }
+            }
+            Q[S][A].q_a += α * (R + (γ * maxQ) - Q[S][A].q_a)
             
             //  Advance S
             S = Sp
@@ -521,7 +543,7 @@ public class MDP {
                             state = try sampleStates.getInput(index)
                             let resultState = getResultingState(fromState: state, action: action)
                             let Vprime = try fitModel.predictOne(resultState)
-                            let expectedReward = getReward(fromState: state, action:action, toState: resultState) + discountFactor * Vprime[0]
+                            let expectedReward = getReward(fromState: state, action:action, toState: resultState) + γ * Vprime[0]
                             if (expectedReward > maximumReward) { maximumReward = expectedReward }
                         }
                         catch {
@@ -548,7 +570,7 @@ public class MDP {
                                 state = try sampleStates.getInput(index)
                                 let resultState = getResultingState(fromState: state, action: action)
                                 let Vprime = try fitModel.predictOne(resultState)
-                                expectedReward += getReward(fromState: state, action:action, toState: resultState)  + discountFactor * Vprime[0]
+                                expectedReward += getReward(fromState: state, action:action, toState: resultState)  + γ * Vprime[0]
                             }
                             catch {
                                 throw MDPErrors.ErrorCreatingSampleTargetValues
