@@ -26,7 +26,7 @@ class LinearRegressionTests: XCTestCase {
         //  Create a data set
         let slope = Double(arc4random()) / Double(UInt32.max)
         let offset = Double(arc4random()) * 100.0 / Double(UInt32.max)
-        let data = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let data = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         var inputs = [0.0]
         do {
             for _ in 0..<50 {
@@ -66,7 +66,7 @@ class LinearRegressionTests: XCTestCase {
             print("Linear Regression Training error")
         }
         //  Create a data set of 4 training examples
-        let testData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let testData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         var expectedOutputs : [Double] = []
         do {
             for _ in 0..<4 {
@@ -97,7 +97,7 @@ class LinearRegressionTests: XCTestCase {
         let slope = Double(arc4random()) / Double(UInt32.max)
         let roc = Double(arc4random()) / Double(UInt32.max)
         let rroc = Double(arc4random()) / Double(UInt32.max)
-        let data = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let data = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         var inputs = [0.0]
         do {
             for _ in 0..<50 {
@@ -129,7 +129,7 @@ class LinearRegressionTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }

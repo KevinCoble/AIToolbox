@@ -9,16 +9,16 @@
 import Foundation
 import Accelerate
 
-enum KMeansError: ErrorType {
-    case TwoFewPointsForClasses
+enum KMeansError: Error {
+    case twoFewPointsForClasses
 }
 
 
 ///  Class to perform k-Means grouping of a dataset
-public class KMeans {
+open class KMeans {
     var numClasses : Int
     var initWithKPlusPlus = true      //  If false, Forgy initialization (only one point used as centroid per class)
-    public private(set) var centroids : [[Double]]
+    open fileprivate(set) var centroids : [[Double]]
     
     public init(classes: Int)
     {
@@ -27,10 +27,10 @@ public class KMeans {
     }
     
     //  Method to classify a dataset
-    public func train(data: MLClassificationDataSet) throws
+    open func train(_ data: MLClassificationDataSet) throws
     {
         //  If there are not enough points for the classes, throw
-        if (data.size < numClasses) { throw KMeansError.TwoFewPointsForClasses }
+        if (data.size < numClasses) { throw KMeansError.twoFewPointsForClasses }
         
         //  If the number of points exactly matches the number of classes, just assign in order
         if (data.size == numClasses) {
@@ -77,7 +77,7 @@ public class KMeans {
                 }
                 
                 //  3. Choose one new data point at random as a new center, using a weighted probability distribution where a point x is chosen with probability proportional to D(x)2.
-                distanceArray.sortInPlace({$0.distanceSquared > $1.distanceSquared})
+                distanceArray.sort(by: {$0.distanceSquared > $1.distanceSquared})
                 totalDistance = sqrt(totalDistance)
                 var selectionDistance = Double(arc4random()) * totalDistance / Double(UInt32.max)
                 selectionDistance *= selectionDistance      //  Square to compare against the list
@@ -145,8 +145,8 @@ public class KMeans {
             //  Move the centroid of each class to the mean of all the points assigned to the class
             for testClass in 0..<numClasses {
                 var count = 0;
-                var startLoc = [Double](count: data.inputDimension, repeatedValue: 0.0)
-                centroids[testClass] = [Double](count: data.inputDimension, repeatedValue: 0.0)
+                var startLoc = [Double](repeating: 0.0, count: data.inputDimension)
+                centroids[testClass] = [Double](repeating: 0.0, count: data.inputDimension)
                 for point in 0..<data.size {
                     do {
                         let inputs = try data.getInput(point)

@@ -1,43 +1,43 @@
 import Cocoa
 
 
-public enum MLViewError: ErrorType {
-    case DataSetNotRegression
-    case DataSetNotClassification
-    case InputVectorNotOfCorrectSize
-    case InputIndexOutsideOfRange
-    case OutputIndexOutsideOfRange
-    case AllClassificationLabelsNotCovered
+public enum MLViewError: Error {
+    case dataSetNotRegression
+    case dataSetNotClassification
+    case inputVectorNotOfCorrectSize
+    case inputIndexOutsideOfRange
+    case outputIndexOutsideOfRange
+    case allClassificationLabelsNotCovered
 }
 
 public enum MLViewAxisSource {
-    case DataInput
-    case DataOutput
-    case ClassLabel     //  Ignores index
+    case dataInput
+    case dataOutput
+    case classLabel     //  Ignores index
 }
 
 public enum MLPlotSymbolShape {
-    case Circle
-    case Rectangle
-    case Plus
-    case Minus
+    case circle
+    case rectangle
+    case plus
+    case minus
 }
 
 public enum MLViewLegendLocation {
-    case UpperLeft
-    case UpperRight
-    case LowerLeft
-    case LowerRight
-    case Custom
+    case upperLeft
+    case upperRight
+    case lowerLeft
+    case lowerRight
+    case custom
 }
 
 ///  Class for symbols showing locations on the plot
-public class MLPlotSymbol {
+open class MLPlotSymbol {
     
     //  Symbol information
-    public var symbolColor: NSColor
-    public var symbolSize: CGFloat = 7.0
-    public var symbolShape: MLPlotSymbolShape = .Circle
+    open var symbolColor: NSColor
+    open var symbolSize: CGFloat = 7.0
+    open var symbolShape: MLPlotSymbolShape = .circle
     
     public init(color: NSColor) {
         symbolColor = color
@@ -50,24 +50,24 @@ public class MLPlotSymbol {
         self.symbolSize = symbolSize
     }
     
-    public func drawAt(point: CGPoint) {
+    open func drawAt(_ point: CGPoint) {
         //  Set the color
         symbolColor.set()
         
         switch (symbolShape) {
-        case .Circle:
+        case .circle:
             let circleRect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.5), symbolSize, symbolSize)
-            let cPath: NSBezierPath = NSBezierPath(ovalInRect: circleRect)
+            let cPath: NSBezierPath = NSBezierPath(ovalIn: circleRect)
             cPath.fill()
-        case .Rectangle:
+        case .rectangle:
             let rect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.5), symbolSize, symbolSize)
             NSRectFill(rect)
-        case .Plus:
+        case .plus:
             let hrect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.1), symbolSize, symbolSize * 0.2)
             NSRectFill(hrect)
             let vrect = NSMakeRect(point.x - (symbolSize * 0.1), point.y - (symbolSize * 0.5), symbolSize * 0.2, symbolSize)
             NSRectFill(vrect)
-        case .Minus:
+        case .minus:
             let rect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.1), symbolSize, symbolSize * 0.2)
             NSRectFill(rect)
         }
@@ -76,32 +76,32 @@ public class MLPlotSymbol {
 }
 
 public protocol MLViewItem {
-    func setColor(color: NSColor)       //  Sets the default color for the item
-    func setScale(scale: (minX: Double, maxX: Double, minY: Double, maxY: Double))      //  Sets the scale to the provided factors, or the item can calculate it's own
-    func draw(bounds: CGRect)
+    func setColor(_ color: NSColor)       //  Sets the default color for the item
+    func setScale(_ scale: (minX: Double, maxX: Double, minY: Double, maxY: Double))      //  Sets the scale to the provided factors, or the item can calculate it's own
+    func draw(_ bounds: CGRect)
     func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)?     //  Return the scale factors used by the item
-    func setInputVector(vector: [Double]) throws       //  Set the input vector used to get values. Plot variable index (if used) is ignored
-    func setXAxisSource(source: MLViewAxisSource, index: Int) throws
-    func setYAxisSource(source: MLViewAxisSource, index: Int) throws
+    func setInputVector(_ vector: [Double]) throws       //  Set the input vector used to get values. Plot variable index (if used) is ignored
+    func setXAxisSource(_ source: MLViewAxisSource, index: Int) throws
+    func setYAxisSource(_ source: MLViewAxisSource, index: Int) throws
 }
 
 ///  Class for drawing a regression style data set onto a plot
-public class MLViewRegressionDataSet: MLViewItem {
+open class MLViewRegressionDataSet: MLViewItem {
     //  DataSet to be drawn
     let dataset : DataSet
 
     //  Axis data source
-    var sourceTypeXAxis = MLViewAxisSource.DataInput
+    var sourceTypeXAxis = MLViewAxisSource.dataInput
     var sourceIndexXAxis = 0
-    var sourceTypeYAxis = MLViewAxisSource.DataOutput
+    var sourceTypeYAxis = MLViewAxisSource.dataOutput
     var sourceIndexYAxis = 0
     
     //  Scale parameters
-    public var scaleToData = true
-    public var roundScales = true
+    open var scaleToData = true
+    open var roundScales = true
 
     //  Symbol information
-    public var symbol = MLPlotSymbol(color: NSColor.greenColor())
+    open var symbol = MLPlotSymbol(color: NSColor.green)
     
     //  Axis scaling ranges
     var minX = 0.0
@@ -110,7 +110,7 @@ public class MLViewRegressionDataSet: MLViewItem {
     var maxY = 100.0
     
     public init(dataset: DataSet) throws {
-        if (dataset.dataType != .Regression) {throw MLViewError.DataSetNotRegression}
+        if (dataset.dataType != .regression) {throw MLViewError.dataSetNotRegression}
         self.dataset = dataset
     }
     
@@ -126,16 +126,16 @@ public class MLViewRegressionDataSet: MLViewItem {
         self.symbol = symbol
     }
     
-    public func scaleToData(calculateScale : Bool) {
+    open func scaleToData(_ calculateScale : Bool) {
         scaleToData = calculateScale
     }
     
-    public func setColor(color: NSColor)       //  Sets the default color for the item
+    open func setColor(_ color: NSColor)       //  Sets the default color for the item
     {
         symbol.symbolColor = color
     }
     
-    public func setScale(scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
+    open func setScale(_ scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
         //  Store the scale to be used
         minX = scale.minX
         maxX = scale.maxX
@@ -143,7 +143,7 @@ public class MLViewRegressionDataSet: MLViewItem {
         maxY = scale.maxY
     }
     
-    public func draw(bounds: CGRect) {
+    open func draw(_ bounds: CGRect) {
         //  Get the scaling factors
         let scaleFactorX = CGFloat(1.0 / (maxX - minX))
         let scaleFactorY = CGFloat(1.0 / (maxY - minY))
@@ -153,7 +153,7 @@ public class MLViewRegressionDataSet: MLViewItem {
             for point in 0..<dataset.size {
                 //  Get the source of the X axis value
                 var x_source : [Double]
-                if (sourceTypeXAxis == .DataInput) {
+                if (sourceTypeXAxis == .dataInput) {
                     x_source = try dataset.getInput(point)
                 }
                 else {
@@ -161,7 +161,7 @@ public class MLViewRegressionDataSet: MLViewItem {
                 }
                 //  Get the source of the Y axis value
                 var y_source : [Double]
-                if (sourceTypeYAxis == .DataInput) {
+                if (sourceTypeYAxis == .dataInput) {
                     y_source = try dataset.getInput(point)
                 }
                 else {
@@ -178,12 +178,12 @@ public class MLViewRegressionDataSet: MLViewItem {
         }
     }
     
-    public func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
+    open func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
         //  If we are scaling to the data, determine the scale factors now
         if (scaleToData) {
             //  Get the source of the X axis range
             var x_range : [(minimum: Double, maximum: Double)]
-            if (sourceTypeXAxis == .DataInput) {
+            if (sourceTypeXAxis == .dataInput) {
                 x_range = dataset.getInputRange()
             }
             else {
@@ -203,7 +203,7 @@ public class MLViewRegressionDataSet: MLViewItem {
             
             //  Get the source of the Y axis range
             var y_range : [(minimum: Double, maximum: Double)]
-            if (sourceTypeYAxis == .DataInput) {
+            if (sourceTypeYAxis == .dataInput) {
                 y_range = dataset.getInputRange()
             }
             else {
@@ -225,32 +225,32 @@ public class MLViewRegressionDataSet: MLViewItem {
         return (minX: minX, maxX: maxX, minY: minY, maxY: maxY)
     }
     
-    public func setInputVector(vector: [Double]) throws {
+    open func setInputVector(_ vector: [Double]) throws {
         //  Not needed for a data set
     }
     
-    public func setXAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setXAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         switch (source) {
-        case .DataInput:
-            if (index > dataset.inputDimension) { throw MLViewError.InputIndexOutsideOfRange }
-        case .DataOutput:
-            if (dataset.dataType != .Regression) { throw MLViewError.DataSetNotRegression }
-            if (index > dataset.outputDimension) { throw MLViewError.OutputIndexOutsideOfRange }
-        case .ClassLabel:     //  Ignores index
-            throw MLViewError.DataSetNotClassification
+        case .dataInput:
+            if (index > dataset.inputDimension) { throw MLViewError.inputIndexOutsideOfRange }
+        case .dataOutput:
+            if (dataset.dataType != .regression) { throw MLViewError.dataSetNotRegression }
+            if (index > dataset.outputDimension) { throw MLViewError.outputIndexOutsideOfRange }
+        case .classLabel:     //  Ignores index
+            throw MLViewError.dataSetNotClassification
         }
         sourceTypeXAxis = source
         sourceIndexXAxis = index
     }
-    public func setYAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setYAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         switch (source) {
-        case .DataInput:
-            if (index > dataset.inputDimension) { throw MLViewError.InputIndexOutsideOfRange }
-        case .DataOutput:
-            if (dataset.dataType != .Regression) { throw MLViewError.DataSetNotRegression }
-            if (index > dataset.outputDimension) { throw MLViewError.OutputIndexOutsideOfRange }
-        case .ClassLabel:     //  Ignores index
-            throw MLViewError.DataSetNotClassification
+        case .dataInput:
+            if (index > dataset.inputDimension) { throw MLViewError.inputIndexOutsideOfRange }
+        case .dataOutput:
+            if (dataset.dataType != .regression) { throw MLViewError.dataSetNotRegression }
+            if (index > dataset.outputDimension) { throw MLViewError.outputIndexOutsideOfRange }
+        case .classLabel:     //  Ignores index
+            throw MLViewError.dataSetNotClassification
         }
         sourceTypeYAxis = source
         sourceIndexYAxis = index
@@ -259,22 +259,22 @@ public class MLViewRegressionDataSet: MLViewItem {
 
 
 ///  Class for drawing a classification style data set onto a plot
-public class MLViewClassificationDataSet: MLViewItem {
+open class MLViewClassificationDataSet: MLViewItem {
     //  DataSet to be drawn
     let dataset : DataSet
     
     //  Axis data source
-    var sourceTypeXAxis = MLViewAxisSource.DataInput
+    var sourceTypeXAxis = MLViewAxisSource.dataInput
     var sourceIndexXAxis = 0
-    var sourceTypeYAxis = MLViewAxisSource.DataInput
+    var sourceTypeYAxis = MLViewAxisSource.dataInput
     var sourceIndexYAxis = 1
     
     //  Scale parameters
-    public var scaleToData = true
-    public var roundScales = true
+    open var scaleToData = true
+    open var roundScales = true
     
     //  Symbol information
-    public var symbols : [MLPlotSymbol]
+    open var symbols : [MLPlotSymbol]
     
     //  Axis scaling ranges
     var minX = 0.0
@@ -283,7 +283,7 @@ public class MLViewClassificationDataSet: MLViewItem {
     var maxY = 100.0
     
     public init(dataset: DataSet) throws {
-        if (dataset.dataType != .Classification) {throw MLViewError.DataSetNotClassification}
+        if (dataset.dataType != .classification) {throw MLViewError.dataSetNotClassification}
         self.dataset = dataset
         
         //  Get the classes
@@ -293,20 +293,20 @@ public class MLViewClassificationDataSet: MLViewItem {
         //  Set a symbol for each of them
         symbols = []
         let colors = [
-            NSColor.greenColor(),
-            NSColor.redColor(),
-            NSColor.blueColor(),
-            NSColor.cyanColor(),
-            NSColor.magentaColor(),
-            NSColor.yellowColor(),
-            NSColor.grayColor(),
-            NSColor.blackColor()
+            NSColor.green,
+            NSColor.red,
+            NSColor.blue,
+            NSColor.cyan,
+            NSColor.magenta,
+            NSColor.yellow,
+            NSColor.gray,
+            NSColor.black
         ]
         let shapes = [
-            MLPlotSymbolShape.Circle,
-            MLPlotSymbolShape.Rectangle,
-            MLPlotSymbolShape.Plus,
-            MLPlotSymbolShape.Minus
+            MLPlotSymbolShape.circle,
+            MLPlotSymbolShape.rectangle,
+            MLPlotSymbolShape.plus,
+            MLPlotSymbolShape.minus
         ]
         var colorIndex = 0
         var shapeIndex = 0
@@ -330,24 +330,24 @@ public class MLViewClassificationDataSet: MLViewItem {
         
         try dataset.groupClasses()
         let optionalData = dataset.optionalData as! ClassificationData
-        if (symbols.count < optionalData.numClasses) {throw MLViewError.AllClassificationLabelsNotCovered}
+        if (symbols.count < optionalData.numClasses) {throw MLViewError.allClassificationLabelsNotCovered}
         
         self.symbols = symbols
     }
     
     //  Sets ALL symbols to the specified color
-    public func setColor(color: NSColor)       //  Sets the default color for the item
+    open func setColor(_ color: NSColor)       //  Sets the default color for the item
     {
         for symbol in symbols {
             symbol.symbolColor = color
         }
     }
     
-    public func scaleToData(calculateScale : Bool) {
+    open func scaleToData(_ calculateScale : Bool) {
         scaleToData = calculateScale
     }
     
-    public func setScale(scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
+    open func setScale(_ scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
         //  Store the scale to be used
         minX = scale.minX
         maxX = scale.maxX
@@ -355,7 +355,7 @@ public class MLViewClassificationDataSet: MLViewItem {
         maxY = scale.maxY
     }
     
-    public func draw(bounds: CGRect) {
+    open func draw(_ bounds: CGRect) {
         //  Get the classes
         do {
             try dataset.groupClasses()
@@ -375,7 +375,7 @@ public class MLViewClassificationDataSet: MLViewItem {
             for point in 0..<dataset.size {
                 //  Get the source of the X axis value
                 var x_source : [Double]
-                if (sourceTypeXAxis == .DataInput) {
+                if (sourceTypeXAxis == .dataInput) {
                     x_source = try dataset.getInput(point)
                 }
                 else {
@@ -383,7 +383,7 @@ public class MLViewClassificationDataSet: MLViewItem {
                 }
                 //  Get the source of the Y axis value
                 var y_source : [Double]
-                if (sourceTypeYAxis == .DataInput) {
+                if (sourceTypeYAxis == .dataInput) {
                     y_source = try dataset.getInput(point)
                 }
                 else {
@@ -414,12 +414,12 @@ public class MLViewClassificationDataSet: MLViewItem {
         }
     }
     
-    public func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
+    open func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
         //  If we are scaling to the data, determine the scale factors now
         if (scaleToData) {
             //  Get the source of the X axis range
             var x_range : [(minimum: Double, maximum: Double)]
-            if (sourceTypeXAxis == .DataInput) {
+            if (sourceTypeXAxis == .dataInput) {
                 x_range = dataset.getInputRange()
             }
             else {
@@ -439,7 +439,7 @@ public class MLViewClassificationDataSet: MLViewItem {
             
             //  Get the source of the Y axis range
             var y_range : [(minimum: Double, maximum: Double)]
-            if (sourceTypeYAxis == .DataInput) {
+            if (sourceTypeYAxis == .dataInput) {
                 y_range = dataset.getInputRange()
             }
             else {
@@ -461,32 +461,32 @@ public class MLViewClassificationDataSet: MLViewItem {
         return (minX: minX, maxX: maxX, minY: minY, maxY: maxY)
     }
     
-    public func setInputVector(vector: [Double]) throws {
+    open func setInputVector(_ vector: [Double]) throws {
         //  Not needed for a data set
     }
     
-    public func setXAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setXAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         switch (source) {
-        case .DataInput:
-            if (index > dataset.inputDimension) { throw MLViewError.InputIndexOutsideOfRange }
-        case .DataOutput:
-            if (dataset.dataType != .Regression) { throw MLViewError.DataSetNotRegression }
-            if (index > dataset.outputDimension) { throw MLViewError.OutputIndexOutsideOfRange }
-        case .ClassLabel:     //  Ignores index
-            throw MLViewError.DataSetNotClassification
+        case .dataInput:
+            if (index > dataset.inputDimension) { throw MLViewError.inputIndexOutsideOfRange }
+        case .dataOutput:
+            if (dataset.dataType != .regression) { throw MLViewError.dataSetNotRegression }
+            if (index > dataset.outputDimension) { throw MLViewError.outputIndexOutsideOfRange }
+        case .classLabel:     //  Ignores index
+            throw MLViewError.dataSetNotClassification
         }
         sourceTypeXAxis = source
         sourceIndexXAxis = index
     }
-    public func setYAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setYAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         switch (source) {
-        case .DataInput:
-            if (index > dataset.inputDimension) { throw MLViewError.InputIndexOutsideOfRange }
-        case .DataOutput:
-            if (dataset.dataType != .Regression) { throw MLViewError.DataSetNotRegression }
-            if (index > dataset.outputDimension) { throw MLViewError.OutputIndexOutsideOfRange }
-        case .ClassLabel:     //  Ignores index
-            throw MLViewError.DataSetNotClassification
+        case .dataInput:
+            if (index > dataset.inputDimension) { throw MLViewError.inputIndexOutsideOfRange }
+        case .dataOutput:
+            if (dataset.dataType != .regression) { throw MLViewError.dataSetNotRegression }
+            if (index > dataset.outputDimension) { throw MLViewError.outputIndexOutsideOfRange }
+        case .classLabel:     //  Ignores index
+            throw MLViewError.dataSetNotClassification
         }
         sourceTypeYAxis = source
         sourceIndexYAxis = index
@@ -494,20 +494,20 @@ public class MLViewClassificationDataSet: MLViewItem {
 }
 
 ///  Class for drawing a regression line
-public class MLViewRegressionLine: MLViewItem {
+open class MLViewRegressionLine: MLViewItem {
     //  Regression line to be drawn
     let regressor : Regressor
     
     //  Axis data source
-    var sourceTypeXAxis = MLViewAxisSource.DataInput
+    var sourceTypeXAxis = MLViewAxisSource.dataInput
     var sourceIndexXAxis = 0
-    var sourceTypeYAxis = MLViewAxisSource.DataOutput
+    var sourceTypeYAxis = MLViewAxisSource.dataOutput
     var sourceIndexYAxis = 0
     var inputVector : [Double] = []
     
     //  Line information
-    public var lineColor = NSColor.redColor()
-    public var lineThickness : CGFloat = 1.0
+    open var lineColor = NSColor.red
+    open var lineThickness : CGFloat = 1.0
     
     //  Axis scaling ranges
     var minX = 0.0
@@ -518,7 +518,7 @@ public class MLViewRegressionLine: MLViewItem {
     public init(regressor: Regressor) {
         self.regressor = regressor
         
-        inputVector = [Double](count: regressor.getInputDimension(), repeatedValue: 0.0)
+        inputVector = [Double](repeating: 0.0, count: regressor.getInputDimension())
     }
     
     public convenience init(regressor: Regressor, color: NSColor) {
@@ -527,12 +527,12 @@ public class MLViewRegressionLine: MLViewItem {
         setColor(color)
     }
     
-    public func setColor(color: NSColor)       //  Sets the default color for the item
+    open func setColor(_ color: NSColor)       //  Sets the default color for the item
     {
         lineColor = color
     }
     
-    public func setScale(scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
+    open func setScale(_ scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
         //  Store the scale
         minX = scale.minX
         maxX = scale.maxX
@@ -540,7 +540,7 @@ public class MLViewRegressionLine: MLViewItem {
         maxY = scale.maxY
     }
     
-    public func draw(bounds: CGRect) {
+    open func draw(_ bounds: CGRect) {
         //  Save the current state
         NSGraphicsContext.saveGraphicsState()
         
@@ -563,13 +563,13 @@ public class MLViewRegressionLine: MLViewItem {
             //  Get the first pixel
             var xIterator = minX - (pixelX * 0.5)
             var inputs = inputVector
-            if (sourceTypeXAxis == .DataInput) {
+            if (sourceTypeXAxis == .dataInput) {
                 inputs[sourceIndexXAxis] = xIterator
             }
             let outputs = try regressor.predictOne(inputs)
             //  Get the X axis value
             var xValue : Double
-            if (sourceTypeXAxis == .DataInput) {
+            if (sourceTypeXAxis == .dataInput) {
                 xValue = inputs[sourceIndexXAxis]
             }
             else {
@@ -577,7 +577,7 @@ public class MLViewRegressionLine: MLViewItem {
             }
             //  Get the Y axis value
             var yValue : Double
-            if (sourceTypeYAxis == .DataInput) {
+            if (sourceTypeYAxis == .dataInput) {
                 yValue = inputs[sourceIndexYAxis]
             }
             else {
@@ -586,24 +586,24 @@ public class MLViewRegressionLine: MLViewItem {
             //  Get the point coordinates
             let x = (CGFloat(xValue - minX) * scaleFactorX) * bounds.width + bounds.origin.x
             let y = (CGFloat(yValue - minY) * scaleFactorY) * bounds.height + bounds.origin.y
-            path.moveToPoint(CGPoint(x: x, y: y))
+            path.move(to: CGPoint(x: x, y: y))
 
             //  Iterate through each pixel
             while (xIterator < maxX) {
                 inputs = inputVector
-                if (sourceTypeXAxis == .DataInput) {
+                if (sourceTypeXAxis == .dataInput) {
                     inputs[sourceIndexXAxis] = xIterator
                 }
                 let outputs = try regressor.predictOne(inputs)
                 //  Get the X axis value
-                if (sourceTypeXAxis == .DataInput) {
+                if (sourceTypeXAxis == .dataInput) {
                     xValue = inputs[sourceIndexXAxis]
                 }
                 else {
                     xValue = outputs[sourceIndexXAxis]
                 }
                 //  Get the Y axis value
-                if (sourceTypeYAxis == .DataInput) {
+                if (sourceTypeYAxis == .dataInput) {
                     yValue = inputs[sourceIndexYAxis]
                 }
                 else {
@@ -613,7 +613,7 @@ public class MLViewRegressionLine: MLViewItem {
                 let x = (CGFloat(xValue - minX) * scaleFactorX) * bounds.width + bounds.origin.x
                 let y = (CGFloat(yValue - minY) * scaleFactorY) * bounds.height + bounds.origin.y
                 xIterator += pixelX
-                path.lineToPoint(CGPoint(x: x, y: y))
+                path.line(to: CGPoint(x: x, y: y))
             }
 
             //  Draw the line
@@ -627,35 +627,35 @@ public class MLViewRegressionLine: MLViewItem {
         NSGraphicsContext.restoreGraphicsState()
     }
     
-    public func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
+    open func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
         return nil
     }
     
-    public func setInputVector(vector: [Double]) throws {
-        if (regressor.getInputDimension() > vector.count) { throw MLViewError.InputVectorNotOfCorrectSize}
+    open func setInputVector(_ vector: [Double]) throws {
+        if (regressor.getInputDimension() > vector.count) { throw MLViewError.inputVectorNotOfCorrectSize}
         inputVector = vector
     }
     
-    public func setXAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setXAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         switch (source) {
-        case .DataInput:
-            if (index > regressor.getInputDimension()) { throw MLViewError.InputIndexOutsideOfRange }
-        case .DataOutput:
-            if (index > regressor.getOutputDimension()) { throw MLViewError.OutputIndexOutsideOfRange }
-        case .ClassLabel:     //  Ignores index
-            throw MLViewError.DataSetNotClassification
+        case .dataInput:
+            if (index > regressor.getInputDimension()) { throw MLViewError.inputIndexOutsideOfRange }
+        case .dataOutput:
+            if (index > regressor.getOutputDimension()) { throw MLViewError.outputIndexOutsideOfRange }
+        case .classLabel:     //  Ignores index
+            throw MLViewError.dataSetNotClassification
         }
         sourceTypeXAxis = source
         sourceIndexXAxis = index
     }
-    public func setYAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setYAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         switch (source) {
-        case .DataInput:
-            if (index > regressor.getInputDimension()) { throw MLViewError.InputIndexOutsideOfRange }
-        case .DataOutput:
-            if (index > regressor.getOutputDimension()) { throw MLViewError.OutputIndexOutsideOfRange }
-        case .ClassLabel:     //  Ignores index
-            throw MLViewError.DataSetNotClassification
+        case .dataInput:
+            if (index > regressor.getInputDimension()) { throw MLViewError.inputIndexOutsideOfRange }
+        case .dataOutput:
+            if (index > regressor.getOutputDimension()) { throw MLViewError.outputIndexOutsideOfRange }
+        case .classLabel:     //  Ignores index
+            throw MLViewError.dataSetNotClassification
         }
         sourceTypeYAxis = source
         sourceIndexYAxis = index
@@ -664,21 +664,21 @@ public class MLViewRegressionLine: MLViewItem {
 
 
 ///  Class for drawing a classification area onto a plot
-public class MLViewClassificationArea: MLViewItem {
+open class MLViewClassificationArea: MLViewItem {
     //  Classifier to be drawn
     let classifier : Classifier
     
     //  Axis data source
-    var sourceTypeXAxis = MLViewAxisSource.DataInput
+    var sourceTypeXAxis = MLViewAxisSource.dataInput
     var sourceIndexXAxis = 0
-    var sourceTypeYAxis = MLViewAxisSource.DataInput
+    var sourceTypeYAxis = MLViewAxisSource.dataInput
     var sourceIndexYAxis = 1
     var inputVector : [Double] = []
     
     //  Label color information
-    public var unknownColor = NSColor.whiteColor()
-    public var colors : [NSColor]
-    public var granularity = 4      ///  Size of 'pixels' area is drawn in
+    open var unknownColor = NSColor.white
+    open var colors : [NSColor]
+    open var granularity = 4      ///  Size of 'pixels' area is drawn in
     
     //  Axis scaling ranges
     var minX = 0.0
@@ -690,14 +690,14 @@ public class MLViewClassificationArea: MLViewItem {
         self.classifier = classifier
         
         let startColors = [
-            NSColor.greenColor(),
-            NSColor.redColor(),
-            NSColor.blueColor(),
-            NSColor.cyanColor(),
-            NSColor.magentaColor(),
-            NSColor.yellowColor(),
-            NSColor.grayColor(),
-            NSColor.blackColor()
+            NSColor.green,
+            NSColor.red,
+            NSColor.blue,
+            NSColor.cyan,
+            NSColor.magenta,
+            NSColor.yellow,
+            NSColor.gray,
+            NSColor.black
         ]
         let numClasses = classifier.getNumberOfClasses()
         colors = []
@@ -716,7 +716,7 @@ public class MLViewClassificationArea: MLViewItem {
             }
         }
         
-        inputVector = [Double](count: classifier.getInputDimension(), repeatedValue: 0.0)
+        inputVector = [Double](repeating: 0.0, count: classifier.getInputDimension())
     }
     
     //  Convenience constructor to create plot object and set colors for the classification labels
@@ -726,12 +726,12 @@ public class MLViewClassificationArea: MLViewItem {
         self.colors = colors
     }
     
-    public func setColor(color: NSColor)       //  Sets the default color for the item
+    open func setColor(_ color: NSColor)       //  Sets the default color for the item
     {
         unknownColor = color
     }
     
-    public func setScale(scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
+    open func setScale(_ scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
         //  Store the scale
         minX = scale.minX
         maxX = scale.maxX
@@ -739,7 +739,7 @@ public class MLViewClassificationArea: MLViewItem {
         maxY = scale.maxY
     }
     
-    public func draw(bounds: CGRect) {
+    open func draw(_ bounds: CGRect) {
         //  draw the 'other' color
         unknownColor.setFill()
         NSRectFill(bounds)
@@ -781,10 +781,10 @@ public class MLViewClassificationArea: MLViewItem {
                     
                     //  Get the class
                     var inputs = inputVector
-                    if (sourceTypeXAxis == .DataInput) {
+                    if (sourceTypeXAxis == .dataInput) {
                         inputs[sourceIndexXAxis] = xIterator + (pixelX * 0.5)
                     }
-                    if (sourceTypeYAxis == .DataInput) {
+                    if (sourceTypeYAxis == .dataInput) {
                         inputs[sourceIndexYAxis] = yIterator + (pixelY * 0.5)
                     }
                     let label = try classifier.classifyOne(inputs)
@@ -819,34 +819,34 @@ public class MLViewClassificationArea: MLViewItem {
         }
     }
     
-    public func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
+    open func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
         return nil
     }
     
-    public func setInputVector(vector: [Double]) throws {
-        if (classifier.getInputDimension() > vector.count) { throw MLViewError.InputVectorNotOfCorrectSize}
+    open func setInputVector(_ vector: [Double]) throws {
+        if (classifier.getInputDimension() > vector.count) { throw MLViewError.inputVectorNotOfCorrectSize}
         inputVector = vector
     }
     
-    public func setXAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setXAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         switch (source) {
-        case .DataInput:
-            if (index > classifier.getInputDimension()) { throw MLViewError.InputIndexOutsideOfRange }
-        case .DataOutput:
-            throw MLViewError.DataSetNotRegression
-        case .ClassLabel:     //  Ignores index
+        case .dataInput:
+            if (index > classifier.getInputDimension()) { throw MLViewError.inputIndexOutsideOfRange }
+        case .dataOutput:
+            throw MLViewError.dataSetNotRegression
+        case .classLabel:     //  Ignores index
             break
         }
         sourceTypeXAxis = source
         sourceIndexXAxis = index
     }
-    public func setYAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setYAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         switch (source) {
-        case .DataInput:
-            if (index > classifier.getInputDimension()) { throw MLViewError.InputIndexOutsideOfRange }
-        case .DataOutput:
-            throw MLViewError.DataSetNotRegression
-        case .ClassLabel:     //  Ignores index
+        case .dataInput:
+            if (index > classifier.getInputDimension()) { throw MLViewError.inputIndexOutsideOfRange }
+        case .dataOutput:
+            throw MLViewError.dataSetNotRegression
+        case .classLabel:     //  Ignores index
             break
         }
         sourceTypeYAxis = source
@@ -856,9 +856,9 @@ public class MLViewClassificationArea: MLViewItem {
 
 
 ///  Class for showing axis labels
-public class MLViewAxisLabel: MLViewItem {
-    public var showXAxis : Bool
-    public var showYAxis : Bool
+open class MLViewAxisLabel: MLViewItem {
+    open var showXAxis : Bool
+    open var showYAxis : Bool
     
     //  Drawing offset
     var xOffset : CGFloat = 0.0
@@ -873,17 +873,17 @@ public class MLViewAxisLabel: MLViewItem {
     var maxY = 100.0
     
     //  Axis appearance
-    public var XAxisColor = NSColor.grayColor()
-    public var YAxisColor = NSColor.grayColor()
-    public var MajorTickDivisions = 5
-    public var MinorTicksDivisionsPerMajorTick = 5
-    public var XAxisMajorTickHeight : CGFloat = 6.0
-    public var XAxisMinorTickHeight : CGFloat = 3.0
-    public var YAxisMajorTickWidth : CGFloat = 6.0
-    public var YAxisMinorTickWidth : CGFloat = 3.0
-    public var labelFont = NSFont(name: "Helvetica Neue", size: 10.0)
-    public var XAxisLabelDecimalDigits = 2
-    public var YAxisLabelDecimalDigits = 2
+    open var XAxisColor = NSColor.gray
+    open var YAxisColor = NSColor.gray
+    open var MajorTickDivisions = 5
+    open var MinorTicksDivisionsPerMajorTick = 5
+    open var XAxisMajorTickHeight : CGFloat = 6.0
+    open var XAxisMinorTickHeight : CGFloat = 3.0
+    open var YAxisMajorTickWidth : CGFloat = 6.0
+    open var YAxisMinorTickWidth : CGFloat = 3.0
+    open var labelFont = NSFont(name: "Helvetica Neue", size: 10.0)
+    open var XAxisLabelDecimalDigits = 2
+    open var YAxisLabelDecimalDigits = 2
     
     //  Internal draw variables
     var xLabelHeight : CGFloat = 0.0
@@ -894,58 +894,58 @@ public class MLViewAxisLabel: MLViewItem {
         showYAxis = showY
     }
     
-    public func setOffsets(x: CGFloat, y: CGFloat) {
+    open func setOffsets(_ x: CGFloat, y: CGFloat) {
         xOffset = x
         yOffset = y
     }
 
-    public func setColor(color: NSColor) {
+    open func setColor(_ color: NSColor) {
         XAxisColor = color
         YAxisColor = color
     }
-    public func setScale(scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
+    open func setScale(_ scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
         //  Store the scale
         minX = scale.minX
         maxX = scale.maxX
         minY = scale.minY
         maxY = scale.maxY
     }
-    public func draw(bounds: CGRect) {
+    open func draw(_ bounds: CGRect) {
         if (showXAxis) {
             //  Get the label font attributes
             let labelParaStyle = NSMutableParagraphStyle()
             labelParaStyle.lineSpacing = 0.0
-            labelParaStyle.alignment = NSTextAlignment.Center
+            labelParaStyle.alignment = NSTextAlignment.center
             let labelAttributes = [
                 NSForegroundColorAttributeName: XAxisColor,
                 NSParagraphStyleAttributeName: labelParaStyle,
                 NSFontAttributeName: labelFont!
-            ]
+            ] as [String : Any]
             
             let format = String(format: "%%.%df", XAxisLabelDecimalDigits)
             XAxisColor.set()
             let path = NSBezierPath()
             let yPos = yOffset + xLabelHeight + 2.0
-            path.moveToPoint(CGPoint(x: bounds.origin.x, y: yPos))
-            path.lineToPoint(CGPoint(x: bounds.origin.x + bounds.width, y: yPos))
+            path.move(to: CGPoint(x: bounds.origin.x, y: yPos))
+            path.line(to: CGPoint(x: bounds.origin.x + bounds.width, y: yPos))
             path.stroke()
             for i in 0...MajorTickDivisions {
                 let xpos = bounds.width * CGFloat(i) / CGFloat(MajorTickDivisions) + bounds.origin.x
                 path.removeAllPoints()
-                path.moveToPoint(CGPoint(x: xpos, y: yPos))
-                path.lineToPoint(CGPoint(x: xpos, y: yPos + XAxisMajorTickHeight))
+                path.move(to: CGPoint(x: xpos, y: yPos))
+                path.line(to: CGPoint(x: xpos, y: yPos + XAxisMajorTickHeight))
                 path.stroke()
                 let value = (maxX - minX) * Double(i) / Double(MajorTickDivisions) + minX
                 let label = String(format: format, value)
-                let labelSize = label.sizeWithAttributes(labelAttributes)
+                let labelSize = label.size(withAttributes: labelAttributes)
                 let labelRect = CGRect(x: xpos - labelSize.width * 0.5, y: yPos - 2.0 - labelSize.height, width: labelSize.width, height: labelSize.height)
-                label.drawInRect(labelRect, withAttributes: labelAttributes)
+                label.draw(in: labelRect, withAttributes: labelAttributes)
                 if (MinorTicksDivisionsPerMajorTick > 1) {
                     for j in 1..<MinorTicksDivisionsPerMajorTick {
                         let minorXpos = bounds.width * CGFloat(j) / CGFloat(MajorTickDivisions * MinorTicksDivisionsPerMajorTick)  + xpos
                         path.removeAllPoints()
-                        path.moveToPoint(CGPoint(x: minorXpos, y: yPos))
-                        path.lineToPoint(CGPoint(x: minorXpos, y: yPos + XAxisMinorTickHeight))
+                        path.move(to: CGPoint(x: minorXpos, y: yPos))
+                        path.line(to: CGPoint(x: minorXpos, y: yPos + XAxisMinorTickHeight))
                         path.stroke()
                     }
                 }
@@ -956,44 +956,44 @@ public class MLViewAxisLabel: MLViewItem {
             //  Get the label font attributes
             let labelParaStyle = NSMutableParagraphStyle()
             labelParaStyle.lineSpacing = 0.0
-            labelParaStyle.alignment = NSTextAlignment.Right
+            labelParaStyle.alignment = NSTextAlignment.right
             let labelAttributes = [
                 NSForegroundColorAttributeName: YAxisColor,
                 NSParagraphStyleAttributeName: labelParaStyle,
                 NSFontAttributeName: labelFont!
-            ]
+            ] as [String : Any]
             
             let format = String(format: "%%.%df", YAxisLabelDecimalDigits)
             YAxisColor.set()
             let path = NSBezierPath()
             let xPos = xOffset + yMaxLabelWidth + 2.0
-            path.moveToPoint(CGPoint(x: xPos, y: bounds.origin.y))
-            path.lineToPoint(CGPoint(x: xPos, y: bounds.origin.y + bounds.height))
+            path.move(to: CGPoint(x: xPos, y: bounds.origin.y))
+            path.line(to: CGPoint(x: xPos, y: bounds.origin.y + bounds.height))
             path.stroke()
             for i in 0...MajorTickDivisions {
                 let ypos = bounds.height * CGFloat(i) / CGFloat(MajorTickDivisions) + bounds.origin.y
                 path.removeAllPoints()
-                path.moveToPoint(CGPoint(x: xPos, y: ypos))
-                path.lineToPoint(CGPoint(x: xPos + YAxisMajorTickWidth, y: ypos))
+                path.move(to: CGPoint(x: xPos, y: ypos))
+                path.line(to: CGPoint(x: xPos + YAxisMajorTickWidth, y: ypos))
                 path.stroke()
                 let value = (maxY - minY) * Double(i) / Double(MajorTickDivisions) + minY
                 let label = String(format: format, value)
-                let labelSize = label.sizeWithAttributes(labelAttributes)
+                let labelSize = label.size(withAttributes: labelAttributes)
                 let labelRect = CGRect(x: xOffset, y: ypos - (labelSize.height * 0.5), width: yMaxLabelWidth, height: labelSize.height)
-                label.drawInRect(labelRect, withAttributes: labelAttributes)
+                label.draw(in: labelRect, withAttributes: labelAttributes)
                 if (MinorTicksDivisionsPerMajorTick > 1) {
                     for j in 1..<MinorTicksDivisionsPerMajorTick {
                         let minorYpos = bounds.height * CGFloat(j) / CGFloat(MajorTickDivisions * MinorTicksDivisionsPerMajorTick)  + ypos
                         path.removeAllPoints()
-                        path.moveToPoint(CGPoint(x: xPos, y: minorYpos))
-                        path.lineToPoint(CGPoint(x: xPos + YAxisMinorTickWidth, y: minorYpos))
+                        path.move(to: CGPoint(x: xPos, y: minorYpos))
+                        path.line(to: CGPoint(x: xPos + YAxisMinorTickWidth, y: minorYpos))
                         path.stroke()
                     }
                 }
             }
         }
     }
-    public func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
+    open func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
         return nil
     }
     
@@ -1005,14 +1005,14 @@ public class MLViewAxisLabel: MLViewItem {
         //  Get the label font sizing
         let labelParaStyle = NSMutableParagraphStyle()
         labelParaStyle.lineSpacing = 0.0
-        labelParaStyle.alignment = NSTextAlignment.Center
+        labelParaStyle.alignment = NSTextAlignment.center
         let labelAttributes = [
             NSForegroundColorAttributeName: XAxisColor,
             NSParagraphStyleAttributeName: labelParaStyle,
             //NSTextAlignment: textalign,
             NSFontAttributeName: labelFont!
-        ]
-        let labelSize = "123.4".sizeWithAttributes(labelAttributes)
+        ] as [String : Any]
+        let labelSize = "123.4".size(withAttributes: labelAttributes)
         
         xAxisHeight = XAxisMajorTickHeight + 2.0     //  Tick plus marging
         xAxisHeight += labelSize.height
@@ -1027,13 +1027,13 @@ public class MLViewAxisLabel: MLViewItem {
         //  Get the label font attributes
         let labelParaStyle = NSMutableParagraphStyle()
         labelParaStyle.lineSpacing = 0.0
-        labelParaStyle.alignment = NSTextAlignment.Center
+        labelParaStyle.alignment = NSTextAlignment.center
         let labelAttributes = [
             NSForegroundColorAttributeName: XAxisColor,
             NSParagraphStyleAttributeName: labelParaStyle,
             //NSTextAlignment: textalign,
             NSFontAttributeName: labelFont!
-        ]
+        ] as [String : Any]
         
         //  Check the width of each label
         yMaxLabelWidth = 0.0
@@ -1041,7 +1041,7 @@ public class MLViewAxisLabel: MLViewItem {
         for i in 0...MajorTickDivisions {
             let value = (maxY - minY) * Double(i) / Double(MajorTickDivisions) + minY
             let label = String(format: format, value)
-            let labelSize = label.sizeWithAttributes(labelAttributes)
+            let labelSize = label.size(withAttributes: labelAttributes)
             if (labelSize.width > yMaxLabelWidth) { yMaxLabelWidth = labelSize.width }
         }
         
@@ -1050,24 +1050,24 @@ public class MLViewAxisLabel: MLViewItem {
         return yAxisWidth
     }
 
-    public func setInputVector(vector: [Double]) throws {
+    open func setInputVector(_ vector: [Double]) throws {
         //  Not needed for labels
     }
     
-    public func setXAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setXAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         //  Not needed for labels
     }
-    public func setYAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setYAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         //  Not needed for labels
     }
 }
 
 
 ///  Class for an item in a legend
-public class MLLegendItem {
+open class MLLegendItem {
     var label = "item"
     var symbol: MLPlotSymbol?   //  If nil, then line style item
-    var lineColor = NSColor.redColor()
+    var lineColor = NSColor.red
     var lineThickness : CGFloat = 1.0
     var itemHeight : CGFloat = 0.0
     
@@ -1098,7 +1098,7 @@ public class MLLegendItem {
         self.label = label
     }
     
-    public static func createClassLegendArray(labelStart: String, classificationDataSet: MLViewClassificationDataSet) -> [MLLegendItem] {
+    open static func createClassLegendArray(_ labelStart: String, classificationDataSet: MLViewClassificationDataSet) -> [MLLegendItem] {
         var array : [MLLegendItem] = []
         
         //  Iterate through each class label
@@ -1116,18 +1116,18 @@ public class MLLegendItem {
 }
 
 ///  Class for drawing a legend
-public class MLViewLegend: MLViewItem {
+open class MLViewLegend: MLViewItem {
     
     //  Location
-    var location = MLViewLegendLocation.LowerRight
+    var location = MLViewLegendLocation.lowerRight
     var xPosition : CGFloat = 0.0
     var yPosition : CGFloat = 0.0
     
     //  Text information
-    public var fontColor = NSColor.blackColor()
-    public var titleFont = NSFont(name: "Helvetica Neue", size: 14.0)
-    public var itemFont = NSFont(name: "Helvetica Neue", size: 12.0)
-    public var title = ""
+    open var fontColor = NSColor.black
+    open var titleFont = NSFont(name: "Helvetica Neue", size: 14.0)
+    open var itemFont = NSFont(name: "Helvetica Neue", size: 12.0)
+    open var title = ""
     
     //  Items
     var items : [MLLegendItem] = []
@@ -1142,46 +1142,46 @@ public class MLViewLegend: MLViewItem {
         self.title = title
     }
     
-    public func addItem(item: MLLegendItem) {
+    open func addItem(_ item: MLLegendItem) {
         items.append(item)
     }
     
-    public func addItems(items: [MLLegendItem]) {
+    open func addItems(_ items: [MLLegendItem]) {
         self.items += items
     }
     
-    public func setColor(color: NSColor) {
+    open func setColor(_ color: NSColor) {
         fontColor =  color
     }
-    public func setScale(scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
+    open func setScale(_ scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
         //  Unused
     }
-    public func draw(bounds: CGRect) {
+    open func draw(_ bounds: CGRect) {
         //  Get the attributes for drawing
         let paraStyle = NSMutableParagraphStyle()
         paraStyle.lineSpacing = 6.0
-        paraStyle.alignment = NSTextAlignment.Center
+        paraStyle.alignment = NSTextAlignment.center
         let titleAttributes = [
             NSForegroundColorAttributeName: fontColor,
             NSParagraphStyleAttributeName: paraStyle,
             //NSTextAlignment: textalign,
             NSFontAttributeName: titleFont!
-        ]
+        ] as [String : Any]
         let labelParaStyle = NSMutableParagraphStyle()
         labelParaStyle.lineSpacing = 6.0
-        labelParaStyle.alignment = NSTextAlignment.Right
+        labelParaStyle.alignment = NSTextAlignment.right
         let labelAttributes = [
             NSForegroundColorAttributeName: fontColor,
             NSParagraphStyleAttributeName: labelParaStyle,
             //NSTextAlignment: textalign,
             NSFontAttributeName: itemFont!
-        ]
+        ] as [String : Any]
         
         //  Get the required size of the legend title
-        var titleSize = CGSizeZero
-        var legendSize = CGSizeZero
+        var titleSize = CGSize.zero
+        var legendSize = CGSize.zero
         if (!title.isEmpty) {
-            titleSize = title.sizeWithAttributes(titleAttributes)
+            titleSize = title.size(withAttributes: titleAttributes)
             legendSize = titleSize
         }
         
@@ -1189,7 +1189,7 @@ public class MLViewLegend: MLViewItem {
         var maxLabelSize : CGFloat = 0.0
         var maxSymbolSize : CGFloat = 0.0
         for item in items {
-            let labelSize = item.label.sizeWithAttributes(titleAttributes)
+            let labelSize = item.label.size(withAttributes: titleAttributes)
             var itemHeight = labelSize.height
             if (labelSize.width > maxLabelSize) { maxLabelSize = labelSize.width }
             if let symbol = item.symbol {
@@ -1209,26 +1209,26 @@ public class MLViewLegend: MLViewItem {
         
         //  Get the legend position
         switch (location) {
-        case .UpperLeft:
+        case .upperLeft:
             xPosition = bounds.origin.x
             yPosition = bounds.height + bounds.origin.y
-        case .UpperRight:
+        case .upperRight:
             xPosition = bounds.width - legendSize.width + bounds.origin.x
             yPosition = bounds.height + bounds.origin.y
-        case .LowerLeft:
+        case .lowerLeft:
             xPosition = bounds.origin.x
             yPosition = legendSize.height + bounds.origin.y
-        case .LowerRight:
+        case .lowerRight:
             xPosition = bounds.width - legendSize.width + bounds.origin.x
             yPosition = legendSize.height + bounds.origin.y
-        case .Custom:
+        case .custom:
             break   //  position already set
         }
         
         //  If specified, draw the title
         if (!title.isEmpty) {
             let rect = CGRect(x: xPosition, y: yPosition - titleSize.height, width: legendSize.width, height: titleSize.height)
-            title.drawInRect(rect, withAttributes: titleAttributes)
+            title.draw(in: rect, withAttributes: titleAttributes)
         }
         
         //  Draw each item
@@ -1244,7 +1244,7 @@ public class MLViewLegend: MLViewItem {
             symbolRect.size.height = item.itemHeight + 2.0
             
             //  Draw the label
-            item.label.drawInRect(labelRect, withAttributes: labelAttributes)
+            item.label.draw(in: labelRect, withAttributes: labelAttributes)
             
             //  Draw the symbol
             if let symbol = item.symbol {
@@ -1256,30 +1256,30 @@ public class MLViewLegend: MLViewItem {
                 item.lineColor.setStroke()
                 path.lineWidth = item.lineThickness
                 let y = symbolRect.origin.y + (item.itemHeight * 0.5)
-                path.moveToPoint(CGPoint(x: symbolRect.origin.x + item.lineThickness, y: y))
-                path.lineToPoint(CGPoint(x: symbolRect.origin.x + symbolRect.width - item.lineThickness, y: y))
+                path.move(to: CGPoint(x: symbolRect.origin.x + item.lineThickness, y: y))
+                path.line(to: CGPoint(x: symbolRect.origin.x + symbolRect.width - item.lineThickness, y: y))
                 path.stroke()
             }
         }
     }
-    public func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
+    open func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
         return nil
     }
     
-    public func setInputVector(vector: [Double]) throws {
+    open func setInputVector(_ vector: [Double]) throws {
         //  Not needed for legends
     }
     
-    public func setXAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setXAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         //  Not needed for legends
     }
-    public func setYAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setYAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         //  Not needed for legends
     }
 }
 
 ///  Class to view Machine Learning data, include data sets, regression lines, classification zones
-public class MLView: NSView {
+open class MLView: NSView {
     
     
     //  Machine learning items to plot
@@ -1292,7 +1292,7 @@ public class MLView: NSView {
     }
     
     convenience init() {
-        self.init(frame: CGRectZero)
+        self.init(frame: CGRect.zero)
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -1300,20 +1300,20 @@ public class MLView: NSView {
     }
     
     ///  Function to add an item to be plotted
-    public func addPlotItem(plotItem: MLViewItem) {
+    open func addPlotItem(_ plotItem: MLViewItem) {
         plotItems.append(plotItem)
-        setNeedsDisplayInRect(bounds)
+        setNeedsDisplay(bounds)
     }
     
     ///  Function to set the item that the initial scale will be retrieved from
-    public func setInitialScaleItem(plotItem: MLViewItem) {
+    open func setInitialScaleItem(_ plotItem: MLViewItem) {
         scalingItem = plotItem
-        setNeedsDisplayInRect(bounds)
+        setNeedsDisplay(bounds)
     }
 
-    override public func drawRect(rect: CGRect) {
+    override open func draw(_ rect: CGRect) {
         //  draw the background
-        NSColor.whiteColor().setFill()
+        NSColor.white.setFill()
         NSRectFill(bounds)
         
         //  Start the initial scaling at 0-100
@@ -1365,27 +1365,27 @@ public class MLView: NSView {
     }
     
     ///  Method to set the input vector on ALL items
-    public func setInputVector(vector: [Double]) throws {
+    open func setInputVector(_ vector: [Double]) throws {
         for plotItem in plotItems {
             try plotItem.setInputVector(vector)
         }
     }
     
     ///  Method to set the X axis source on ALL items
-    public func setXAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setXAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         for plotItem in plotItems {
             try plotItem.setXAxisSource(source, index: index)
         }
     }
     ///  Method to set the Y axis source on ALL items
-    public func setYAxisSource(source: MLViewAxisSource, index: Int) throws {
+    open func setYAxisSource(_ source: MLViewAxisSource, index: Int) throws {
         for plotItem in plotItems {
             try plotItem.setYAxisSource(source, index: index)
         }
     }
     
     ///  Routine to round/extend a scale to more 'human-readable' values.
-    public static func roundScale(min: Double, max: Double, logScale: Bool = false) -> (min: Double, max: Double) {
+    open static func roundScale(_ min: Double, max: Double, logScale: Bool = false) -> (min: Double, max: Double) {
 
         var Y : Double
         var Z : Double
@@ -1425,7 +1425,7 @@ public class MLView: NSView {
         while (bRoundLimits) {
             bRoundLimits = false
             let difference = upper - lower
-            if (!isfinite(difference)) {
+            if (!difference.isFinite) {
                 lower = 0.0
                 upper = 0.0
                 return (min: lower, max: upper)

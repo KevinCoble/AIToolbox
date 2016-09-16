@@ -11,7 +11,7 @@ import Foundation
 // MARK: GraphEdge
 ///  Class for link between GraphNodes.
 ///  Only subclass if you need to override the cost function to be variable
-public class GraphEdge {
+open class GraphEdge {
     let destinationNode : GraphNode
     let cost : Double
     
@@ -33,10 +33,10 @@ public class GraphEdge {
     
     ///  Method to get cost
     ///  Override to make calculation.  Edge is from passed in sourceNode to stored destinationNode
-    public func getCost(sourceNode: GraphNode) -> Double {return cost}
+    open func getCost(_ sourceNode: GraphNode) -> Double {return cost}
     
     ///  Method to determine if this edge has the passed in GraphNode as a destination
-    public func goesToNode(node: GraphNode) -> Bool {
+    open func goesToNode(_ node: GraphNode) -> Bool {
         return node === destinationNode
     }
 }
@@ -44,7 +44,7 @@ public class GraphEdge {
 // MARK: -
 // MARK: GraphNode
 ///  Subclass GraphNode to add data to a graph node
-public class GraphNode {
+open class GraphNode {
     var edgeList: [GraphEdge] = []
     var visited = false
     var leastCostToNode = Double.infinity
@@ -55,14 +55,14 @@ public class GraphNode {
     }
     
     ///  Method to add a GraphEdge (or subclass) to a node
-    public func addEdge(newEdge: GraphEdge) {
+    open func addEdge(_ newEdge: GraphEdge) {
         edgeList.append(newEdge)
     }
     
     ///  Convenience method to add two edges, making a bi-directional connection.
     ///  This only works with standard GraphEdge classes, not sub-classes.
     ///  If the optional second cost is not provided, the passed-in edge cost is duplicated
-    public func addBidirectionalEdge(newEdge: GraphEdge, reverseCost: Double?) {
+    open func addBidirectionalEdge(_ newEdge: GraphEdge, reverseCost: Double?) {
         //  Add the first direction
         edgeList.append(newEdge)
         
@@ -80,11 +80,11 @@ public class GraphNode {
     }
     
     ///  Method to remove all edges to a specified destination node
-    public func removeEdgesToNode(node: GraphNode) {
+    open func removeEdgesToNode(_ node: GraphNode) {
         var index = edgeList.count-1
         while (index >= 0) {
             if edgeList[index].goesToNode(node) {
-                edgeList.removeAtIndex(index)
+                edgeList.remove(at: index)
             }
             index -= 1
         }
@@ -92,7 +92,7 @@ public class GraphNode {
     
     ///  Method to return the admissible heuristic value for an A* search
     ///  The value is a lower-bound estimate of the remaining cost to the goal
-    public func admissibleHeuristicCost() -> Double { return 0.0 }
+    open func admissibleHeuristicCost() -> Double { return 0.0 }
 }
 
 // MARK: -
@@ -119,7 +119,7 @@ struct SearchQueueEntry<T> {
 // MARK: Graph Class
 ///  Class for a graph of nodes.  The nodes are subclasses of GraphNode, connected by
 ///    GraphEdge classes (or subclasses)
-public class Graph<T : GraphNode> {
+open class Graph<T : GraphNode> {
     //  Array of nodes in the list
     var graphNodeList : [T] = []
     
@@ -136,15 +136,15 @@ public class Graph<T : GraphNode> {
     }
     
     ///  Method to add a GraphNode (or subclass) to a graph
-    public func addNode(newNode: T) {
+    open func addNode(_ newNode: T) {
         graphNodeList.append(newNode)
     }
     
     ///  Method to remove a node from the graph, along with all edges to that node
-    public func removeNode(nodeToRemove: T) {
+    open func removeNode(_ nodeToRemove: T) {
         for index in 0 ..< graphNodeList.count  {
             if graphNodeList[index] === nodeToRemove {
-                graphNodeList.removeAtIndex(index)
+                graphNodeList.remove(at: index)
                 for node in graphNodeList {
                     node.removeEdgesToNode(nodeToRemove)
                 }
@@ -158,7 +158,7 @@ public class Graph<T : GraphNode> {
     ///  Method to do depth-first search of graph to find path between nodes.
     ///  Returns an array of edge indices for the traverse path from the start to the end node.
     ///  Returns empty array if start and end nodes are the same.  Returns nil if no path exists
-    public func getDepthFirstPath(fromNode fromNode: T, searchCriteria: (T) -> Bool) -> [Int]? {
+    open func getDepthFirstPath(fromNode: T, searchCriteria: (T) -> Bool) -> [Int]? {
         //  Clear the 'queue' arrays
         currentQueueList = []
         nextDepthList = []
@@ -180,7 +180,7 @@ public class Graph<T : GraphNode> {
     ///  Returns an array of edge indices for the traverse path from the start to the end node.
     ///  Returns empty array if start and end nodes are the same.  Returns nil if no path exists.
     ///  Modifying the graph between calls will result in unexpected behavior - possibly loops
-    public func getDepthFirstNextPath(searchCriteria searchCriteria: (T) -> Bool) -> [Int]? {
+    open func getDepthFirstNextPath(searchCriteria: (T) -> Bool) -> [Int]? {
         //  Iterate until we find a path, or we run out of queue
         while (true) {
             if currentQueueList.count > 0 {
@@ -201,7 +201,7 @@ public class Graph<T : GraphNode> {
                 }
                 
                 //  Put the next level at the end of the current queue
-                currentQueueList += Array(nextDepthList.reverse())  //  reverse since we are taking last item off)
+                currentQueueList += Array(nextDepthList.reversed())  //  reverse since we are taking last item off)
                 nextDepthList = []
                 
                 //  See if this is the node we want
@@ -217,7 +217,7 @@ public class Graph<T : GraphNode> {
     ///  Method to do breadth-first search of graph to find path between nodes.
     ///  Returns an array of edge indices for the traverse path from the start to the end node.
     ///  Returns empty array if start and end nodes are the same.  Returns nil if no path exists
-    public func getBreadthFirstPath(fromNode fromNode: T, searchCriteria: (T) -> Bool) -> [Int]? {
+    open func getBreadthFirstPath(fromNode: T, searchCriteria: (T) -> Bool) -> [Int]? {
         //  Clear the 'queue' arrays
         currentQueueList = []
         nextDepthList = []
@@ -240,7 +240,7 @@ public class Graph<T : GraphNode> {
     ///  Returns an array of edge indices for the traverse path from the start to the end node.
     ///  Returns empty array if start and end nodes are the same.  Returns nil if no path exists.
     ///  Modifying the graph between calls will result in unexpected behavior - possibly loops
-    public func getBreadthFirstNextPath(searchCriteria searchCriteria: (T) -> Bool) -> [Int]? {
+    open func getBreadthFirstNextPath(searchCriteria: (T) -> Bool) -> [Int]? {
         //  Iterate until we find a path, or we run out of queue
         while (true) {
             if currentQueueList.count > 0 {
@@ -265,7 +265,7 @@ public class Graph<T : GraphNode> {
             }
             else {
                 if (nextDepthList.count == 0) {return nil}  //  No more nodes, return nil to indicate no path
-                currentQueueList = Array(nextDepthList.reverse())  //  Go down one more depth level (reverse since we are taking last item off)
+                currentQueueList = Array(nextDepthList.reversed())  //  Go down one more depth level (reverse since we are taking last item off)
                 nextDepthList = []
             }
         }
@@ -277,7 +277,7 @@ public class Graph<T : GraphNode> {
     ///  The heuristic is a closure/function that returns the relative value of the node compared to the goal.  Larger values indicate closer to the goal.
     ///  Returns an array of edge indices for the traverse path from the start to the end node.
     ///  Returns empty array if start and end nodes are the same.  Returns nil if no path exists
-    public func getHillClimbPath(fromNode fromNode: T, nodeHeuristic: (T) -> Double, searchCriteria: (T) -> Bool) -> [Int]? {
+    open func getHillClimbPath(fromNode: T, nodeHeuristic: (T) -> Double, searchCriteria: (T) -> Bool) -> [Int]? {
         //  Clear the 'queue' arrays
         currentQueueList = []
         nextDepthList = []
@@ -299,7 +299,7 @@ public class Graph<T : GraphNode> {
     ///  Returns an array of edge indices for the traverse path from the start to the end node.
     ///  Returns empty array if start and end nodes are the same.  Returns nil if no path exists.
     ///  Modifying the graph between calls will result in unexpected behavior - possibly loops
-    public func getHillClimbNextPath(nodeHeuristic nodeHeuristic: (T) -> Double, searchCriteria: (T) -> Bool) -> [Int]? {
+    open func getHillClimbNextPath(nodeHeuristic: (T) -> Double, searchCriteria: (T) -> Bool) -> [Int]? {
         //  Iterate until we find a path, or we run out of queue
         while (true) {
             if currentQueueList.count > 0 {
@@ -316,7 +316,7 @@ public class Graph<T : GraphNode> {
                         edge.destinationNode.visited = true
                         
                         //  Add the new node sorted, based on it's heuristic value
-                        enqueueCurrentOrdered(newEntry, orderHeuristic: nodeHeuristic)
+                        _ = enqueueCurrentOrdered(newEntry, orderHeuristic: nodeHeuristic)
                     }
                     index += 1
                 }
@@ -331,7 +331,7 @@ public class Graph<T : GraphNode> {
     }
     
     //  Enqueue on the current list with the higher heuristic going to the end
-    func enqueueCurrentOrdered(newItem: SearchQueueEntry<T>, orderHeuristic: (T) -> Double) -> Bool {
+    func enqueueCurrentOrdered(_ newItem: SearchQueueEntry<T>, orderHeuristic: (T) -> Double) -> Bool {
         var max = currentQueueList.count
         if (max == 0) {
             currentQueueList.append(newItem)
@@ -354,7 +354,7 @@ public class Graph<T : GraphNode> {
             if (max != currentQueueList.count && orderHeuristic(currentQueueList[max].graphNode) == newItemHeuristicValue) {
                 return false
             }
-            currentQueueList.insert(newItem, atIndex: max)
+            currentQueueList.insert(newItem, at: max)
             return true
         }
         else {
@@ -368,7 +368,7 @@ public class Graph<T : GraphNode> {
     ///  The heuristic is a closure/function that returns the relative value of the node compared to the goal.  Larger values indicate closer to the goal.
     ///  Returns an array of edge indices for the traverse path from the start to the end node.
     ///  Returns empty array if start and end nodes are the same.  Returns nil if no path exists
-    public func getBeamPath(fromNode fromNode: T, nodeHeuristic: (T) -> Double, beamWidth: Int, searchCriteria: (T) -> Bool) -> [Int]? {
+    open func getBeamPath(fromNode: T, nodeHeuristic: (T) -> Double, beamWidth: Int, searchCriteria: (T) -> Bool) -> [Int]? {
         //  Clear the 'queue' arrays
         currentQueueList = []
         nextDepthList = []
@@ -409,9 +409,9 @@ public class Graph<T : GraphNode> {
             }
             else {
                 if (nextDepthList.count == 0) {return nil}  //  No more nodes, return nil to indicate no path
-                nextDepthList.sortInPlace({nodeHeuristic($0.graphNode) > nodeHeuristic($1.graphNode)})     //  Sort best first
+                nextDepthList.sort(by: {nodeHeuristic($0.graphNode) > nodeHeuristic($1.graphNode)})     //  Sort best first
                 while (nextDepthList.count > beamWidth) { nextDepthList.removeLast() }              //  Limit to the beam width
-                currentQueueList = Array(nextDepthList.reverse())  //  Go down one more depth level (reverse since we are taking last item off)
+                currentQueueList = Array(nextDepthList.reversed())  //  Go down one more depth level (reverse since we are taking last item off)
                 nextDepthList = []
             }
         }
@@ -423,7 +423,7 @@ public class Graph<T : GraphNode> {
     ///  The 'length' of each edge traversal is retrieved using the 'getCost' method.
     ///  Returns an array of edge indices for the traverse path from the start to the end node.
     ///  Returns empty array if start and end nodes are the same.  Returns nil if no path exists
-    public func getShortestPathByBestFirst(fromNode fromNode: T, searchCriteria: (T) -> Bool) -> [Int]? {
+    open func getShortestPathByBestFirst(fromNode: T, searchCriteria: (T) -> Bool) -> [Int]? {
         //  Clear the 'queue' arrays
         currentQueueList = []
         nextDepthList = []
@@ -456,7 +456,7 @@ public class Graph<T : GraphNode> {
                             var newEntry = SearchQueueEntry<T>(node: (edge.destinationNode as! T), cost: newCost)
                             newEntry.pathToNode = entry.pathToNode
                             newEntry.pathToNode.append(index)
-                            enqueueOrderedByCost(newEntry)
+                            _ = enqueueOrderedByCost(newEntry)
                             edge.destinationNode.leastCostToNode = newCost
                         }
                     }
@@ -483,7 +483,7 @@ public class Graph<T : GraphNode> {
     ///  The admissible heuristic is retrieved using the 'getAdmissibleHeuristic' method
     ///  Returns an array of edge indices for the traverse path from the start to the end node.
     ///  Returns empty array if start and end nodes are the same.  Returns nil if no path exists
-    public func getShortestPathByAStar(fromNode fromNode: T, destinationNode: T) -> [Int]? {
+    open func getShortestPathByAStar(fromNode: T, destinationNode: T) -> [Int]? {
         //  Clear the 'queue' arrays
         currentQueueList = []
         nextDepthList = []
@@ -518,7 +518,7 @@ public class Graph<T : GraphNode> {
                             var newEntry = SearchQueueEntry<T>(node: (edge.destinationNode as! T), cost: newEstimatedFinalCost)
                             newEntry.pathToNode = entry.pathToNode
                             newEntry.pathToNode.append(index)
-                            enqueueOrderedByCost(newEntry)  //  Sort based on estimated final cost
+                            _ = enqueueOrderedByCost(newEntry)  //  Sort based on estimated final cost
                             edge.destinationNode.leastCostToNode = newCost
                         }
                     }
@@ -542,7 +542,7 @@ public class Graph<T : GraphNode> {
     }
     
     //  Enqueue on the 'current' list with lower cost going at the end (first to pop
-    func enqueueOrderedByCost(newItem: SearchQueueEntry<T>) -> Bool {
+    func enqueueOrderedByCost(_ newItem: SearchQueueEntry<T>) -> Bool {
         var max = currentQueueList.count
         if (max == 0) {
             currentQueueList.append(newItem)
@@ -564,7 +564,7 @@ public class Graph<T : GraphNode> {
             if (max != currentQueueList.count && currentQueueList[max].costToNode == newItem.costToNode) {
                 return false
             }
-            currentQueueList.insert(newItem, atIndex: max)
+            currentQueueList.insert(newItem, at: max)
             return true
         }
         else {
@@ -577,7 +577,7 @@ public class Graph<T : GraphNode> {
     ///  Method to convert a path (an array of edge indices) to a list
     ///  of nodes traversed by the path, including the start node.  If the path is nil, the list will be nil.
     ///  If the path is empty, the list will be contain just the start node
-    public func convertPathToNodeList(startNode: T, path: [Int]?) -> [T]? {
+    open func convertPathToNodeList(_ startNode: T, path: [Int]?) -> [T]? {
         //  Check for a nil path
         if let path = path {
             //  Create the node list

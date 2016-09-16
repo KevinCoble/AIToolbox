@@ -23,7 +23,7 @@ class SVMTests: XCTestCase {
 
     func testClassification() {
         //  Create a data set
-        let data = DataSet(dataType: .RealAndClass, inputDimension: 2, outputDimension: 1)
+        let data = DataSet(dataType: .realAndClass, inputDimension: 2, outputDimension: 1)
         do {
             try data.addDataPoint(input: [0.0, 1.0], dataClass:1)
             try data.addDataPoint(input: [0.0, 0.9], dataClass:1)
@@ -37,12 +37,12 @@ class SVMTests: XCTestCase {
         }
         
         //  Create an SVM classifier and train
-        let svm = SVMModel(problemType: .C_SVM_Classification, kernelSettings:
-                    KernelParameters(type: .RadialBasisFunction, degree: 0, gamma: 0.5, coef0: 0.0))
+        let svm = SVMModel(problemType: .c_SVM_Classification, kernelSettings:
+                    KernelParameters(type: .radialBasisFunction, degree: 0, gamma: 0.5, coef0: 0.0))
         svm.train(data)
         
         //  Create a test dataset
-        let testData = DataSet(dataType: .RealAndClass, inputDimension: 2, outputDimension: 1)
+        let testData = DataSet(dataType: .realAndClass, inputDimension: 2, outputDimension: 1)
         do {
             try testData.addTestDataPoint(input: [0.0, 0.1])    //  Expect 1
             try testData.addTestDataPoint(input: [0.1, 0.0])    //  Expect 0
@@ -114,7 +114,7 @@ class SVMTests: XCTestCase {
     
     func testThreeStateClassification() {
         //  Create a data set
-        let data = DataSet(dataType: .RealAndClass, inputDimension: 2, outputDimension: 1)
+        let data = DataSet(dataType: .realAndClass, inputDimension: 2, outputDimension: 1)
         do {
             try data.addDataPoint(input: [0.2, 0.9], dataClass:0)
             try data.addDataPoint(input: [0.8, 0.3], dataClass:0)
@@ -131,12 +131,12 @@ class SVMTests: XCTestCase {
         }
         
         //  Create an SVM classifier and train
-        let svm = SVMModel(problemType: .C_SVM_Classification, kernelSettings:
-            KernelParameters(type: .RadialBasisFunction, degree: 0, gamma: 0.5, coef0: 0.0))
+        let svm = SVMModel(problemType: .c_SVM_Classification, kernelSettings:
+            KernelParameters(type: .radialBasisFunction, degree: 0, gamma: 0.5, coef0: 0.0))
         svm.train(data)
         
         //  Create a test dataset
-        let testData = DataSet(dataType: .RealAndClass, inputDimension: 2, outputDimension: 3)
+        let testData = DataSet(dataType: .realAndClass, inputDimension: 2, outputDimension: 3)
         do {
             try testData.addTestDataPoint(input: [0.7, 0.6])    //  Expect 0
             try testData.addTestDataPoint(input: [0.5, 0.7])    //  Expect 0
@@ -175,7 +175,7 @@ class SVMTests: XCTestCase {
     
     func testRegression() {
         //  Create a data set - function is x1*2 - x2
-        let data = DataSet(dataType: .Regression, inputDimension: 2, outputDimension: 1)
+        let data = DataSet(dataType: .regression, inputDimension: 2, outputDimension: 1)
         do {
             try data.addDataPoint(input: [0.0, 1.0], output:[-1.0])
             try data.addDataPoint(input: [0.0, 0.5], output:[-0.5])
@@ -193,11 +193,11 @@ class SVMTests: XCTestCase {
         
         //  Create an SVM regularizer and train
         let svm = SVMModel(problemType: .ϵSVMRegression, kernelSettings:
-            KernelParameters(type: .RadialBasisFunction, degree: 0, gamma: 0.5, coef0: 0.0))
+            KernelParameters(type: .radialBasisFunction, degree: 0, gamma: 0.5, coef0: 0.0))
         svm.train(data)
         
         //  Create a test dataset - same function
-        let testData = DataSet(dataType: .Regression, inputDimension: 2, outputDimension: 1)
+        let testData = DataSet(dataType: .regression, inputDimension: 2, outputDimension: 1)
         do {
             try testData.addTestDataPoint(input: [0.5, 0.5])    //  Expect 0.5
 //            try testData.addTestDataPoint(input: [0.8, 0.0])    //  Expect 0.64
@@ -225,7 +225,7 @@ class SVMTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }

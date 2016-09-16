@@ -6,7 +6,7 @@
  We start with the required import statements.  If this was your own program, rather than a playground, you add an 'import AIToolbox' line instead of the 'import XCPlayground' line.
  */
 import Cocoa
-import XCPlayground
+import PlaygroundSupport
 
 /*: Examples
  This playground shows multiple examples of neural networks in action.  The following integer index switches between the examples.  Start at 1, and change it to higher numbers as the narrative requests
@@ -22,7 +22,7 @@ let exampleIndex = 1
  
  This is a Neural Network, which can be either a regressor or classifier.  We will be doing classification for this example, so our data set will be the 'Classification' type, with an input input vector sized for two variables (the X and Y axis on our plot later).
  */
-let data = DataSet(dataType: .Classification, inputDimension: 2, outputDimension: 1)
+let data = DataSet(dataType: .classification, inputDimension: 2, outputDimension: 1)
 /*: 
  Add a few data points to the data set.  Note the 'output' category is a single integer.  This is the 'class label' for the point.  All points with the same label are assumed to be in the same class.
  We will start with linearly seperable data for the initial example
@@ -54,20 +54,20 @@ if (exampleIndex > 3) {
 var network : NeuralNetwork
 if (exampleIndex <= 2) {
     //  One node in one layer
-    network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .SimpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil)])
+    network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
 }
     
 //  Network creation for later examples
 else if (exampleIndex == 3 || exampleIndex == 4) {
     //  Two nodes in first layer, one in second layer
-    network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .SimpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil),
-        (layerType: .SimpleFeedForward, numNodes: 1, activation:NeuralActivationFunction.Sigmoid, auxiliaryData: nil)])
+    network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil),
+        (layerType: .simpleFeedForward, numNodes: 1, activation:NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
 }
 else {
     //  8 nodes in first layer, three in second, and one in last layer
-    network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .SimpleFeedForward, numNodes: 8, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil),
-        (layerType: .SimpleFeedForward, numNodes: 3, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil),
-        (layerType: .SimpleFeedForward, numNodes: 1, activation:NeuralActivationFunction.Sigmoid, auxiliaryData: nil)])
+    network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 8, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil),
+        (layerType: .simpleFeedForward, numNodes: 3, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil),
+        (layerType: .simpleFeedForward, numNodes: 1, activation:NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
 }
 
 /*: Initializing
@@ -119,14 +119,15 @@ dataView.addPlotItem(classifierArea)
 //:  Add the data plot item now (so the data points are on top of the areas
 dataView.addPlotItem(dataPlotItem)
 //:  Create a legend
-let legend = MLViewLegend(location: .UpperRight, title: "Legend")
+let legend = MLViewLegend(location: .upperRight, title: "Legend")
 //:  Add the data point labels to the legend (they coincide with the area colors)
 let dataLegends = MLLegendItem.createClassLegendArray("class ", classificationDataSet: dataPlotItem)
 legend.addItems(dataLegends)
 dataView.addPlotItem(legend)
 
 //:  Finally, set the view to be drawn by the playground
-XCPlaygroundPage.currentPage.liveView = dataView
+PlaygroundPage.current.liveView = dataView
+//XCPlaygroundPage.currentPage.liveView = dataView
 
 /*: Results
  ## Expected results

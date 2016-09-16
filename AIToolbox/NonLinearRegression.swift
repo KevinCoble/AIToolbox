@@ -11,25 +11,25 @@ import Accelerate
 
 ///  Enumeration for type of solution attempted for the non-linear rectression
 public enum NonLinearRegressionType {
-    case ParameterDelta
-    case SGD
-    case GaussNewton
+    case parameterDelta
+    case sgd
+    case gaussNewton
 }
 
 public enum NonLinearRegressionConvergenceType {
-    case SmallGradient
-    case SmallAverageLoss
-    case SmallParameterChange       //  Only option for ParameterDelta
+    case smallGradient
+    case smallAverageLoss
+    case smallParameterChange       //  Only option for ParameterDelta
 }
 
-public enum NonLinearRegressionError: ErrorType {
-    case ConvergenceTypeNotAllowed
-    case MatrixSolutionError
+public enum NonLinearRegressionError: Error {
+    case convergenceTypeNotAllowed
+    case matrixSolutionError
 }
 
 ///  Class for non-linear regression solving
 ///  Requires an equation that conforms to the protocol 'NonLinearEquation'
-public class NonLinearRegression : Regressor
+open class NonLinearRegression : Regressor
 {
     var equation: NonLinearEquation
     let solveType: NonLinearRegressionType
@@ -37,11 +37,11 @@ public class NonLinearRegression : Regressor
     var initialStepSize = 0.01
     var stepSizeModifier = 1.0
     var stepSizeChangeAfterIterations = 10000
-    var initializeFunction : ((trainData: MLDataSet)->[Double])!
-    public var convergenceType = NonLinearRegressionConvergenceType.SmallGradient
-    public var convergenceLimit = 0.0000001     //  Maximum component of gradient at convergence for SGD
-    public var iterationLimit = 10000     //  convergence failure after this many iterations
-    public var normalizeGradient = false        //  If true, SGD will normalize the gradient vector before multiplying by the step size
+    var initializeFunction : ((_ trainData: MLDataSet)->[Double])!
+    open var convergenceType = NonLinearRegressionConvergenceType.smallGradient
+    open var convergenceLimit = 0.0000001     //  Maximum component of gradient at convergence for SGD
+    open var iterationLimit = 10000     //  convergence failure after this many iterations
+    open var normalizeGradient = false        //  If true, SGD will normalize the gradient vector before multiplying by the step size
     
     public init(equation: NonLinearEquation, type: NonLinearRegressionType)
     {
@@ -52,17 +52,17 @@ public class NonLinearRegression : Regressor
     ///  Convenience constructor for creating a ParameterDelta solution
     public convenience init(equation: NonLinearEquation, batchSize: Int, initialDelta: Double)
     {
-        self.init(equation: equation, type: .ParameterDelta)
+        self.init(equation: equation, type: .parameterDelta)
         self.batchSize = batchSize
         initialStepSize = initialDelta
-        convergenceType = .SmallParameterChange
+        convergenceType = .smallParameterChange
         convergenceLimit = 0.001
     }
     
     ///  Convenience constructor for creating an SGD solution
     public convenience init(equation: NonLinearEquation, batchSize: Int, initialStepSize: Double, multiplyBy: Double, afterIterations: Int)
     {
-        self.init(equation: equation, type: .SGD)
+        self.init(equation: equation, type: .sgd)
         self.batchSize = batchSize
         self.initialStepSize = initialStepSize
         stepSizeModifier = multiplyBy
@@ -72,55 +72,55 @@ public class NonLinearRegression : Regressor
     ///  Convenience constructor for creating a Gauss-Newton solution
     public convenience init(equation: NonLinearEquation, batchSize: Int)
     {
-        self.init(equation: equation, type: .GaussNewton)
+        self.init(equation: equation, type: .gaussNewton)
         self.batchSize = batchSize
     }
     
     ///  Method to set a custom function to initialize the parameters.  If not set, random parameters are used
-    public func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!)
+    open func setCustomInitializer(_ function: ((_ trainData: MLDataSet)->[Double])!)
     {
         initializeFunction = function
     }
     
-    public func getParameters() throws -> [Double]
+    open func getParameters() throws -> [Double]
     {
         return equation.parameters
     }
     
     ///  Method to set convergence criteria
-    public func setConvergence(type: NonLinearRegressionConvergenceType, limit: Double)
+    open func setConvergence(_ type: NonLinearRegressionConvergenceType, limit: Double)
     {
         convergenceType = type
         convergenceLimit = limit
     }
     
-    public func getInputDimension() -> Int
+    open func getInputDimension() -> Int
     {
         return equation.getInputDimension()
     }
     
-    public func getOutputDimension() -> Int
+    open func getOutputDimension() -> Int
     {
         return equation.getOutputDimension()
     }
     
-    public func getParameterDimension() -> Int
+    open func getParameterDimension() -> Int
     {
         return equation.getParameterDimension()
     }
     
-    public func setParameters(parameters: [Double]) throws
+    open func setParameters(_ parameters: [Double]) throws
     {
         try equation.setParameters(parameters)
     }
 
     
-    public func trainRegressor(trainData: MLRegressionDataSet) throws
+    open func trainRegressor(_ trainData: MLRegressionDataSet) throws
     {
         //  Validate the training data
-        if (trainData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
-        if (trainData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.DataWrongDimension }
-        if (trainData.outputDimension != equation.getOutputDimension()) { throw MachineLearningError.DataWrongDimension }
+        if (trainData.dataType != .regression) { throw MachineLearningError.dataNotRegression }
+        if (trainData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.dataWrongDimension }
+        if (trainData.outputDimension != equation.getOutputDimension()) { throw MachineLearningError.dataWrongDimension }
         
         //  If batch size is zero, size it for the entire data set
         if (batchSize <= 0) {batchSize = trainData.size }
@@ -128,8 +128,8 @@ public class NonLinearRegression : Regressor
         //  Initialize the parameters
         let numParameters = equation.getParameterDimension()
         if let initFunc = initializeFunction {
-            let initParameters = initFunc(trainData: trainData)
-            if (initParameters.count != numParameters) { throw MachineLearningError.InitializationError }
+            let initParameters = initFunc(trainData)
+            if (initParameters.count != numParameters) { throw MachineLearningError.initializationError }
             equation.parameters = initParameters
         }
         else {
@@ -150,12 +150,12 @@ public class NonLinearRegression : Regressor
     }
     
     ///  Function to continue calculating the parameters of the model with more data, without initializing parameters
-    public func continueTrainingRegressor(trainData: MLRegressionDataSet) throws
+    open func continueTrainingRegressor(_ trainData: MLRegressionDataSet) throws
     {
         //  Validate the training data
-        if (trainData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
-        if (trainData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.DataWrongDimension }
-        if (trainData.outputDimension != equation.getOutputDimension()) { throw MachineLearningError.DataWrongDimension }
+        if (trainData.dataType != .regression) { throw MachineLearningError.dataNotRegression }
+        if (trainData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.dataWrongDimension }
+        if (trainData.outputDimension != equation.getOutputDimension()) { throw MachineLearningError.dataWrongDimension }
         
         //  If batch size is zero, size it for the entire data set
         if (batchSize <= 0) {batchSize = trainData.size }
@@ -163,13 +163,13 @@ public class NonLinearRegression : Regressor
         //  Use the specified method to converge the parameters
         do {
             switch (solveType) {
-            case .ParameterDelta:
+            case .parameterDelta:
                 try trainParameterDelta(trainData)
                 
-            case .SGD:
+            case .sgd:
                 try trainSGD(trainData)
                 
-            case .GaussNewton:
+            case .gaussNewton:
                 try trainGaussNewton(trainData)
             }
         }
@@ -178,10 +178,10 @@ public class NonLinearRegression : Regressor
         }
     }
     
-    public func trainParameterDelta(trainData: MLRegressionDataSet) throws
+    open func trainParameterDelta(_ trainData: MLRegressionDataSet) throws
     {
         //  Make sure we have the right convergence type
-        if (convergenceType != .SmallParameterChange) { throw NonLinearRegressionError.ConvergenceTypeNotAllowed }
+        if (convergenceType != .smallParameterChange) { throw NonLinearRegressionError.convergenceTypeNotAllowed }
         
         //  Set up the batch indices
         var tOrder : [(index : Int, random : Double)] = []
@@ -194,7 +194,7 @@ public class NonLinearRegression : Regressor
         let numOutputs = equation.getOutputDimension()
         let parametersPerOutput = numParameters / numOutputs
         
-        var absoluteParameterChanges = [Double](count: numParameters, repeatedValue: 0.0)
+        var absoluteParameterChanges = [Double](repeating: 0.0, count: numParameters)
         var modifierStart = initialStepSize
         var iteration = 0
         while (iteration < iterationLimit) {
@@ -208,7 +208,7 @@ public class NonLinearRegression : Regressor
                     for i in 0..<trainData.size {
                         tOrder[i].random = drand48()
                     }
-                    tOrder.sortInPlace{$0.random < $1.random}
+                    tOrder.sort{$0.random < $1.random}
                     batchPointIndex = 0
                 }
             }
@@ -219,7 +219,7 @@ public class NonLinearRegression : Regressor
             //  Remember the parameters
             let previousParameters = equation.parameters
             
-            var totalChange = [Double](count: numParameters, repeatedValue: 0.0)
+            var totalChange = [Double](repeating: 0.0, count: numParameters)
             
             //  Get the parameter modifications for this batch
             do {
@@ -287,7 +287,7 @@ public class NonLinearRegression : Regressor
         }
     }
    
-    public func trainSGD(trainData: MLRegressionDataSet) throws
+    open func trainSGD(_ trainData: MLRegressionDataSet) throws
     {
         //  Set up the batch indices
         var tOrder : [(index : Int, random : Double)] = []
@@ -306,7 +306,7 @@ public class NonLinearRegression : Regressor
         var lossIncrementCount = 0
         var lastTotalLoss = Double.infinity
         var dotProduct = 0.0
-        var absoluteValGradient = [Double](count: numParameters, repeatedValue: 0.0)
+        var absoluteValGradient = [Double](repeating: 0.0, count: numParameters)
         
         var iteration = 0
         while (iteration < iterationLimit) {
@@ -325,7 +325,7 @@ public class NonLinearRegression : Regressor
                     for i in 0..<trainData.size {
                         tOrder[i].random = drand48()
                     }
-                    tOrder.sortInPlace{$0.random < $1.random}
+                    tOrder.sort{$0.random < $1.random}
                     batchPointIndex = 0
                 }
             }
@@ -335,7 +335,7 @@ public class NonLinearRegression : Regressor
             
             //  Get the average gradient
             totalLoss = 0.0
-            var averageGradient = [Double](count: numParameters, repeatedValue: 0.0)
+            var averageGradient = [Double](repeating: 0.0, count: numParameters)
             do {
                 for _ in 0..<batchSize {
                     //  Get the point
@@ -350,7 +350,7 @@ public class NonLinearRegression : Regressor
                     totalLoss += dotProduct
                     if (parametersPerOutput > 1) {       //  Extend each difference just calculated to the parameter subset it belongs to
                         var extendedValues : [Double] = []
-                        for value in values { extendedValues += [Double](count: parametersPerOutput, repeatedValue: value) }
+                        for value in values { extendedValues += [Double](repeating: value, count: parametersPerOutput) }
                         values = extendedValues
                     }
                     var gradient = try equation.getGradient(inputs)        //  get ∂f(x)/∂x
@@ -366,7 +366,7 @@ public class NonLinearRegression : Regressor
             
             //  If total loss has not gone down in 4 iterations, cut step size in half
             //  If total loss has not gone down in 13 iterations (three step size changes) and we are using random initialization, re-initialize to a new set of parameters
-            if (totalLoss != Double.infinity && totalLoss != Double.NaN && totalLoss < lastTotalLoss) {
+            if (totalLoss != Double.infinity && totalLoss != Double.nan && totalLoss < lastTotalLoss) {
                 lossIncrementCount = 0
             }
             else {
@@ -386,13 +386,13 @@ public class NonLinearRegression : Regressor
             
             //  Check for convergence
             switch (convergenceType) {
-            case .SmallAverageLoss:
+            case .smallAverageLoss:
                 //  See if the average loss is less than the convergence limit
                 totalLoss /= Double(batchSize)     // Get average loss
                 if (totalLoss < convergenceLimit) {
                     return
                 }
-            case .SmallGradient:
+            case .smallGradient:
                 //  See if the maximum derivitive is less than the convergence limit
                 vDSP_vabsD(averageGradient, 1, &absoluteValGradient, 1, vDSP_Length(numParameters))
                 var maxDerivitive = convergenceLimit + 1.0
@@ -400,7 +400,7 @@ public class NonLinearRegression : Regressor
                 if (maxDerivitive < convergenceLimit) {
                     return
                 }
-            case .SmallParameterChange:
+            case .smallParameterChange:
                 vDSP_vabsD(averageGradient, 1, &absoluteValGradient, 1, vDSP_Length(numParameters))
                 var totalParameterChange = 0.0
                 vDSP_sveD(absoluteValGradient, 1, &totalParameterChange, vDSP_Length(numParameters))
@@ -423,10 +423,10 @@ public class NonLinearRegression : Regressor
             vDSP_vsmulD(averageGradient, 1, &stepSize, &averageGradient, 1, vDSP_Length(numParameters))
             vDSP_vsubD(averageGradient, 1, equation.parameters, 1, &equation.parameters, 1, vDSP_Length(numParameters))
         }
-        throw MachineLearningError.DidNotConverge
+        throw MachineLearningError.didNotConverge
     }
     
-    public func trainGaussNewton(trainData: MLRegressionDataSet) throws
+    open func trainGaussNewton(_ trainData: MLRegressionDataSet) throws
     {
         //  Set up the batch indices
         var tOrder : [(index : Int, random : Double)] = []
@@ -440,9 +440,9 @@ public class NonLinearRegression : Regressor
         let parametersPerOutput = numParameters / numOutputs
         
         var iteration = 0
-        var J = [Double](count: batchSize * numParameters, repeatedValue: 0.0)
-        var r = [Double](count: batchSize * numOutputs, repeatedValue: 0.0)
-        var delta = [Double](count: numParameters, repeatedValue: 0.0)
+        var J = [Double](repeating: 0.0, count: batchSize * numParameters)
+        var r = [Double](repeating: 0.0, count: batchSize * numOutputs)
+        var delta = [Double](repeating: 0.0, count: numParameters)
         while (iteration < iterationLimit) {
             iteration += 1
             
@@ -454,7 +454,7 @@ public class NonLinearRegression : Regressor
                     for i in 0..<trainData.size {
                         tOrder[i].random = drand48()
                     }
-                    tOrder.sortInPlace{$0.random < $1.random}
+                    tOrder.sort{$0.random < $1.random}
                     batchPointIndex = 0
                 }
             }
@@ -478,7 +478,7 @@ public class NonLinearRegression : Regressor
                     for outputIndex in 0..<numOutputs {
                         let residual = output[outputIndex] - expectedOutput[outputIndex]
                         r[outputIndex * batchSize + pointIndex] = residual
-                        if (convergenceType == .SmallAverageLoss) {
+                        if (convergenceType == .smallAverageLoss) {
                             totalLoss += fabs(residual)
                         }
                     }
@@ -487,7 +487,7 @@ public class NonLinearRegression : Regressor
                     let gradient = try equation.getGradient(inputs)
                     for parameter in 0..<numParameters {
                         J[(parameter * batchSize) + pointIndex] = gradient[parameter]
-                        if (convergenceType == .SmallGradient) {
+                        if (convergenceType == .smallGradient) {
                             if (gradient[parameter] > maxDerivitive) { maxDerivitive = gradient[parameter] }
                         }
                     }
@@ -498,13 +498,13 @@ public class NonLinearRegression : Regressor
             }
             
             //  If the convergence type is a small loss, check if we are done
-            if (convergenceType == .SmallAverageLoss) {
+            if (convergenceType == .smallAverageLoss) {
                 totalLoss /= Double(batchSize)
                 if (totalLoss < convergenceLimit) { return }
             }
             
             //  If the convergence type is a small gradient, check if we are done
-            if (convergenceType == .SmallGradient) {
+            if (convergenceType == .smallGradient) {
                 if (maxDerivitive < convergenceLimit) { return }
             }
             
@@ -512,7 +512,7 @@ public class NonLinearRegression : Regressor
             for outputIndex in 0..<numOutputs {
                 //  Solve J'Jp = J'r for p - the parameter change, using LAPACK's dgels function
                 let jobTChar = "N" as NSString
-                var jobT : Int8 = Int8(jobTChar.characterAtIndex(0))          //  not transposed
+                var jobT : Int8 = Int8(jobTChar.character(at: 0))          //  not transposed
                 var m : Int32 = Int32(batchSize)
                 var n : Int32 = Int32(parametersPerOutput)
                 var nrhs = Int32(1)
@@ -523,13 +523,13 @@ public class NonLinearRegression : Regressor
                 let residualOffset = batchSize * outputIndex      //  Offset to start of residual vector for this output
                 dgels_(&jobT, &m, &n, &nrhs, &J[jacobianOffset], &m, &r[residualOffset], &m, &work, &lwork, &info)
                 if (info != 0 || work[0] < 1) {
-                    throw NonLinearRegressionError.MatrixSolutionError
+                    throw NonLinearRegressionError.matrixSolutionError
                 }
                 lwork = Int32(work[0])
-                work = [Double](count: Int(work[0]), repeatedValue: 0.0)
+                work = [Double](repeating: 0.0, count: Int(work[0]))
                 dgels_(&jobT, &m, &n, &nrhs, &J[jacobianOffset], &m, &r[residualOffset], &m, &work, &lwork, &info)
                 if (info != 0 || work[0] < 1) {
-                    throw NonLinearRegressionError.MatrixSolutionError
+                    throw NonLinearRegressionError.matrixSolutionError
                 }
                 
                 //  Extract the parameter changes
@@ -542,20 +542,20 @@ public class NonLinearRegression : Regressor
             vDSP_vsubD(delta, 1, equation.parameters, 1, &equation.parameters, 1, vDSP_Length(numParameters))
             
             //  If the convergence criteria is for a small parameter change, check now
-            if (convergenceType == .SmallParameterChange) {
+            if (convergenceType == .smallParameterChange) {
                 var sum: Double = 0.0;
                 vDSP_vswsumD(r, 1, &sum, 1, 1, vDSP_Length(numParameters));
                 if (sum < convergenceLimit) { return }
             }
         }
-        throw MachineLearningError.DidNotConverge
+        throw MachineLearningError.didNotConverge
     }
 
     
-    public func predictOne(inputs: [Double]) throws ->[Double]
+    open func predictOne(_ inputs: [Double]) throws ->[Double]
     {
-        if (inputs.count != equation.getInputDimension()) { throw MachineLearningError.DataWrongDimension }
-        if (equation.parameters.count != equation.getParameterDimension()) { throw MachineLearningError.NotTrained }
+        if (inputs.count != equation.getInputDimension()) { throw MachineLearningError.dataWrongDimension }
+        if (equation.parameters.count != equation.getParameterDimension()) { throw MachineLearningError.notTrained }
         
         do {
             return try equation.getOutputs(inputs)
@@ -565,11 +565,11 @@ public class NonLinearRegression : Regressor
         }
     }
     
-    public func predict(testData: MLRegressionDataSet) throws
+    open func predict(_ testData: MLRegressionDataSet) throws
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
-        if (testData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.DataWrongDimension }
+        if (testData.dataType != .regression) { throw MachineLearningError.dataNotRegression }
+        if (testData.inputDimension != equation.getInputDimension()) { throw MachineLearningError.dataWrongDimension }
         
         //  predict on each input
         for index in 0..<testData.size {

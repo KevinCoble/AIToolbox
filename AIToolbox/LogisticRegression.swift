@@ -10,60 +10,60 @@ import Foundation
 import Accelerate
 
 ///  Class for logistic regression solving/classification
-public class LogisticRegression : Regressor, Classifier
+open class LogisticRegression : Regressor, Classifier
 {
     let numInputs : Int     //  Does not include bias term
     var numClasses = 2      //  Set after initial training
     let solveType : NonLinearRegressionType
-    public var parameters : [Double]
-    var initializeFunction : ((trainData: MLDataSet)->[Double])!
+    open var parameters : [Double]
+    var initializeFunction : ((_ trainData: MLDataSet)->[Double])!
     var classData : ClassificationData!
 
     ///  Initializer - specify the dimension of the input data
     public init(numInputs : Int, solvingMethod: NonLinearRegressionType) {
         self.numInputs = numInputs
         solveType = solvingMethod
-        parameters = [Double](count:numInputs+1, repeatedValue: 0.0)
+        parameters = [Double](repeating: 0.0, count: numInputs+1)
     }
     
-    public func getInputDimension() -> Int
+    open func getInputDimension() -> Int
     {
         return numInputs
     }
-    public func getOutputDimension() -> Int
+    open func getOutputDimension() -> Int
     {
         return numClasses
     }
-    public func getParameterDimension() -> Int
+    open func getParameterDimension() -> Int
     {
         return (numInputs + 1) * numClasses * (numClasses - 1) / 2        //  Weights and bias term for each pair of classes
     }
-    public func getNumberOfClasses() -> Int        //  May only be valid after training
+    open func getNumberOfClasses() -> Int        //  May only be valid after training
     {
         return 2     //!!  Currently fixed at a binary set
     }
-    public func setParameters(parameters: [Double]) throws
+    open func setParameters(_ parameters: [Double]) throws
     {
-        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.notEnoughData }
         self.parameters = parameters
     }
     ///  Method to set a custom function to initialize the parameters.  If not set, random parameters are used
-    public func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!)
+    open func setCustomInitializer(_ function: ((_ trainData: MLDataSet)->[Double])!)
     {
         initializeFunction = function
     }
     
-    public func getParameters() throws -> [Double]
+    open func getParameters() throws -> [Double]
     {
         return parameters
     }
     
     ///  Method to initialize the weights - call before any training other than 'trainClassifier' or 'trainRegressor', which call this
-    public func initializeWeights(trainData: MLDataSet!)
+    open func initializeWeights(_ trainData: MLDataSet!)
     {
         let numPairs = numClasses * (numClasses - 1) / 2
-        if let initFunc = initializeFunction, data = trainData {
-            let startWeights = initFunc(trainData: data)
+        if let initFunc = initializeFunction, let data = trainData {
+            let startWeights = initFunc(data)
             //  If enough for all parameters, split and send to layers
             if (getParameterDimension() == startWeights.count) {
                 parameters = []
@@ -98,7 +98,7 @@ public class LogisticRegression : Regressor, Classifier
         }
     }
     
-    public func trainClassifier(trainData: MLClassificationDataSet) throws
+    open func trainClassifier(_ trainData: MLClassificationDataSet) throws
     {
         //  Get the class labels
         classData = try trainData.groupClasses()
@@ -112,17 +112,17 @@ public class LogisticRegression : Regressor, Classifier
         try trainingClassifier(trainData)
     }
     
-    public func continueTrainingClassifier(trainData: MLClassificationDataSet) throws      //  Trains without initializing parameters first
+    open func continueTrainingClassifier(_ trainData: MLClassificationDataSet) throws      //  Trains without initializing parameters first
     {
         //  Verify the class labels match the initial set
         let continueClassData = try trainData.groupClasses()
         trainData.optionalData = continueClassData
         if (continueClassData.classCount != classData.classCount) {        //  Must have same number of classes so all pairs can be trained
-            throw MachineLearningError.ContinueTrainingClassesNotSame
+            throw MachineLearningError.continueTrainingClassesNotSame
         }
         for label in classData.foundLabels {
             if (!continueClassData.foundLabels.contains(label)) {
-                throw MachineLearningError.ContinueTrainingClassesNotSame
+                throw MachineLearningError.continueTrainingClassesNotSame
             }
         }
         
@@ -130,7 +130,7 @@ public class LogisticRegression : Regressor, Classifier
         try trainingClassifier(trainData)
     }
     
-    func trainingClassifier(trainData: MLClassificationDataSet) throws      //  Continues training on a data set.  Assumes class labels have been set
+    func trainingClassifier(_ trainData: MLClassificationDataSet) throws      //  Continues training on a data set.  Assumes class labels have been set
     {
         //  Create a non-linear solution
         let logit = LogitFunction(numInputs: numInputs)
@@ -141,7 +141,7 @@ public class LogisticRegression : Regressor, Classifier
         for i in 0..<numClasses-1 {
             for j in i+1..<numClasses {
                 //  Create a sub-problem data set with just the i and j class data
-                let subProblem = DataSet(dataType: .Regression, inputDimension: numInputs, outputDimension: 1)
+                let subProblem = DataSet(dataType: .regression, inputDimension: numInputs, outputDimension: 1)
                 do {
                     try subProblem.includeEntryInputs(fromDataSet: trainData, withEntries: classData.classOffsets[i])
                     try subProblem.includeEntryInputs(fromDataSet: trainData, withEntries: classData.classOffsets[j])
@@ -174,25 +174,25 @@ public class LogisticRegression : Regressor, Classifier
     }
     
     //  Training is done with classification data
-    public func trainRegressor(trainData: MLRegressionDataSet) throws
+    open func trainRegressor(_ trainData: MLRegressionDataSet) throws
     {
-        throw MachineLearningError.DataNotClassification
+        throw MachineLearningError.dataNotClassification
     }
-    public func continueTrainingRegressor(trainData: MLRegressionDataSet) throws      //  Trains without initializing parameters first
+    open func continueTrainingRegressor(_ trainData: MLRegressionDataSet) throws      //  Trains without initializing parameters first
     {
-        throw MachineLearningError.DataNotClassification
+        throw MachineLearningError.dataNotClassification
     }
     
     ///  Return the class with the highest probability
-    public func classifyOne(inputs: [Double]) throws ->Int
+    open func classifyOne(_ inputs: [Double]) throws ->Int
     {
-        if (inputs.count != numInputs) { throw DataTypeError.WrongDimensionOnInput }
+        if (inputs.count != numInputs) { throw DataTypeError.wrongDimensionOnInput }
 
         //  Create a logit function to do the comparisions
         let logit = LogitFunction(numInputs: numInputs)
         
         //  Allocate vote space for the classification
-        var votes = [Int](count: numClasses, repeatedValue: 0)
+        var votes = [Int](repeating: 0, count: numClasses)
         
         //  Get the decision for each pair
         var parameterStart = 0
@@ -231,11 +231,11 @@ public class LogisticRegression : Regressor, Classifier
     }
     
     ///  Set the class label to the class with the highest probability for each data point
-    public func classify(testData: MLClassificationDataSet) throws
+    open func classify(_ testData: MLClassificationDataSet) throws
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
-        if (testData.inputDimension != numInputs) { throw DataTypeError.WrongDimensionOnInput }
+        if (testData.dataType != .classification) { throw DataTypeError.invalidDataType }
+        if (testData.inputDimension != numInputs) { throw DataTypeError.wrongDimensionOnInput }
         
         //  Classify each input
         for index in 0..<testData.size {
@@ -245,10 +245,10 @@ public class LogisticRegression : Regressor, Classifier
     }
     
     ///  Return the probability for each class
-    public func predictOne(inputs: [Double]) throws ->[Double]
+    open func predictOne(_ inputs: [Double]) throws ->[Double]
     {
         //  Verify the data set is the right type
-        if (inputs.count != numInputs) { throw DataTypeError.WrongDimensionOnInput }
+        if (inputs.count != numInputs) { throw DataTypeError.wrongDimensionOnInput }
         
         //  Get the weighted sum
         var weightedSum = 0.0
@@ -262,11 +262,11 @@ public class LogisticRegression : Regressor, Classifier
     }
     
     ///  Set the probablility for each class for each data point
-    public func predict(testData: MLRegressionDataSet) throws
+    open func predict(_ testData: MLRegressionDataSet) throws
     {
         //  Verify the data set is the right type
-        if (testData.inputDimension != numInputs) { throw DataTypeError.WrongDimensionOnInput }
-        if (testData.outputDimension != getOutputDimension()) { throw DataTypeError.WrongDimensionOnOutput }
+        if (testData.inputDimension != numInputs) { throw DataTypeError.wrongDimensionOnInput }
+        if (testData.outputDimension != getOutputDimension()) { throw DataTypeError.wrongDimensionOnOutput }
         
         //  predict on each input
         for index in 0..<testData.size {
@@ -283,7 +283,7 @@ class LogitFunction : NonLinearEquation {
     
     init(numInputs : Int) {
         self.numInputs = numInputs
-        parameters = [Double](count:numInputs+1, repeatedValue: 0.0)
+        parameters = [Double](repeating: 0.0, count: numInputs+1)
     }
 
     func getInputDimension() -> Int
@@ -298,15 +298,15 @@ class LogitFunction : NonLinearEquation {
     {
         return numInputs + 1        //  Bias term
     }
-    func setParameters(parameters: [Double]) throws
+    func setParameters(_ parameters: [Double]) throws
     {
-        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.notEnoughData }
         self.parameters = parameters
     }
-    func getOutputs(inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
+    func getOutputs(_ inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
     {
         //  Verify the data set is the right type
-        if (inputs.count != numInputs) { throw DataTypeError.WrongDimensionOnInput }
+        if (inputs.count != numInputs) { throw DataTypeError.wrongDimensionOnInput }
 
         //  Get the weighted sum
         var weightedSum = 0.0
@@ -318,7 +318,7 @@ class LogitFunction : NonLinearEquation {
         
         return [probabilityOne]
     }
-    func getGradient(inputs: [Double]) throws -> [Double]       //  Returns vector gradient with respect to parameters - ∂y/∂w, where y is the output and w is each parameter  (this is multiplied by ∂E/∂y by Nonlinear Regression SGD routine, where E is the error)
+    func getGradient(_ inputs: [Double]) throws -> [Double]       //  Returns vector gradient with respect to parameters - ∂y/∂w, where y is the output and w is each parameter  (this is multiplied by ∂E/∂y by Nonlinear Regression SGD routine, where E is the error)
     {
         //  Get the output
         let output = try getOutputs(inputs)[0]
@@ -327,7 +327,7 @@ class LogitFunction : NonLinearEquation {
         var dz = output - (output * output)
         
         //  Multiply by ∂z/∂w for each parameter, which is just the input
-        var gradient = [Double](count:numInputs, repeatedValue: 0.0)
+        var gradient = [Double](repeating: 0.0, count: numInputs)
         vDSP_vsmulD(inputs, 1, &dz, &gradient, 1, vDSP_Length(numInputs))
         gradient.append(dz)        //  Bias term
         

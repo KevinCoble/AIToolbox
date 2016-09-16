@@ -6,7 +6,7 @@
  We start with the required import statements.  If this was your own program, rather than a playground, you would also add an 'import AIToolbox' line.
  */
 import Cocoa
-import XCPlayground
+import PlaygroundSupport
 
 /*: Data Set
  ## Create a Classification DataSet
@@ -17,7 +17,7 @@ import XCPlayground
  
  This is a Support Vector Machine, so our data set will be the 'Classification' type, with an input input vector sized for two variables (the X and Y axis on our plot later).
  */
-let data = DataSet(dataType: .Classification, inputDimension: 2, outputDimension: 1)
+let data = DataSet(dataType: .classification, inputDimension: 2, outputDimension: 1)
 //:  Add a few data points to the data set.  Note the 'output' category is a single integer.  This is the 'class label' for the point.  All points with the same label are assumed to be in the same class.
 try data.addDataPoint(input: [0.2, 0.9], output:0)
 try data.addDataPoint(input: [0.8, 0.3], output:0)
@@ -38,7 +38,7 @@ try data.addDataPoint(input: [0.7, 0.2], output:2)
  
  Below are two examples of kernel functions.  The first is for a radial basis function, the second for a 3rd degree polynomial
  */
-let kernelSettings = KernelParameters(type: .RadialBasisFunction, degree: 0, gamma: 0.5, coef0: 0.0)
+let kernelSettings = KernelParameters(type: .radialBasisFunction, degree: 0, gamma: 0.5, coef0: 0.0)
 //let kernelSettings = KernelParameters(type: .Polynomial, degree: 3, gamma: 0.5, coef0: 0.0)
 
 /*: SVM
@@ -49,7 +49,7 @@ let kernelSettings = KernelParameters(type: .RadialBasisFunction, degree: 0, gam
  There are several different types of solutions for an SVM, classification, regression, and multiple solutions types for each.  We will use standard classification.
  */
 
-let svm = SVMModel(problemType: .C_SVM_Classification, kernelSettings: kernelSettings)
+let svm = SVMModel(problemType: .c_SVM_Classification, kernelSettings: kernelSettings)
 /*: SVM
  ### Adjusting the Cost
  
@@ -92,12 +92,12 @@ dataView.addPlotItem(classifierArea)
 //:  Add the data plot item now (so the data points are on top of the areas
 dataView.addPlotItem(dataPlotItem)
 //:  Create a legend
-let legend = MLViewLegend(location: .UpperRight, title: "Legend")
+let legend = MLViewLegend(location: .upperRight, title: "Legend")
 //:  Add the data point labels to the legend (they coincide with the area colors)
 let dataLegends = MLLegendItem.createClassLegendArray("class ", classificationDataSet: dataPlotItem)
 legend.addItems(dataLegends)
 dataView.addPlotItem(legend)
 
 //:  Finally, set the view to be drawn by the playground
-XCPlaygroundPage.currentPage.liveView = dataView
+PlaygroundPage.current.liveView = dataView
 

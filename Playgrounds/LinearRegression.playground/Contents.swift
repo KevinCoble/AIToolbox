@@ -6,7 +6,7 @@
  We start with the required import statements.  If this was your own program, rather than a playground, you would also add an 'import AIToolbox' line.
  */
 import Cocoa
-import XCPlayground
+import PlaygroundSupport
 
 /*: Target Function
  ## Create a Target function
@@ -42,7 +42,7 @@ targetParameters        //  Show target parameters to compare with hypothesis pa
  
  This is Linear Regression, so our data set will be the 'Regression type, with the same input and output dimensions as our target function.
 */
-let data = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+let data = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
 /*:
  We are going to use the target function to create points, and add noise
  set numPoints to the number of points to create, and set the standard deviation of the gaussian noise
@@ -97,7 +97,7 @@ AIToolbox includes a subclass of NSView that can be used to plot the data and th
  */
 let dataView = MLView(frame: CGRect(x: 0, y: 0, width: 480, height: 320))
 //:  Create a symbol object for plotting the data set - a green circle
-let dataPlotSymbol = MLPlotSymbol(color: NSColor.greenColor(), symbolShape: .Circle, symbolSize: 7.0)
+let dataPlotSymbol = MLPlotSymbol(color: NSColor.green, symbolShape: .circle, symbolSize: 7.0)
 //:  Create a regression data set plot item
 let dataPlotItem = try MLViewRegressionDataSet(dataset: data, symbol: dataPlotSymbol)
 //:  Set that item as the source of the initial scale of plot items.  Some plot items can be set to change the scale, but something needs to set the initial scale
@@ -106,15 +106,15 @@ dataView.setInitialScaleItem(dataPlotItem)
 let axisLabels = MLViewAxisLabel(showX: true, showY: true)
 dataView.addPlotItem(axisLabels)
 //:  Create a regression data line item for the target function, blue
-let targetLine = MLViewRegressionLine(regressor: target, color: NSColor.blueColor())
+let targetLine = MLViewRegressionLine(regressor: target, color: NSColor.blue)
 dataView.addPlotItem(targetLine)
 //:  Create a regression data line item for the hypothes function, red
-let hypothesisLine = MLViewRegressionLine(regressor: lr, color: NSColor.redColor())
+let hypothesisLine = MLViewRegressionLine(regressor: lr, color: NSColor.red)
 dataView.addPlotItem(hypothesisLine)
 //:  Add the data plot item now (so the data points are on top of the lines - reorder if you want!)
 dataView.addPlotItem(dataPlotItem)
 //:  Create a legend
-let legend = MLViewLegend(location: .LowerRight, title: "Legend")
+let legend = MLViewLegend(location: .lowerRight, title: "Legend")
 //:  Add the target line to the legend
 let targetLegend = MLLegendItem(label: "target", regressionLinePlotItem: targetLine)
 legend.addItem(targetLegend)
@@ -127,6 +127,6 @@ legend.addItem(lineLegend)
 dataView.addPlotItem(legend)
 
 //:  Finally, set the view to be drawn by the playground
-XCPlaygroundPage.currentPage.liveView = dataView
+PlaygroundPage.current.liveView = dataView
 
 

@@ -42,7 +42,7 @@ class MixtureOfGaussianTests: XCTestCase {
         }
         
         //  Create a dataset to train on
-        let trainData = DataSet(dataType: .Regression, inputDimension: 2, outputDimension: 1)
+        let trainData = DataSet(dataType: .regression, inputDimension: 2, outputDimension: 1)
         do {
             for _ in 0..<500 {
                 let x = Double(arc4random()) * 100.0 / Double(UInt32.max)
@@ -64,7 +64,7 @@ class MixtureOfGaussianTests: XCTestCase {
         }
         
         //  Create a dataset to test on
-        let testData = DataSet(dataType: .Regression, inputDimension: 2, outputDimension: 1)
+        let testData = DataSet(dataType: .regression, inputDimension: 2, outputDimension: 1)
         do {
             for _ in 0..<100 {
                 let x = Double(arc4random()) * 100.0 / Double(UInt32.max)
@@ -102,7 +102,7 @@ class MixtureOfGaussianTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }

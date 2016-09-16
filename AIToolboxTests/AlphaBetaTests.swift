@@ -59,7 +59,7 @@ class TestAlphaBetaNode : AlphaBetaNode {
         super.init()
     }
     
-    override func generateMoves(forMaximizer: Bool) -> [AlphaBetaNode] {
+    override func generateMoves(_ forMaximizer: Bool) -> [AlphaBetaNode] {
         var returnMoves : [AlphaBetaNode] = []
         print("created children of \(creationIndex)")
         returnMoves.append(TestAlphaBetaNode())
@@ -97,7 +97,7 @@ class AlphaBetaTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock() {
+        self.measure() {
             // Put the code you want to measure the time of here.
         }
     }

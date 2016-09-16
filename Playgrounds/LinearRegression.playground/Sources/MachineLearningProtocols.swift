@@ -8,18 +8,18 @@
 
 import Foundation
 
-public enum MachineLearningError: ErrorType {
-    case DataNotRegression
-    case DataWrongDimension
-    case NotEnoughData
-    case ModelNotRegression
-    case ModelNotClassification
-    case NotTrained
-    case InitializationError
-    case DidNotConverge
-    case ContinuationNotSupported
-    case OperationTimeout
-    case ContinueTrainingClassesNotSame
+public enum MachineLearningError: Error {
+    case dataNotRegression
+    case dataWrongDimension
+    case notEnoughData
+    case modelNotRegression
+    case modelNotClassification
+    case notTrained
+    case initializationError
+    case didNotConverge
+    case continuationNotSupported
+    case operationTimeout
+    case continueTrainingClassesNotSame
 }
 
 
@@ -27,26 +27,26 @@ public protocol Classifier {
     func getInputDimension() -> Int
     func getParameterDimension() -> Int     //  May only be valid after training
     func getNumberOfClasses() -> Int        //  May only be valid after training
-    func setParameters(parameters: [Double]) throws
-    func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
+    func setParameters(_ parameters: [Double]) throws
+    func setCustomInitializer(_ function: ((_ trainData: DataSet)->[Double])!)
     func getParameters() throws -> [Double]
-    func trainClassifier(trainData: DataSet) throws
-    func continueTrainingClassifier(trainData: DataSet) throws      //  Trains without initializing parameters first
-    func classifyOne(inputs: [Double]) throws ->Int
-    func classify(testData: DataSet) throws
+    func trainClassifier(_ trainData: DataSet) throws
+    func continueTrainingClassifier(_ trainData: DataSet) throws      //  Trains without initializing parameters first
+    func classifyOne(_ inputs: [Double]) throws ->Int
+    func classify(_ testData: DataSet) throws
 }
 
 public protocol Regressor {
     func getInputDimension() -> Int
     func getOutputDimension() -> Int
     func getParameterDimension() -> Int
-    func setParameters(parameters: [Double]) throws
-    func setCustomInitializer(function: ((trainData: DataSet)->[Double])!)
+    func setParameters(_ parameters: [Double]) throws
+    func setCustomInitializer(_ function: ((_ trainData: DataSet)->[Double])!)
     func getParameters() throws -> [Double]
-    func trainRegressor(trainData: DataSet) throws
-    func continueTrainingRegressor(trainData: DataSet) throws      //  Trains without initializing parameters first
-    func predictOne(inputs: [Double]) throws ->[Double]
-    func predict(testData: DataSet) throws
+    func trainRegressor(_ trainData: DataSet) throws
+    func continueTrainingRegressor(_ trainData: DataSet) throws      //  Trains without initializing parameters first
+    func predictOne(_ inputs: [Double]) throws ->[Double]
+    func predict(_ testData: DataSet) throws
 }
 
 public protocol NonLinearEquation {
@@ -56,17 +56,17 @@ public protocol NonLinearEquation {
     func getInputDimension() -> Int
     func getOutputDimension() -> Int
     func getParameterDimension() -> Int     //  This must be an integer multiple of output dimension
-    func setParameters(parameters: [Double]) throws
-    func getOutputs(inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
-    func getGradient(inputs: [Double]) throws -> [Double]       //  Returns vector gradient sized for parameters - can be stubbed for ParameterDelta method
+    func setParameters(_ parameters: [Double]) throws
+    func getOutputs(_ inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
+    func getGradient(_ inputs: [Double]) throws -> [Double]       //  Returns vector gradient sized for parameters - can be stubbed for ParameterDelta method
 }
 
 extension Classifier {
     ///  Calculate the precentage correct on a classification network using a test data set
-    public func getClassificationPercentage(testData: DataSet) throws -> Double
+    public func getClassificationPercentage(_ testData: DataSet) throws -> Double
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
+        if (testData.dataType != .classification) { throw DataTypeError.invalidDataType }
         
         var countCorrect = 0
         
@@ -85,10 +85,10 @@ extension Classifier {
 extension Regressor {
     
     ///  Calculate the total absolute value of error on a regressor using a test data set
-    public func getTotalAbsError(testData: DataSet) throws -> Double
+    public func getTotalAbsError(_ testData: DataSet) throws -> Double
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Regression) { throw DataTypeError.InvalidDataType }
+        if (testData.dataType != .regression) { throw DataTypeError.invalidDataType }
         
         var sum = 0.0
         

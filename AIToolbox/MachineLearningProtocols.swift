@@ -8,27 +8,27 @@
 
 import Foundation
 
-public enum MachineLearningError: ErrorType {
-    case DataNotRegression
-    case DataNotClassification
-    case DataWrongDimension
-    case NotEnoughData
-    case ModelNotRegression
-    case ModelNotClassification
-    case NotTrained
-    case InitializationError
-    case DidNotConverge
-    case ContinuationNotSupported
-    case OperationTimeout
-    case ContinueTrainingClassesNotSame
+public enum MachineLearningError: Error {
+    case dataNotRegression
+    case dataNotClassification
+    case dataWrongDimension
+    case notEnoughData
+    case modelNotRegression
+    case modelNotClassification
+    case notTrained
+    case initializationError
+    case didNotConverge
+    case continuationNotSupported
+    case operationTimeout
+    case continueTrainingClassesNotSame
 }
 
 
 public enum DataSetType   //  data type
 {
-    case Regression
-    case Classification
-    case RealAndClass           //  Has both real array and class (SVM predict values, etc.)
+    case regression
+    case classification
+    case realAndClass           //  Has both real array and class (SVM predict values, etc.)
 }
 
 public protocol MLDataSet : class {     //  Machine learning data set provider
@@ -38,19 +38,19 @@ public protocol MLDataSet : class {     //  Machine learning data set provider
     var size: Int { get }
     var optionalData: AnyObject? { get set }      //  Optional data that can be temporarily added by methods using the data set
     
-    func getInput(index: Int) throws ->[Double]
+    func getInput(_ index: Int) throws ->[Double]
 }
 
 public protocol MLRegressionDataSet : MLDataSet {     //  Machine learning regression data set provider
-    func getOutput(index: Int) throws ->[Double]
+    func getOutput(_ index: Int) throws ->[Double]
     
-    func setOutput(index: Int, newOutput : [Double]) throws
+    func setOutput(_ index: Int, newOutput : [Double]) throws
 }
 
 public protocol MLClassificationDataSet : MLDataSet {     //  Machine learning classification data set provider
-    func getClass(index: Int) throws ->Int
+    func getClass(_ index: Int) throws ->Int
     
-    func setClass(index: Int, newClass : Int) throws
+    func setClass(_ index: Int, newClass : Int) throws
 }
 
 public protocol MLCombinedDataSet : MLRegressionDataSet, MLClassificationDataSet {     //  Machine learning classification AND regression data set provider (for classes that can do both)
@@ -60,26 +60,26 @@ public protocol Classifier {
     func getInputDimension() -> Int
     func getParameterDimension() -> Int     //  May only be valid after training
     func getNumberOfClasses() -> Int        //  May only be valid after training
-    func setParameters(parameters: [Double]) throws
-    func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!)
+    func setParameters(_ parameters: [Double]) throws
+    func setCustomInitializer(_ function: ((_ trainData: MLDataSet)->[Double])!)
     func getParameters() throws -> [Double]
-    func trainClassifier(trainData: MLClassificationDataSet) throws
-    func continueTrainingClassifier(trainData: MLClassificationDataSet) throws      //  Trains without initializing parameters first
-    func classifyOne(inputs: [Double]) throws ->Int
-    func classify(testData: MLClassificationDataSet) throws
+    func trainClassifier(_ trainData: MLClassificationDataSet) throws
+    func continueTrainingClassifier(_ trainData: MLClassificationDataSet) throws      //  Trains without initializing parameters first
+    func classifyOne(_ inputs: [Double]) throws ->Int
+    func classify(_ testData: MLClassificationDataSet) throws
 }
 
 public protocol Regressor {
     func getInputDimension() -> Int
     func getOutputDimension() -> Int
     func getParameterDimension() -> Int
-    func setParameters(parameters: [Double]) throws
-    func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!)
+    func setParameters(_ parameters: [Double]) throws
+    func setCustomInitializer(_ function: ((_ trainData: MLDataSet)->[Double])!)
     func getParameters() throws -> [Double]
-    func trainRegressor(trainData: MLRegressionDataSet) throws
-    func continueTrainingRegressor(trainData: MLRegressionDataSet) throws      //  Trains without initializing parameters first
-    func predictOne(inputs: [Double]) throws ->[Double]
-    func predict(testData: MLRegressionDataSet) throws
+    func trainRegressor(_ trainData: MLRegressionDataSet) throws
+    func continueTrainingRegressor(_ trainData: MLRegressionDataSet) throws      //  Trains without initializing parameters first
+    func predictOne(_ inputs: [Double]) throws ->[Double]
+    func predict(_ testData: MLRegressionDataSet) throws
 }
 
 public protocol NonLinearEquation {
@@ -89,9 +89,9 @@ public protocol NonLinearEquation {
     func getInputDimension() -> Int
     func getOutputDimension() -> Int
     func getParameterDimension() -> Int     //  This must be an integer multiple of output dimension
-    func setParameters(parameters: [Double]) throws
-    func getOutputs(inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
-    func getGradient(inputs: [Double]) throws -> [Double]       //  Returns vector gradient sized for parameters - can be stubbed for ParameterDelta method
+    func setParameters(_ parameters: [Double]) throws
+    func getOutputs(_ inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
+    func getGradient(_ inputs: [Double]) throws -> [Double]       //  Returns vector gradient sized for parameters - can be stubbed for ParameterDelta method
 }
 
 extension MLDataSet {
@@ -120,7 +120,7 @@ extension MLRegressionDataSet {
     public func getInputRange() -> [(minimum: Double, maximum: Double)]
     {
         //  Allocate the array of tuples
-        var results : [(minimum: Double, maximum: Double)] = Array(count: inputDimension, repeatedValue: (minimum: Double.infinity, maximum: -Double.infinity))
+        var results : [(minimum: Double, maximum: Double)] = Array(repeating: (minimum: Double.infinity, maximum: -Double.infinity), count: inputDimension)
         
         //  Go through each input
         for index in 0..<size {
@@ -143,7 +143,7 @@ extension MLRegressionDataSet {
     public func getOutputRange() -> [(minimum: Double, maximum: Double)]
     {
         //  Allocate the array of tuples
-        var results : [(minimum: Double, maximum: Double)] = Array(count: outputDimension, repeatedValue: (minimum: Double.infinity, maximum: -Double.infinity))
+        var results : [(minimum: Double, maximum: Double)] = Array(repeating: (minimum: Double.infinity, maximum: -Double.infinity), count: outputDimension)
         
         //  Go through each output
         for index in 0..<size {
@@ -163,7 +163,7 @@ extension MLRegressionDataSet {
         return results
     }
     
-    public func singleOutput(index: Int) -> Double?
+    public func singleOutput(_ index: Int) -> Double?
     {
         //  Validate the index
         if (index < 0) { return nil}
@@ -186,7 +186,7 @@ extension MLClassificationDataSet {
     public func getInputRange() -> [(minimum: Double, maximum: Double)]
     {
         //  Allocate the array of tuples
-        var results : [(minimum: Double, maximum: Double)] = Array(count: inputDimension, repeatedValue: (minimum: Double.infinity, maximum: -Double.infinity))
+        var results : [(minimum: Double, maximum: Double)] = Array(repeating: (minimum: Double.infinity, maximum: -Double.infinity), count: inputDimension)
         
         //  Go through each input
         for index in 0..<size {
@@ -208,7 +208,7 @@ extension MLClassificationDataSet {
     
     public func groupClasses() throws -> ClassificationData
     {
-        if (dataType == .Regression)  { throw DataTypeError.InvalidDataType }
+        if (dataType == .regression)  { throw DataTypeError.invalidDataType }
         
         //  If the data already has classification data, skip
         if (optionalData != nil) {
@@ -221,7 +221,7 @@ extension MLClassificationDataSet {
         //  Get the different data labels
         for index in 0..<size {
             let thisClass = try getClass(index)
-            let thisClassIndex = classificationData.foundLabels.indexOf(thisClass)
+            let thisClassIndex = classificationData.foundLabels.index(of: thisClass)
             if let classIndex = thisClassIndex {
                 //  Class label found, increment count
                 classificationData.classCount[classIndex] += 1
@@ -240,7 +240,7 @@ extension MLClassificationDataSet {
         return classificationData
     }
     
-    public func singleOutput(index: Int) -> Double?
+    public func singleOutput(_ index: Int) -> Double?
     {
         //  Validate the index
         if (index < 0) { return nil}
@@ -261,7 +261,7 @@ extension MLClassificationDataSet {
 
 extension MLCombinedDataSet {
     
-    public func singleOutput(index: Int) -> Double?
+    public func singleOutput(_ index: Int) -> Double?
     {
         //  Validate the index
         if (index < 0) { return nil}
@@ -270,13 +270,13 @@ extension MLCombinedDataSet {
         //  Get the data
         do {
             switch dataType {
-            case .Regression:
+            case .regression:
                 let outputs = try getOutput(index)
                 return outputs[0]
-            case .Classification:
+            case .classification:
                 let outputClass = try getClass(index)
                 return Double(outputClass)
-            case .RealAndClass:
+            case .realAndClass:
                 let outputClass = try getClass(index)       //  Class is a single output
                 return Double(outputClass)
             }
@@ -290,10 +290,10 @@ extension MLCombinedDataSet {
 
 extension Classifier {
     ///  Calculate the precentage correct on a classification network using a test data set
-    public func getClassificationPercentage(testData: DataSet) throws -> Double
+    public func getClassificationPercentage(_ testData: DataSet) throws -> Double
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
+        if (testData.dataType != .classification) { throw DataTypeError.invalidDataType }
         
         var countCorrect = 0
         
@@ -314,10 +314,10 @@ extension Classifier {
 extension Regressor {
     
     ///  Calculate the total absolute value of error on a regressor using a test data set
-    public func getTotalAbsError(testData: DataSet) throws -> Double
+    public func getTotalAbsError(_ testData: DataSet) throws -> Double
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Regression) { throw DataTypeError.InvalidDataType }
+        if (testData.dataType != .regression) { throw DataTypeError.invalidDataType }
         
         var sum = 0.0
         
@@ -340,7 +340,7 @@ extension Regressor {
     
 }
 
-public class ClassificationData {
+open class ClassificationData {
     var foundLabels: [Int] = []
     var classCount: [Int] = []
     var classOffsets: [[Int]] = []

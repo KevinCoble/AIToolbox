@@ -103,18 +103,18 @@ final class LSTMNeuralNode {
     }
     
     //  Initialize the weights
-    func initWeights(startWeights: [Double]!)
+    func initWeights(_ startWeights: [Double]!)
     {
         if let startWeights = startWeights {
             if (startWeights.count == 1) {
-                Wi = [Double](count: numInputs, repeatedValue: startWeights[0])
-                Ui = [Double](count: numFeedback, repeatedValue: startWeights[0])
-                Wf = [Double](count: numInputs, repeatedValue: startWeights[0])
-                Uf = [Double](count: numFeedback, repeatedValue: startWeights[0])
-                Wc = [Double](count: numInputs, repeatedValue: startWeights[0])
-                Uc = [Double](count: numFeedback, repeatedValue: startWeights[0])
-                Wo = [Double](count: numInputs, repeatedValue: startWeights[0])
-                Uo = [Double](count: numFeedback, repeatedValue: startWeights[0])
+                Wi = [Double](repeating: startWeights[0], count: numInputs)
+                Ui = [Double](repeating: startWeights[0], count: numFeedback)
+                Wf = [Double](repeating: startWeights[0], count: numInputs)
+                Uf = [Double](repeating: startWeights[0], count: numFeedback)
+                Wc = [Double](repeating: startWeights[0], count: numInputs)
+                Uc = [Double](repeating: startWeights[0], count: numFeedback)
+                Wo = [Double](repeating: startWeights[0], count: numInputs)
+                Uo = [Double](repeating: startWeights[0], count: numFeedback)
             }
             else if (startWeights.count == (numInputs+numFeedback) * 4) {
                 //  Full weight array, just split into the eight weight arrays
@@ -273,7 +273,7 @@ final class LSTMNeuralNode {
         }
     }
     
-    func feedForward(x: [Double], hPrev: [Double]) -> Double
+    func feedForward(_ x: [Double], hPrev: [Double]) -> Double
     {
         //  Get the input gate value
         var zi = 0.0
@@ -305,25 +305,25 @@ final class LSTMNeuralNode {
         
         //  Use the activation function function for the nonlinearity
         switch (activation) {
-        case .None:
+        case .none:
             hc = zc
             break
-        case .HyperbolicTangent:
+        case .hyperbolicTangent:
             hc = tanh(zc)
             break
-        case .SigmoidWithCrossEntropy:
+        case .sigmoidWithCrossEntropy:
             fallthrough
-        case .Sigmoid:
+        case .sigmoid:
             hc = 1.0 / (1.0 + exp(-zc))
             break
-        case .RectifiedLinear:
+        case .rectifiedLinear:
             hc = zc
             if (zc < 0) { hc = 0.0 }
             break
-        case .SoftSign:
+        case .softSign:
             hc = zc / (1.0 + abs(zc))
             break
-        case .SoftMax:
+        case .softMax:
             hc = exp(zc)
             break
         }
@@ -346,25 +346,25 @@ final class LSTMNeuralNode {
         //  Use the activation function function for the nonlinearity
         var squashedCellState : Double
         switch (activation) {
-        case .None:
+        case .none:
             squashedCellState = lastCellState
             break
-        case .HyperbolicTangent:
+        case .hyperbolicTangent:
             squashedCellState = tanh(lastCellState)
             break
-        case .SigmoidWithCrossEntropy:
+        case .sigmoidWithCrossEntropy:
             fallthrough
-        case .Sigmoid:
+        case .sigmoid:
             squashedCellState = 1.0 / (1.0 + exp(-lastCellState))
             break
-        case .RectifiedLinear:
+        case .rectifiedLinear:
             squashedCellState = lastCellState
             if (lastCellState < 0) { squashedCellState = 0.0 }
             break
-        case .SoftSign:
+        case .softSign:
             squashedCellState = lastCellState / (1.0 + abs(lastCellState))
             break
-        case .SoftMax:
+        case .softMax:
             squashedCellState = exp(lastCellState)
             break
         }
@@ -373,7 +373,7 @@ final class LSTMNeuralNode {
     }
     
     //  Get the partial derivitive of the error with respect to the weighted sum
-    func getFinalNode𝟃E𝟃zs(𝟃E𝟃h: Double)
+    func getFinalNode𝟃E𝟃zs(_ 𝟃E𝟃h: Double)
     {
         //  Store 𝟃E/𝟃h, set initial future error contributions to zero, and have the hidden layer routine do the work
         self.𝟃E𝟃h = 𝟃E𝟃h
@@ -385,12 +385,12 @@ final class LSTMNeuralNode {
         𝟃E𝟃h = 0.0
     }
     
-    func addTo𝟃E𝟃hs(addition: Double)
+    func addTo𝟃E𝟃hs(_ addition: Double)
     {
         𝟃E𝟃h += addition
     }
     
-    func getWeightTimes𝟃E𝟃zs(weightIndex: Int) ->Double
+    func getWeightTimes𝟃E𝟃zs(_ weightIndex: Int) ->Double
     {
         var sum = Wo[weightIndex] * 𝟃E𝟃zo
         sum += Wf[weightIndex] * 𝟃E𝟃zf
@@ -400,7 +400,7 @@ final class LSTMNeuralNode {
         return sum
     }
     
-    func getFeedbackWeightTimes𝟃E𝟃zs(weightIndex: Int) ->Double
+    func getFeedbackWeightTimes𝟃E𝟃zs(_ weightIndex: Int) ->Double
     {
         var sum = Uo[weightIndex] * 𝟃E𝟃zo
         sum += Uf[weightIndex] * 𝟃E𝟃zf
@@ -431,25 +431,25 @@ final class LSTMNeuralNode {
 
     }
     
-    func getActPrime(h: Double) -> Double
+    func getActPrime(_ h: Double) -> Double
     {
         //  derivitive of the non-linearity: tanh' -> 1 - result^2, sigmoid -> result - result^2, rectlinear -> 0 if result<0 else 1
         var actPrime = 0.0
         switch (activation) {
-        case .None:
+        case .none:
             break
-        case .HyperbolicTangent:
+        case .hyperbolicTangent:
             actPrime = (1 - h * h)
             break
-        case .SigmoidWithCrossEntropy:
+        case .sigmoidWithCrossEntropy:
             fallthrough
-        case .Sigmoid:
+        case .sigmoid:
             actPrime = (h - h * h)
             break
-        case .RectifiedLinear:
+        case .rectifiedLinear:
             actPrime = h <= 0.0 ? 0.0 : 1.0
             break
-        case .SoftSign:
+        case .softSign:
             //  Reconstitute z from h
             var z : Double
             if (h < 0) {        //  Negative z
@@ -461,7 +461,7 @@ final class LSTMNeuralNode {
                 actPrime = 1.0 / ((1.0 + z) * (1.0 + z))
             }
             break
-        case .SoftMax:
+        case .softMax:
             //  Should not get here - SoftMax is only valid on output layer
             break
         }
@@ -478,17 +478,17 @@ final class LSTMNeuralNode {
 
     func clearWeightChanges()
     {
-        𝟃E𝟃Wi = [Double](count: numInputs, repeatedValue: 0.0)
-        𝟃E𝟃Ui = [Double](count: numFeedback, repeatedValue: 0.0)
-        𝟃E𝟃Wf = [Double](count: numInputs, repeatedValue: 0.0)
-        𝟃E𝟃Uf = [Double](count: numFeedback, repeatedValue: 0.0)
-        𝟃E𝟃Wc = [Double](count: numInputs, repeatedValue: 0.0)
-        𝟃E𝟃Uc = [Double](count: numFeedback, repeatedValue: 0.0)
-        𝟃E𝟃Wo = [Double](count: numInputs, repeatedValue: 0.0)
-        𝟃E𝟃Uo = [Double](count: numFeedback, repeatedValue: 0.0)
+        𝟃E𝟃Wi = [Double](repeating: 0.0, count: numInputs)
+        𝟃E𝟃Ui = [Double](repeating: 0.0, count: numFeedback)
+        𝟃E𝟃Wf = [Double](repeating: 0.0, count: numInputs)
+        𝟃E𝟃Uf = [Double](repeating: 0.0, count: numFeedback)
+        𝟃E𝟃Wc = [Double](repeating: 0.0, count: numInputs)
+        𝟃E𝟃Uc = [Double](repeating: 0.0, count: numFeedback)
+        𝟃E𝟃Wo = [Double](repeating: 0.0, count: numInputs)
+        𝟃E𝟃Uo = [Double](repeating: 0.0, count: numFeedback)
     }
     
-    func appendWeightChanges(x: [Double], hPrev: [Double]) -> Double
+    func appendWeightChanges(_ x: [Double], hPrev: [Double]) -> Double
     {
         //  Update each weight accumulation
         
@@ -515,7 +515,7 @@ final class LSTMNeuralNode {
         return h
     }
     
-    func updateWeightsFromAccumulations(averageTrainingRate: Double)
+    func updateWeightsFromAccumulations(_ averageTrainingRate: Double)
     {
         //  Update the weights from the accumulations
         //  weights -= accumulation * averageTrainingRate
@@ -530,7 +530,7 @@ final class LSTMNeuralNode {
         vDSP_vsmaD(𝟃E𝟃Uo, 1, &η, Uo, 1, &Uo, 1, vDSP_Length(numFeedback))
     }
     
-    func decayWeights(decayFactor : Double)
+    func decayWeights(_ decayFactor : Double)
     {
         var λ = decayFactor     //  Needed for unsafe pointer conversion
         vDSP_vsmulD(Wi, 1, &λ, &Wi, 1, vDSP_Length(numInputs-1))
@@ -607,7 +607,7 @@ final class LSTMNeuralLayer: NeuralLayer {
     }
     
     //  Initialize the weights
-    func initWeights(startWeights: [Double]!)
+    func initWeights(_ startWeights: [Double]!)
     {
         if let startWeights = startWeights {
             if (startWeights.count >= nodes.count * nodes[0].numWeights) {
@@ -674,7 +674,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         return nodes[0].activation
     }
     
-    func feedForward(x: [Double]) -> [Double]
+    func feedForward(_ x: [Double]) -> [Double]
     {
         //  Gather the previous outputs for the feedback
         var hPrev : [Double] = []
@@ -685,7 +685,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         var outputs : [Double] = []
         //  Assume input array already has bias constant 1.0 appended
         //  Fully-connected nodes means all nodes get the same input array
-        if (nodes[0].activation == .SoftMax) {
+        if (nodes[0].activation == .softMax) {
             var sum = 0.0
             for node in nodes {     //  Sum each output
                 sum += node.feedForward(x, hPrev: hPrev)
@@ -705,7 +705,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         return outputs
     }
     
-    func getFinalLayer𝟃E𝟃zs(𝟃E𝟃h: [Double])
+    func getFinalLayer𝟃E𝟃zs(_ 𝟃E𝟃h: [Double])
     {
         for nNodeIndex in 0..<nodes.count {
             //  Start with the portion from the squared error term
@@ -713,7 +713,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         }
     }
     
-    func getLayer𝟃E𝟃zs(nextLayer: NeuralLayer)
+    func getLayer𝟃E𝟃zs(_ nextLayer: NeuralLayer)
     {
         //  Get 𝟃E/𝟃h
         for nNodeIndex in 0..<nodes.count {
@@ -735,7 +735,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         }
     }
     
-    func get𝟃E𝟃hForNodeInPreviousLayer(inputIndex: Int) ->Double
+    func get𝟃E𝟃hForNodeInPreviousLayer(_ inputIndex: Int) ->Double
     {
         var sum = 0.0
         for node in nodes {
@@ -751,7 +751,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         }
     }
     
-    func appendWeightChanges(x: [Double]) -> [Double]
+    func appendWeightChanges(_ x: [Double]) -> [Double]
     {
         //  Gather the previous outputs for the feedback
         var hPrev : [Double] = []
@@ -769,7 +769,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         return outputs
     }
     
-    func updateWeightsFromAccumulations(averageTrainingRate: Double, weightDecay: Double)
+    func updateWeightsFromAccumulations(_ averageTrainingRate: Double, weightDecay: Double)
     {
         //  Have each node update it's weights from the accumulations
         for node in nodes {
@@ -778,7 +778,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         }
     }
     
-    func decayWeights(decayFactor : Double)
+    func decayWeights(_ decayFactor : Double)
     {
         for node in nodes {
             node.decayWeights(decayFactor)
@@ -788,7 +788,7 @@ final class LSTMNeuralLayer: NeuralLayer {
     func getSingleNodeClassifyValue() -> Double
     {
         let activation = nodes[0].activation
-        if (activation == .HyperbolicTangent || activation == .RectifiedLinear) { return 0.0 }
+        if (activation == .hyperbolicTangent || activation == .rectifiedLinear) { return 0.0 }
         return 0.5
     }
     
@@ -806,7 +806,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         }
     }
     
-    func retrieveRecurrentValues(sequenceIndex: Int)
+    func retrieveRecurrentValues(_ sequenceIndex: Int)
     {
         //  Set the last recurrent value in the history array to the last output
         for node in nodes {

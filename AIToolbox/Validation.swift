@@ -8,12 +8,12 @@
 
 import Foundation
 
-public enum ValidationError: ErrorType {
-    case ComputationError
+public enum ValidationError: Error {
+    case computationError
 }
 
 ///  Class for using validation techniques for model/parameter selection
-public class Validation
+open class Validation
 {
     let validationType : DataSetType
     var classifiers : [Classifier] = []
@@ -26,16 +26,16 @@ public class Validation
         validationType = type
     }
     
-    public func addModel(model: Classifier) throws
+    open func addModel(_ model: Classifier) throws
     {
-        if (validationType == .Regression) { throw MachineLearningError.ModelNotRegression }
+        if (validationType == .regression) { throw MachineLearningError.modelNotRegression }
         
         classifiers.append(model)
     }
     
-    public func addModel(model: Regressor) throws
+    open func addModel(_ model: Regressor) throws
     {
-        if (validationType == .Classification) { throw MachineLearningError.ModelNotClassification }
+        if (validationType == .classification) { throw MachineLearningError.modelNotClassification }
         
         regressors.append(model)
     }
@@ -44,12 +44,12 @@ public class Validation
     ///  Returns model index that did the best.  Scores in validationTestResults
     ///  Model should probably be re-trained on all data afterwards
     ///  Uses Grand-Central-Dispatch to run in parallel
-    public func simpleValidation(data: DataSet, fractionForTest: Double) throws -> Int
+    open func simpleValidation(_ data: DataSet, fractionForTest: Double) throws -> Int
     {
         //  Get the size of the training and testing sets
         let testSize = Int(fractionForTest * Double(data.size))
-        if (testSize < 1) { throw MachineLearningError.NotEnoughData }
-        if (testSize == data.size) { throw MachineLearningError.NotEnoughData }
+        if (testSize < 1) { throw MachineLearningError.notEnoughData }
+        if (testSize == data.size) { throw MachineLearningError.notEnoughData }
         
         //  Split the data into a training and a testing set
         let indices = data.getRandomIndexSet()
@@ -57,16 +57,16 @@ public class Validation
         let trainData = DataSet(fromDataSet: data, withEntries: indices[testSize..<data.size])!
         
         //  Get a concurrent GCD queue to run this all in
-        let queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+        let queue = DispatchQueue.global(qos: DispatchQoS.QoSClass.default)
         
         //  Get a GCD group so we can know when all models are done
-        let group = dispatch_group_create();
+        let group = DispatchGroup();
         
         //  Train and test each model
-        if (validationType == .Regression) {
-            validationTestResults = [Double](count: regressors.count, repeatedValue: 0.0)
+        if (validationType == .regression) {
+            validationTestResults = [Double](repeating: 0.0, count: regressors.count)
             for modelIndex in 0..<regressors.count {
-                dispatch_group_async(group, queue) {
+                queue.async(group: group) {
                     do {
                         try self.regressors[modelIndex].trainRegressor(trainData)
                         self.validationTestResults[modelIndex] = try self.regressors[modelIndex].getTotalAbsError(testData)
@@ -78,15 +78,15 @@ public class Validation
             }
             
             //  Wait for the models to finish calculating
-            let timeoutTime = dispatch_time(DISPATCH_TIME_NOW, timeout)
-            if (dispatch_group_wait(group, timeoutTime) != 0) {
-                throw MachineLearningError.OperationTimeout
+            let timeoutTime = DispatchTime.now() + Double(timeout) / Double(NSEC_PER_SEC)
+            if (group.wait(timeout: timeoutTime) != DispatchTimeoutResult.success) {
+                throw MachineLearningError.operationTimeout
             }
             
             //  Rescale errors to have minimum error = 1.0
             var minError = Double.infinity
             for error in validationTestResults {
-                if (error == Double.infinity) { throw ValidationError.ComputationError }
+                if (error == Double.infinity) { throw ValidationError.computationError }
                 if (error < minError) { minError = error }
             }
             for modelIndex in 0..<regressors.count {
@@ -99,9 +99,9 @@ public class Validation
             }
         }
         else {
-            validationTestResults = [Double](count: classifiers.count, repeatedValue: 0.0)
+            validationTestResults = [Double](repeating: 0.0, count: classifiers.count)
             for modelIndex in 0..<classifiers.count {
-                dispatch_group_async(group, queue) {
+                queue.async(group: group) {
                     do {
                         try self.classifiers[modelIndex].trainClassifier(trainData)
                         self.validationTestResults[modelIndex] = try self.classifiers[modelIndex].getClassificationPercentage(testData)
@@ -113,14 +113,14 @@ public class Validation
             }
             
             //  Wait for the models to finish calculating
-            let timeoutTime = dispatch_time(DISPATCH_TIME_NOW, timeout)
-            if (dispatch_group_wait(group, timeoutTime) != 0) {
-                throw MachineLearningError.OperationTimeout
+            let timeoutTime = DispatchTime.now() + Double(timeout) / Double(NSEC_PER_SEC)
+            if (group.wait(timeout: timeoutTime) != DispatchTimeoutResult.success) {
+                throw MachineLearningError.operationTimeout
             }
             
             //  Check for an error during multithreading
             for error in validationTestResults {
-                if (error == Double.infinity) { throw ValidationError.ComputationError }
+                if (error == Double.infinity) { throw ValidationError.computationError }
             }
         }
         
@@ -140,22 +140,22 @@ public class Validation
     ///  If N is set to dataset size, this turns into 'leave-one-out' cross validation
     ///  Returns model that did the best.  Model should probably be re-trained on all data afterwards
     ///  Uses Grand-Central-Dispatch to run in parallel
-    public func NFoldCrossValidation(data: DataSet, numberOfFolds: Int) throws -> Int
+    open func NFoldCrossValidation(_ data: DataSet, numberOfFolds: Int) throws -> Int
     {
-        if (numberOfFolds > data.size) { throw MachineLearningError.NotEnoughData }
+        if (numberOfFolds > data.size) { throw MachineLearningError.notEnoughData }
         
         //  Get a concurrent GCD queue to run this all in
-        let queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+        let queue = DispatchQueue.global(qos: DispatchQoS.QoSClass.default)
         
         //  Get a GCD group so we can know when all models are done
-        let group = dispatch_group_create();
+        let group = DispatchGroup();
 
         //  Randomize the points into the different folds
         let indices = data.getRandomIndexSet()
         var startIndex = 0
         
         //  Initialize the results to 0
-        validationTestResults = [Double](count: regressors.count, repeatedValue: 0.0)
+        validationTestResults = [Double](repeating: 0.0, count: regressors.count)
         
         //  Do for each fold
         for fold in 0..<numberOfFolds {
@@ -174,9 +174,9 @@ public class Validation
             startIndex += foldSize
             
             //  Train and test each model with this fold
-            if (validationType == .Regression) {
+            if (validationType == .regression) {
                 for modelIndex in 0..<regressors.count {
-                    dispatch_group_async(group, queue) {
+                    queue.async(group: group) {
                         do {
                             try self.regressors[modelIndex].trainRegressor(trainData)
                             self.validationTestResults[modelIndex] += try self.regressors[modelIndex].getTotalAbsError(testData)
@@ -189,7 +189,7 @@ public class Validation
             }
             else {
                 for modelIndex in 0..<classifiers.count {
-                    dispatch_group_async(group, queue) {
+                    queue.async(group: group) {
                         do {
                             try self.classifiers[modelIndex].trainClassifier(trainData)
                             self.validationTestResults[modelIndex] += try self.classifiers[modelIndex].getClassificationPercentage(testData)
@@ -202,22 +202,22 @@ public class Validation
             }
             
             //  Wait for the models to finish calculating before the next fold
-            let timeoutTime = dispatch_time(DISPATCH_TIME_NOW, timeout)
-            if (dispatch_group_wait(group, timeoutTime) != 0) {
-                throw MachineLearningError.OperationTimeout
+            let timeoutTime = DispatchTime.now() + Double(timeout) / Double(NSEC_PER_SEC)
+            if (group.wait(timeout: timeoutTime) != DispatchTimeoutResult.success) {
+                throw MachineLearningError.operationTimeout
             }
         }
         
         //  Check for an error during multithreading
         for error in validationTestResults {
-            if (error == Double.infinity) { throw ValidationError.ComputationError }
+            if (error == Double.infinity) { throw ValidationError.computationError }
         }
         
         //  Scale the validation results
-        if (validationType == .Regression) {
+        if (validationType == .regression) {
             var minError = Double.infinity
             for error in validationTestResults {
-                if (error == Double.infinity) { throw ValidationError.ComputationError }
+                if (error == Double.infinity) { throw ValidationError.computationError }
                 if (error < minError) { minError = error }
             }
             for modelIndex in 0..<regressors.count {

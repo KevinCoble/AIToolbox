@@ -17,7 +17,7 @@ class QueueNode<T> {
     }
 }
 
-public class Queue<T> {
+open class Queue<T> {
     var itemCount: Int = 0
     var queueHead : QueueNode<T>?
     var queueTail : QueueNode<T>?
@@ -25,13 +25,13 @@ public class Queue<T> {
     public init() {}
     
     ///  Computed property to get the number of items queued
-    public var queuedItemCount : Int {return itemCount}
+    open var queuedItemCount : Int {return itemCount}
     
     ///  Computed property to determine if a queue is empty
-    public var isEmpty: Bool {return itemCount == 0}
+    open var isEmpty: Bool {return itemCount == 0}
     
     ///  Method to add an item to the queue
-    public func enqueue(itemToQueue: T) {
+    open func enqueue(_ itemToQueue: T) {
         let newNode = QueueNode<T>(itemToQueue: itemToQueue)
         if (itemCount == 0) {
             //  First item in becomes both head and tail
@@ -46,7 +46,7 @@ public class Queue<T> {
     }
 
     ///  Method to get the item at the front of the queue.  The item is removed from the queue
-    public func dequeue() -> T? {
+    open func dequeue() -> T? {
         //  If no items, return nil
         if (itemCount == 0) {return nil}
         
@@ -62,7 +62,7 @@ public class Queue<T> {
     }
     
     ///  Method to examine the next item in the queue, without removing it
-    public func peek() -> T? {
+    open func peek() -> T? {
         //  If no items, return nil
         if (itemCount == 0) {return nil}
         

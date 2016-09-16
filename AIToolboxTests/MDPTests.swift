@@ -30,7 +30,7 @@ class MDPTests: XCTestCase {
     }
     
     //  Routine to get the actions possible from each state.  Return an empty list at ending states.  This can be from a table or calculated
-    func getActions(fromState: Int) -> [Int] {
+    func getActions(_ fromState: Int) -> [Int] {
         var actions : [[Int]] = [
             [0, 3],         //  State 0
             [1, 3],         //  State 1
@@ -49,7 +49,7 @@ class MDPTests: XCTestCase {
     }
     
     //  Routine to get the result of taking an action from a state.  Returns an array of state/probability tuples.  This can be from a table or calculated
-    func getActionResults(fromState: Int, action : Int) -> [(state: Int, probability: Double)] {
+    func getActionResults(_ fromState: Int, action : Int) -> [(state: Int, probability: Double)] {
         switch fromState {
         case 0:
             if (action == 0) {
@@ -157,7 +157,7 @@ class MDPTests: XCTestCase {
     }
     
     //  Routine to get the reward or penalty from taking an action from a state.  Returns an value.  This can be from a table or calculated
-    func getReward(fromState: Int, action : Int, toState: Int) -> Double {
+    func getReward(_ fromState: Int, action : Int, toState: Int) -> Double {
         if (toState == 10) { return 1.0 }
         if (toState == 6) { return -1.0 }
         return 0.0
@@ -517,7 +517,7 @@ class MDPTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             var results = self.mdp.valueIteration(self.getActions, getResults: self.getActionResults, getReward: self.getReward)
             do {
                 results = try self.mdp.policyIteration(self.getActions, getResults: self.getActionResults, getReward: self.getReward)
@@ -541,7 +541,7 @@ class MDPTests: XCTestCase {
     }
     
     //  Routine to get the actions possible from each state.  Return an empty list at ending states.  This can be from a table or calculated
-    func getRWActions(fromState: Int) -> [Int] {
+    func getRWActions(_ fromState: Int) -> [Int] {
         var actions : [[Int]] = [
             [],             //  State 0
             [0, 1],         //  State 1
@@ -554,7 +554,7 @@ class MDPTests: XCTestCase {
     }
     
     //  Routine to get the result of taking an action from a state.  Returns an array of state/probability tuples.  This can be from a table or calculated
-    func getRWActionResults(fromState: Int, action : Int) -> [(state: Int, probability: Double)] {
+    func getRWActionResults(_ fromState: Int, action : Int) -> [(state: Int, probability: Double)] {
         if (fromState > 0 && fromState < 4) {
             if (action == 0) {
                 return [(state: fromState-1, probability: 1.0)]
@@ -567,7 +567,7 @@ class MDPTests: XCTestCase {
     }
     
     //  Routine to get the reward or penalty from taking an action from a state.  Returns an value.  This can be from a table or calculated
-    func getRWReward(fromState: Int, action : Int, toState: Int) -> Double {
+    func getRWReward(_ fromState: Int, action : Int, toState: Int) -> Double {
         if (toState == 4) { return 1.0 }
         return 0.0
     }

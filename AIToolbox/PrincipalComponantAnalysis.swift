@@ -10,22 +10,22 @@ import Foundation
 import Accelerate
 
 
-enum PCAError: ErrorType {
-    case InvalidDimensions
-    case ErrorInSVDParameters
-    case SVDDidNotConverge
-    case PCANotPerformed
-    case TransformError
+enum PCAError: Error {
+    case invalidDimensions
+    case errorInSVDParameters
+    case svdDidNotConverge
+    case pcaNotPerformed
+    case transformError
 }
 
 ///  Class to perform principal component analysis
-public class PCA {
-    public private(set) var initialDimension : Int
-    public private(set) var reducedDimension : Int
+open class PCA {
+    open fileprivate(set) var initialDimension : Int
+    open fileprivate(set) var reducedDimension : Int
     
-    public var μ : [Double] = []       //  Mean of the data set used to find basis vectors
-    public var eigenValues : [Double] = []     //  Array of all eigenvalues - this will be sized at initialDimension
-    public var basisVectors : [Double] = []    //  Matrix (column-major) of the top 'reducedDimension' eigenvectors that for the new basis
+    open var μ : [Double] = []       //  Mean of the data set used to find basis vectors
+    open var eigenValues : [Double] = []     //  Array of all eigenvalues - this will be sized at initialDimension
+    open var basisVectors : [Double] = []    //  Matrix (column-major) of the top 'reducedDimension' eigenvectors that for the new basis
     
     public init(initialSize: Int, reduceSize: Int)
     {
@@ -69,25 +69,25 @@ public class PCA {
     }
     
     ///  Routine to get the reduced eigenvector set that is the basis for the reduced dimension subspace
-    public func getReducedBasisVectorSet(data: MLDataSet) throws
+    open func getReducedBasisVectorSet(_ data: MLDataSet) throws
     {
         //  Verify we have a valid setup
         if (initialDimension < 2 || reducedDimension < 1 || initialDimension < reducedDimension) {
-            throw PCAError.InvalidDimensions
+            throw PCAError.invalidDimensions
         }
         
         //  Verify the data set matches the initial dimension
         if (data.inputDimension != initialDimension) {
-            throw MachineLearningError.DataWrongDimension
+            throw MachineLearningError.dataWrongDimension
         }
         
         //  Make sure we have enough data
         if (data.size < 2) {
-            throw MachineLearningError.NotEnoughData
+            throw MachineLearningError.notEnoughData
         }
         
         //  Get the mean of the data
-        μ = [Double](count: initialDimension, repeatedValue: 0.0)
+        μ = [Double](repeating: 0.0, count: initialDimension)
         for point in 0..<data.size {
             let inputs = try data.getInput(point)
             vDSP_vaddD(inputs, 1, μ, 1, &μ, 1, vDSP_Length(initialDimension))
@@ -96,8 +96,8 @@ public class PCA {
         vDSP_vsmulD(μ, 1, &scale, &μ, 1, vDSP_Length(initialDimension))
         
         //  Get the data matrix with a mean of 0 - in column-major format for the LAPACK routines
-        var X = [Double](count: initialDimension * data.size, repeatedValue: 0.0)
-        var row : [Double] = [Double](count: initialDimension, repeatedValue: 0.0)
+        var X = [Double](repeating: 0.0, count: initialDimension * data.size)
+        var row : [Double] = [Double](repeating: 0.0, count: initialDimension)
         for point in 0..<data.size {
             let inputs = try data.getInput(point)
             vDSP_vsubD(μ, 1, inputs, 1, &row, 1, vDSP_Length(initialDimension))
@@ -108,33 +108,33 @@ public class PCA {
         
         //  Get the SVD decomposition of the X matrix
         let jobZChar = "S" as NSString
-        var jobZ : Int8 = Int8(jobZChar.characterAtIndex(0))          //  return min(m,n) rows of Vt
+        var jobZ : Int8 = Int8(jobZChar.character(at: 0))          //  return min(m,n) rows of Vt
         var m : Int32 = Int32(data.size)
         var n : Int32 = Int32(initialDimension)
-        eigenValues = [Double](count: initialDimension, repeatedValue: 0.0)
-        var u = [Double](count: data.size * data.size, repeatedValue: 0.0)
-        var vTranspose = [Double](count: initialDimension * initialDimension, repeatedValue: 0.0)
+        eigenValues = [Double](repeating: 0.0, count: initialDimension)
+        var u = [Double](repeating: 0.0, count: data.size * data.size)
+        var vTranspose = [Double](repeating: 0.0, count: initialDimension * initialDimension)
         var work : [Double] = [0.0]
         var lwork : Int32 = -1        //  Ask for the best size of the work array
         let iworkSize = 8 * Int(min(m,n))
-        var iwork = [Int32](count: iworkSize, repeatedValue: 0)
+        var iwork = [Int32](repeating: 0, count: iworkSize)
         var info : Int32 = 0
         dgesdd_(&jobZ, &m, &n, &X, &m, &eigenValues, &u, &m, &vTranspose, &n, &work, &lwork, &iwork, &info)
         if (info != 0 || work[0] < 1) {
-            throw PCAError.ErrorInSVDParameters
+            throw PCAError.errorInSVDParameters
         }
         lwork = Int32(work[0])
-        work = [Double](count: Int(work[0]), repeatedValue: 0.0)
+        work = [Double](repeating: 0.0, count: Int(work[0]))
         dgesdd_(&jobZ, &m, &n, &X, &m, &eigenValues, &u, &m, &vTranspose, &n, &work, &lwork, &iwork, &info)
         if (info < 0) {
-            throw PCAError.ErrorInSVDParameters
+            throw PCAError.errorInSVDParameters
         }
         if (info > 0) {
-            throw PCAError.SVDDidNotConverge
+            throw PCAError.svdDidNotConverge
         }
         
         //  Extract the new basis vectors - make a row-major matrix for dataset matrix multiplication using vDSP
-        basisVectors = [Double](count: reducedDimension * initialDimension, repeatedValue: 0.0)
+        basisVectors = [Double](repeating: 0.0, count: reducedDimension * initialDimension)
         for vector in 0..<reducedDimension {
             for column in 0..<initialDimension {
                 basisVectors[(vector * reducedDimension) + column] = vTranspose[vector + (column * initialDimension)]
@@ -143,20 +143,20 @@ public class PCA {
     }
     
     ///  Routine to transform the given dataset into a new dataset using the basis vectors calculated
-    public func transformDataSet(data: MLDataSet) throws ->DataSet
+    open func transformDataSet(_ data: MLDataSet) throws ->DataSet
     {
         //  Make sure we have the PCA results to use
-        if (basisVectors.count <= 0) { throw PCAError.PCANotPerformed }
+        if (basisVectors.count <= 0) { throw PCAError.pcaNotPerformed }
         
         //  Make sure the data dimension matches
-        if (data.inputDimension != initialDimension) { throw MachineLearningError.DataWrongDimension }
+        if (data.inputDimension != initialDimension) { throw MachineLearningError.dataWrongDimension }
         
         //  Make a new data set with the new dimension
-        let result = DataSet(dataType: .Regression, inputDimension: reducedDimension, outputDimension: 1)
+        let result = DataSet(dataType: .regression, inputDimension: reducedDimension, outputDimension: 1)
         
         //  Convert each data point
-        var centered = [Double](count: initialDimension, repeatedValue: 0.0)
-        var transformed = [Double](count: reducedDimension, repeatedValue: 0.0)
+        var centered = [Double](repeating: 0.0, count: initialDimension)
+        var transformed = [Double](repeating: 0.0, count: reducedDimension)
         for point in 0..<data.size {
             //  Move relative to the mean of the training data
             let inputs = try data.getInput(point)
@@ -170,7 +170,7 @@ public class PCA {
                 try result.addUnlabeledDataPoint(input: transformed)
             }
             catch {
-                throw PCAError.TransformError
+                throw PCAError.transformError
             }
         }
         
@@ -179,19 +179,19 @@ public class PCA {
     }
     
     ///  Routine to write the model result parameters to a property list path at the provided path
-    public enum PCAWriteErrors: ErrorType { case failedWriting }
-    public func saveToFile(path: String) throws
+    public enum PCAWriteErrors: Error { case failedWriting }
+    open func saveToFile(_ path: String) throws
     {
         //  Create a property list of the PCA model
         var modelDictionary = [String: AnyObject]()
-        modelDictionary["initialDimension"] = initialDimension
-        modelDictionary["reducedDimension"] = reducedDimension
-        modelDictionary["mean"] = μ
-        modelDictionary["eigenValues"] = eigenValues
-        modelDictionary["basisVectors"] = basisVectors
+        modelDictionary["initialDimension"] = initialDimension as AnyObject?
+        modelDictionary["reducedDimension"] = reducedDimension as AnyObject?
+        modelDictionary["mean"] = μ as AnyObject?
+        modelDictionary["eigenValues"] = eigenValues as AnyObject?
+        modelDictionary["basisVectors"] = basisVectors as AnyObject?
 
         //  Convert to a property list (NSDictionary) and write
         let pList = NSDictionary(dictionary: modelDictionary)
-        if !pList.writeToFile(path, atomically: false) { throw PCAWriteErrors.failedWriting }
+        if !pList.write(toFile: path, atomically: false) { throw PCAWriteErrors.failedWriting }
     }
 }

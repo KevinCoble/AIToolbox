@@ -11,25 +11,25 @@ import Foundation
 
 public enum DataSetType   //  data type
 {
-    case Regression
-    case Classification
+    case regression
+    case classification
 }
 
-enum DataTypeError: ErrorType {
-    case InvalidDataType
-    case DataWrongForType
-    case WrongDimensionOnInput
-    case WrongDimensionOnOutput
+enum DataTypeError: Error {
+    case invalidDataType
+    case dataWrongForType
+    case wrongDimensionOnInput
+    case wrongDimensionOnOutput
 }
 
-enum DataIndexError: ErrorType {
-    case Negative
-    case IndexAboveDimension
-    case IndexAboveDataSetSize
+enum DataIndexError: Error {
+    case negative
+    case indexAboveDimension
+    case indexAboveDataSetSize
 }
 
 
-public class DataSet {
+open class DataSet {
     let dataType : DataSetType
     let inputDimension: Int
     let outputDimension: Int
@@ -47,7 +47,7 @@ public class DataSet {
         
         //  Allocate data arrays
         inputs = []
-        if (dataType == .Regression) {
+        if (dataType == .regression) {
             outputs = []
         }
         else {
@@ -77,7 +77,7 @@ public class DataSet {
         
         //  Allocate data arrays
         inputs = []
-        if (dataType == .Regression) {
+        if (dataType == .regression) {
             outputs = []
         }
         else {
@@ -102,7 +102,7 @@ public class DataSet {
         
         //  Allocate data arrays
         inputs = []
-        if (dataType == .Regression) {
+        if (dataType == .regression) {
             outputs = []
         }
         else {
@@ -119,19 +119,19 @@ public class DataSet {
     }
     
     ///  Get entries from another matching dataset
-    public func includeEntries(fromDataSet fromDataSet: DataSet, withEntries: [Int]) throws
+    open func includeEntries(fromDataSet: DataSet, withEntries: [Int]) throws
     {
         //  Make sure the dataset matches
-        if dataType != fromDataSet.dataType { throw DataTypeError.InvalidDataType }
-        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.WrongDimensionOnInput }
-        if outputDimension != fromDataSet.outputDimension { throw DataTypeError.WrongDimensionOnOutput }
+        if dataType != fromDataSet.dataType { throw DataTypeError.invalidDataType }
+        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.wrongDimensionOnInput }
+        if outputDimension != fromDataSet.outputDimension { throw DataTypeError.wrongDimensionOnOutput }
         
         //  Copy the entries
         for index in withEntries {
-            if (index  < 0) { throw DataIndexError.Negative }
-            if (index  >= fromDataSet.size) { throw DataIndexError.IndexAboveDataSetSize }
+            if (index  < 0) { throw DataIndexError.negative }
+            if (index  >= fromDataSet.size) { throw DataIndexError.indexAboveDataSetSize }
             inputs.append(fromDataSet.inputs[index])
-            if (dataType == .Regression) {
+            if (dataType == .regression) {
                 outputs!.append(fromDataSet.outputs![index])
             }
             else {
@@ -144,19 +144,19 @@ public class DataSet {
     }
     
     ///  Get entries from another matching dataset
-    public func includeEntries(fromDataSet fromDataSet: DataSet, withEntries: ArraySlice<Int>) throws
+    open func includeEntries(fromDataSet: DataSet, withEntries: ArraySlice<Int>) throws
     {
         //  Make sure the dataset matches
-        if dataType != fromDataSet.dataType { throw DataTypeError.InvalidDataType }
-        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.WrongDimensionOnInput }
-        if outputDimension != fromDataSet.outputDimension { throw DataTypeError.WrongDimensionOnOutput }
+        if dataType != fromDataSet.dataType { throw DataTypeError.invalidDataType }
+        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.wrongDimensionOnInput }
+        if outputDimension != fromDataSet.outputDimension { throw DataTypeError.wrongDimensionOnOutput }
         
         //  Copy the entries
         for index in withEntries {
-            if (index  < 0) { throw DataIndexError.Negative }
-            if (index  >= fromDataSet.size) { throw DataIndexError.IndexAboveDataSetSize }
+            if (index  < 0) { throw DataIndexError.negative }
+            if (index  >= fromDataSet.size) { throw DataIndexError.indexAboveDataSetSize }
             inputs.append(fromDataSet.inputs[index])
-            if (dataType == .Regression) {
+            if (dataType == .regression) {
                 outputs!.append(fromDataSet.outputs![index])
             }
             else {
@@ -169,18 +169,18 @@ public class DataSet {
     }
     
     ///  Get inputs from another matching dataset, initializing outputs to 0
-    public func includeEntryInputs(fromDataSet fromDataSet: DataSet, withEntries: [Int]) throws
+    open func includeEntryInputs(fromDataSet: DataSet, withEntries: [Int]) throws
     {
         //  Make sure the dataset inputs match
-        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.WrongDimensionOnInput }
+        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.wrongDimensionOnInput }
         
         //  Copy the inputs
         for index in withEntries {
-            if (index  < 0) { throw DataIndexError.Negative }
-            if (index  >= fromDataSet.size) { throw DataIndexError.IndexAboveDataSetSize }
+            if (index  < 0) { throw DataIndexError.negative }
+            if (index  >= fromDataSet.size) { throw DataIndexError.indexAboveDataSetSize }
             inputs.append(fromDataSet.inputs[index])
-            if (dataType == .Regression) {
-                outputs!.append([Double](count:outputDimension, repeatedValue: 0.0))
+            if (dataType == .regression) {
+                outputs!.append([Double](repeating: 0.0, count: outputDimension))
             }
             else {
                 classes!.append(0)
@@ -189,18 +189,18 @@ public class DataSet {
     }
     
     ///  Get inputs from another matching dataset, initializing outputs to 0
-    public func includeEntryInputs(fromDataSet fromDataSet: DataSet, withEntries: ArraySlice<Int>) throws
+    open func includeEntryInputs(fromDataSet: DataSet, withEntries: ArraySlice<Int>) throws
     {
         //  Make sure the dataset inputs match
-        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.WrongDimensionOnInput }
+        if inputDimension != fromDataSet.inputDimension { throw DataTypeError.wrongDimensionOnInput }
         
         //  Copy the inputs
         for index in withEntries {
-            if (index  < 0) { throw DataIndexError.Negative }
-            if (index  >= fromDataSet.size) { throw DataIndexError.IndexAboveDataSetSize }
+            if (index  < 0) { throw DataIndexError.negative }
+            if (index  >= fromDataSet.size) { throw DataIndexError.indexAboveDataSetSize }
             inputs.append(fromDataSet.inputs[index])
-            if (dataType == .Regression) {
-                outputs!.append([Double](count:outputDimension, repeatedValue: 0.0))
+            if (dataType == .regression) {
+                outputs!.append([Double](repeating: 0.0, count: outputDimension))
             }
             else {
                 classes!.append(0)
@@ -208,19 +208,19 @@ public class DataSet {
         }
     }
     
-    public var size: Int
+    open var size: Int
     {
         return inputs.count
     }
     
-    public func singleOutput(index: Int) -> Double?
+    open func singleOutput(_ index: Int) -> Double?
     {
         //  Validate the index
         if (index < 0) { return nil}
         if (index >= inputs.count) { return nil }
         
         //  Get the data
-        if (dataType == .Regression) {
+        if (dataType == .regression) {
             return outputs![index][0]
         }
         else {
@@ -228,98 +228,98 @@ public class DataSet {
         }
     }
     
-    public func addDataPoint(input input : [Double], output: [Double]) throws
+    open func addDataPoint(input : [Double], output: [Double]) throws
     {
         //  Validate the data
-        if (dataType != .Regression) { throw DataTypeError.DataWrongForType }
-        if (input.count != inputDimension) { throw DataTypeError.WrongDimensionOnInput }
-        if (output.count != outputDimension) { throw DataTypeError.WrongDimensionOnOutput }
+        if (dataType != .regression) { throw DataTypeError.dataWrongForType }
+        if (input.count != inputDimension) { throw DataTypeError.wrongDimensionOnInput }
+        if (output.count != outputDimension) { throw DataTypeError.wrongDimensionOnOutput }
         
         //  Add the new data item
         inputs.append(input)
         outputs!.append(output)
     }
     
-    public func addDataPoint(input input : [Double], output: Int) throws
+    open func addDataPoint(input : [Double], output: Int) throws
     {
         //  Validate the data
-        if (dataType != .Classification) { throw DataTypeError.DataWrongForType }
-        if (input.count != inputDimension) { throw DataTypeError.WrongDimensionOnInput }
+        if (dataType != .classification) { throw DataTypeError.dataWrongForType }
+        if (input.count != inputDimension) { throw DataTypeError.wrongDimensionOnInput }
         
         //  Add the new data item
         inputs.append(input)
         classes!.append(output)
     }
     
-    public func setOutput(index: Int, newOutput : [Double]) throws
+    open func setOutput(_ index: Int, newOutput : [Double]) throws
     {
         //  Validate the data
-        if (dataType != .Regression) { throw DataTypeError.DataWrongForType }
-        if (index < 0) { throw  DataIndexError.Negative }
-        if (index > inputs.count) { throw  DataIndexError.Negative }
-        if (newOutput.count != outputDimension) { throw DataTypeError.WrongDimensionOnOutput }
+        if (dataType != .regression) { throw DataTypeError.dataWrongForType }
+        if (index < 0) { throw  DataIndexError.negative }
+        if (index > inputs.count) { throw  DataIndexError.negative }
+        if (newOutput.count != outputDimension) { throw DataTypeError.wrongDimensionOnOutput }
         
         //  Add the new output item
         outputs![index] = newOutput
     }
     
-    public func setClass(index: Int, newClass : Int) throws
+    open func setClass(_ index: Int, newClass : Int) throws
     {
         //  Validate the data
-        if (dataType != .Classification) { throw DataTypeError.DataWrongForType }
-        if (index < 0) { throw  DataIndexError.Negative }
-        if (index > inputs.count) { throw  DataIndexError.Negative }
+        if (dataType != .classification) { throw DataTypeError.dataWrongForType }
+        if (index < 0) { throw  DataIndexError.negative }
+        if (index > inputs.count) { throw  DataIndexError.negative }
         
         classes![index] = newClass
     }
     
-    public func addUnlabeledDataPoint(input input : [Double]) throws
+    open func addUnlabeledDataPoint(input : [Double]) throws
     {
         //  Validate the data
-        if (input.count != inputDimension) { throw DataTypeError.WrongDimensionOnInput }
+        if (input.count != inputDimension) { throw DataTypeError.wrongDimensionOnInput }
         
         //  Add the new data item
         inputs.append(input)
     }
-    public func addTestDataPoint(input input : [Double]) throws
+    open func addTestDataPoint(input : [Double]) throws
     {
         //  Validate the data
-        if (input.count != inputDimension) { throw DataTypeError.WrongDimensionOnInput }
+        if (input.count != inputDimension) { throw DataTypeError.wrongDimensionOnInput }
         
         //  Add the new data item
         inputs.append(input)
     }
     
-    public func getInput(index: Int) throws ->[Double]
+    open func getInput(_ index: Int) throws ->[Double]
     {
         //  Validate the data
-        if (index < 0) { throw  DataIndexError.Negative }
-        if (index > inputs.count) { throw  DataIndexError.IndexAboveDataSetSize }
+        if (index < 0) { throw  DataIndexError.negative }
+        if (index > inputs.count) { throw  DataIndexError.indexAboveDataSetSize }
         
         return inputs[index]
     }
     
-    public func getOutput(index: Int) throws ->[Double]
+    open func getOutput(_ index: Int) throws ->[Double]
     {
         //  Validate the data
-        if (dataType != .Regression) { throw DataTypeError.DataWrongForType }
-        if (index < 0) { throw  DataIndexError.Negative }
-        if (index > outputs!.count) { throw  DataIndexError.IndexAboveDataSetSize }
+        if (dataType != .regression) { throw DataTypeError.dataWrongForType }
+        if (index < 0) { throw  DataIndexError.negative }
+        if (index > outputs!.count) { throw  DataIndexError.indexAboveDataSetSize }
         
         return outputs![index]
     }
    
-    public func getClass(index: Int) throws ->Int
+    open func getClass(_ index: Int) throws ->Int
     {
         //  Validate the data
-        if (dataType != .Classification) { throw DataTypeError.DataWrongForType }
-        if (index < 0) { throw  DataIndexError.Negative }
-        if (index > classes!.count) { throw  DataIndexError.IndexAboveDataSetSize }
+        if (dataType != .classification) { throw DataTypeError.dataWrongForType }
+        if (index < 0) { throw  DataIndexError.negative }
+        if (index > classes!.count) { throw  DataIndexError.indexAboveDataSetSize }
         
         return classes![index]
     }
     
-    public func getRandomIndexSet() -> [Int]
+    open func getRandomIndexSet() -> [Int]
     {
         //  Get the ordered array of indices
         var shuffledArray: [Int] = []
@@ -338,10 +338,10 @@ public class DataSet {
         return shuffledArray
     }
     
-    public func getInputRange() -> [(minimum: Double, maximum: Double)]
+    open func getInputRange() -> [(minimum: Double, maximum: Double)]
     {
         //  Allocate the array of tuples
-        var results : [(minimum: Double, maximum: Double)] = Array(count: inputDimension, repeatedValue: (minimum: Double.infinity, maximum: -Double.infinity))
+        var results : [(minimum: Double, maximum: Double)] = Array(repeating: (minimum: Double.infinity, maximum: -Double.infinity), count: inputDimension)
         
         //  Go through each input
         for input in inputs {
@@ -355,10 +355,10 @@ public class DataSet {
         return results
     }
     
-    public func getOutputRange() -> [(minimum: Double, maximum: Double)]
+    open func getOutputRange() -> [(minimum: Double, maximum: Double)]
     {
         //  Allocate the array of tuples
-        var results : [(minimum: Double, maximum: Double)] = Array(count: outputDimension, repeatedValue: (minimum: Double.infinity, maximum: -Double.infinity))
+        var results : [(minimum: Double, maximum: Double)] = Array(repeating: (minimum: Double.infinity, maximum: -Double.infinity), count: outputDimension)
         
         //  If no outputs, return invalid range
         if (outputs == nil) { return results }
@@ -375,9 +375,9 @@ public class DataSet {
         return results
     }
     
-    public func groupClasses() throws
+    open func groupClasses() throws
     {
-        if (dataType != .Classification)  { throw DataTypeError.InvalidDataType }
+        if (dataType != .classification)  { throw DataTypeError.invalidDataType }
         
         //  If the data already has classification data, skip
         if (optionalData != nil) {
@@ -390,7 +390,7 @@ public class DataSet {
         //  Get the different data labels
         for index in 0..<size {
             let thisClass = classes![index]
-            let thisClassIndex = classificationData.foundLabels.indexOf(thisClass)
+            let thisClassIndex = classificationData.foundLabels.index(of: thisClass)
             if let classIndex = thisClassIndex {
                 //  Class label found, increment count
                 classificationData.classCount[classIndex] += 1
@@ -411,7 +411,7 @@ public class DataSet {
 
     
     //  Leave here in case it is used by other methods
-    public static func gaussianRandom(mean : Double, standardDeviation : Double) -> Double
+    open static func gaussianRandom(_ mean : Double, standardDeviation : Double) -> Double
     {
         return Gaussian.gaussianRandom(mean, standardDeviation: standardDeviation)
     }

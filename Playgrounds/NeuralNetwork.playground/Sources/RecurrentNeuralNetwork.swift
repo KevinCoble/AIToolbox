@@ -43,12 +43,12 @@ final class RecurrentNeuralNode {
     }
     
     //  Initialize the weights
-    func initWeights(startWeights: [Double]!)
+    func initWeights(_ startWeights: [Double]!)
     {
         if let startWeights = startWeights {
             if (startWeights.count == 1) {
-                inputWeights = [Double](count: numInputs, repeatedValue: startWeights[0])
-                feedbackWeights = [Double](count: numFeedback, repeatedValue: startWeights[0])
+                inputWeights = [Double](repeating: startWeights[0], count: numInputs)
+                feedbackWeights = [Double](repeating: startWeights[0], count: numFeedback)
             }
             else if (startWeights.count == numInputs+numFeedback) {
                 //  Full weight array, just split into the two weight arrays
@@ -88,7 +88,7 @@ final class RecurrentNeuralNode {
         }
     }
     
-    func getNodeOutput(inputs: [Double], feedback: [Double]) -> Double
+    func getNodeOutput(_ inputs: [Double], feedback: [Double]) -> Double
     {
         //  Get the weighted sum
         var sum = 0.0
@@ -98,25 +98,25 @@ final class RecurrentNeuralNode {
         
         //  Use the activation function function for the nonlinearity
         switch (activation) {
-        case .None:
+        case .none:
             lastOutput = lastWeightedSum
             break
-        case .HyberbolicTangent:
+        case .hyberbolicTangent:
             lastOutput = tanh(lastWeightedSum)
             break
-        case .SigmoidWithCrossEntropy:
+        case .sigmoidWithCrossEntropy:
             fallthrough
-        case .Sigmoid:
+        case .sigmoid:
             lastOutput = 1.0 / (1.0 + exp(-lastWeightedSum))
             break
-        case .RectifiedLinear:
+        case .rectifiedLinear:
             lastOutput = lastWeightedSum
             if (lastWeightedSum < 0) { lastOutput = 0.0 }
             break
-        case .SoftSign:
+        case .softSign:
             lastOutput = lastWeightedSum / (1.0 + abs(lastWeightedSum))
             break
-        case .SoftMax:
+        case .softMax:
             lastOutput = exp(lastWeightedSum)
             break
         }
@@ -125,34 +125,34 @@ final class RecurrentNeuralNode {
     }
     
     //  Get the partial derivitive of the error with respect to the weighted sum
-    func getFinalNodeDelta(expectedOutput: Double)
+    func getFinalNodeDelta(_ expectedOutput: Double)
     {
         //  error = (result - expected value)^2  (squared error) - not the case for softmax or cross entropy
         //  derivitive of error = 2 * (result - expected value) * result'  (chain rule - result is a function of the sum through the non-linearity)
         //  derivitive of the non-linearity: tanh' -> 1 - result², sigmoid -> result - result², rectlinear -> 0 if result<0 else 1
         //  derivitive of error = 2 * (result - expected value) * derivitive from above
         switch (activation) {
-        case .None:
+        case .none:
             delta = 2.0 * (lastOutput - expectedOutput)
             break
-        case .HyberbolicTangent:
+        case .hyberbolicTangent:
             delta = 2.0 * (lastOutput - expectedOutput) * (1 - lastOutput * lastOutput)
             break
-        case .Sigmoid:
+        case .sigmoid:
             delta = 2.0 * (lastOutput - expectedOutput) * (lastOutput - lastOutput * lastOutput)
             break
-        case .SigmoidWithCrossEntropy:
+        case .sigmoidWithCrossEntropy:
             delta = (lastOutput - expectedOutput)
             break
-        case .RectifiedLinear:
+        case .rectifiedLinear:
             delta = lastOutput < 0.0 ? 0.0 : 2.0 * (lastOutput - expectedOutput)
             break
-        case .SoftSign:
+        case .softSign:
             delta = (1-abs(lastOutput)) //  Start with derivitive for computation speed's sake
             delta *= delta
             delta *= 2.0 * (lastOutput - expectedOutput)
             break
-        case .SoftMax:
+        case .softMax:
             delta = (lastOutput - expectedOutput)
             break
         }
@@ -164,17 +164,17 @@ final class RecurrentNeuralNode {
         delta = 0.0
     }
     
-    func addToDelta(addition: Double)
+    func addToDelta(_ addition: Double)
     {
         delta += addition
     }
     
-    func getWeightTimesDelta(weightIndex: Int) ->Double
+    func getWeightTimesDelta(_ weightIndex: Int) ->Double
     {
         return inputWeights[weightIndex] * delta
     }
     
-    func getRecurrentWeightTimesForwardDelta(weightIndex: Int) ->Double
+    func getRecurrentWeightTimesForwardDelta(_ weightIndex: Int) ->Double
     {
         return feedbackWeights[weightIndex] * forwardDelta
     }
@@ -183,30 +183,30 @@ final class RecurrentNeuralNode {
     {
         //  derivitive of the non-linearity: tanh' -> 1 - result^2, sigmoid -> result - result^2, rectlinear -> 0 if result<0 else 1
         switch (activation) {
-        case .None:
+        case .none:
             break
-        case .HyberbolicTangent:
+        case .hyberbolicTangent:
             delta *= (1 - lastOutput * lastOutput)
             break
-        case .SigmoidWithCrossEntropy:
+        case .sigmoidWithCrossEntropy:
             fallthrough
-        case .Sigmoid:
+        case .sigmoid:
             delta *= (lastOutput - lastOutput * lastOutput)
             break
-        case .RectifiedLinear:
+        case .rectifiedLinear:
             delta = lastOutput < 0.0 ? 0.0 : delta
             break
-        case .SoftSign:
+        case .softSign:
             if (lastOutput < 0) { delta *= -1 }
             delta /= (1.0 + lastOutput) * (1.0 + lastOutput)
             break
-        case .SoftMax:
+        case .softMax:
             //  Should not get here - SoftMax is only valid on output layer
             break
         }
     }
     
-    func updateWeights(inputs: [Double], feedback: [Double], trainingRate: Double) -> Double
+    func updateWeights(_ inputs: [Double], feedback: [Double], trainingRate: Double) -> Double
     {
         //  Update each weight
         var negativeScaleFactor = trainingRate * delta * -1.0  //  Make negative so we can use DSP to vectorize equation
@@ -218,11 +218,11 @@ final class RecurrentNeuralNode {
     
     func clearWeightChanges()
     {
-        accumulatedInputWeightChanges = [Double](count: numInputs, repeatedValue: 0.0)
-        accumulatedFeedbackWeightChanges = [Double](count: numFeedback, repeatedValue: 0.0)
+        accumulatedInputWeightChanges = [Double](repeating: 0.0, count: numInputs)
+        accumulatedFeedbackWeightChanges = [Double](repeating: 0.0, count: numFeedback)
     }
     
-    func appendWeightChanges(inputs: [Double], feedback: [Double]) -> Double
+    func appendWeightChanges(_ inputs: [Double], feedback: [Double]) -> Double
     {
         //  Update each weight accumulation
         vDSP_vsmaD(inputs, 1, &delta, accumulatedInputWeightChanges!, 1, &accumulatedInputWeightChanges!, 1, vDSP_Length(numInputs))       //  Calculate the weight change:  total change = total change + delta * inputs
@@ -231,7 +231,7 @@ final class RecurrentNeuralNode {
         return lastOutput
     }
     
-    func updateWeightsFromAccumulations(averageTrainingRate: Double)
+    func updateWeightsFromAccumulations(_ averageTrainingRate: Double)
     {
         //  Update the weights from the accumulations
         //  weights -= accumulation * averageTrainingRate  (training rate is passed in negative to allow subtraction with vector math)
@@ -240,7 +240,7 @@ final class RecurrentNeuralNode {
         vDSP_vsmaD(accumulatedFeedbackWeightChanges!, 1, &x, feedbackWeights, 1, &feedbackWeights, 1, vDSP_Length(numFeedback))
     }
     
-    func decayWeights(decayFactor : Double)
+    func decayWeights(_ decayFactor : Double)
     {
         var x = decayFactor     //  Needed for unsafe pointer conversion
         vDSP_vsmulD(inputWeights, 1, &x, &inputWeights, 1, vDSP_Length(numInputs-1))
@@ -287,7 +287,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
     }
     
     //  Initialize the weights
-    func initWeights(startWeights: [Double]!)
+    func initWeights(_ startWeights: [Double]!)
     {
         if let startWeights = startWeights {
             if (startWeights.count >= nodes.count * nodes[0].numWeights) {
@@ -339,7 +339,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
         return nodes[0].activation
     }
     
-    func getLayerOutputs(inputs: [Double]) -> [Double]
+    func getLayerOutputs(_ inputs: [Double]) -> [Double]
     {
         //  Gather the previous outputs for the feedback
         var feedback : [Double] = []
@@ -350,7 +350,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
         var outputs : [Double] = []
         //  Assume input array already has bias constant 1.0 appended
         //  Fully-connected nodes means all nodes get the same input array
-        if (nodes[0].activation == .SoftMax) {
+        if (nodes[0].activation == .softMax) {
             var sum = 0.0
             for node in nodes {     //  Sum each output
                 sum += node.getNodeOutput(inputs, feedback: feedback)
@@ -370,14 +370,14 @@ final class RecurrentNeuralLayer: NeuralLayer {
         return outputs
     }
     
-    func getFinalLayerDelta(expectedOutputs: [Double])
+    func getFinalLayerDelta(_ expectedOutputs: [Double])
     {
         for nodeIndex in 0..<nodes.count {
             nodes[nodeIndex].getFinalNodeDelta(expectedOutputs[nodeIndex])
         }
     }
     
-    func getLayerDelta(nextLayer: NeuralLayer)
+    func getLayerDelta(_ nextLayer: NeuralLayer)
     {
         for nNodeIndex in 0..<nodes.count {
             nodes[nNodeIndex].resetDelta()
@@ -395,7 +395,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
         }
     }
     
-    func getSumOfWeightsTimesDelta(weightIndex: Int) ->Double
+    func getSumOfWeightsTimesDelta(_ weightIndex: Int) ->Double
     {
         var sum = 0.0
         for node in nodes {
@@ -404,7 +404,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
         return sum
     }
     
-    func updateWeights(inputs: [Double], trainingRate: Double, weightDecay: Double) -> [Double]
+    func updateWeights(_ inputs: [Double], trainingRate: Double, weightDecay: Double) -> [Double]
     {
         //  Gather the previous outputs for the feedback
         var feedback : [Double] = []
@@ -430,7 +430,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
         }
     }
     
-    func appendWeightChanges(inputs: [Double]) -> [Double]
+    func appendWeightChanges(_ inputs: [Double]) -> [Double]
     {
         //  Gather the previous outputs for the feedback
         var feedback : [Double] = []
@@ -448,7 +448,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
         return outputs
     }
     
-    func updateWeightsFromAccumulations(averageTrainingRate: Double, weightDecay: Double)
+    func updateWeightsFromAccumulations(_ averageTrainingRate: Double, weightDecay: Double)
     {
         //  Have each node update it's weights from the accumulations
         for node in nodes {
@@ -457,7 +457,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
         }
     }
     
-    func decayWeights(decayFactor : Double)
+    func decayWeights(_ decayFactor : Double)
     {
         for node in nodes {
             node.decayWeights(decayFactor)
@@ -467,7 +467,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
     func getSingleNodeClassifyValue() -> Double
     {
         let activation = nodes[0].activation
-        if (activation == .HyberbolicTangent || activation == .RectifiedLinear) { return 0.0 }
+        if (activation == .hyberbolicTangent || activation == .rectifiedLinear) { return 0.0 }
         return 0.5
     }
     

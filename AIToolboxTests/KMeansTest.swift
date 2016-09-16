@@ -28,7 +28,7 @@ class KMeansTest: XCTestCase {
         let kmeans = KMeans(classes: 2)
         
         //  Create a data set of 6 points in two dimension
-        let data = DataSet(dataType: .Classification, inputDimension: 2, outputDimension: 1)
+        let data = DataSet(dataType: .classification, inputDimension: 2, outputDimension: 1)
         do {
             try data.addUnlabeledDataPoint(input: [-1.0, -1.0])
             try data.addUnlabeledDataPoint(input: [1.0, 1.0])
@@ -76,7 +76,7 @@ class KMeansTest: XCTestCase {
         let kmeans = KMeans(classes: 16)
         
         //  Create a data set of 1000 points in four dimension
-        let data = DataSet(dataType: .Classification, inputDimension: 4, outputDimension: 1)
+        let data = DataSet(dataType: .classification, inputDimension: 4, outputDimension: 1)
         do {
             for _ in 0..<1000 {
                 var inputs: [Double] = []
@@ -91,7 +91,7 @@ class KMeansTest: XCTestCase {
             print("Invalid data set created")
         }
         
-        self.measureBlock {
+        self.measure {
             //  Get the groupings
             do {
                 try kmeans.train(data)

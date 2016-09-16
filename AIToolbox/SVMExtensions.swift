@@ -11,8 +11,8 @@
 import Foundation
 
 
-enum SVMError: ErrorType {
-    case InvalidModelType
+enum SVMError: Error {
+    case invalidModelType
 }
 
 
@@ -30,7 +30,7 @@ extension SVMModel : Classifier {
     {
         return numClasses
     }
-    public func setParameters(parameters: [Double]) throws
+    public func setParameters(_ parameters: [Double]) throws
     {
         //!!   This needs to be filled in
     }
@@ -40,17 +40,17 @@ extension SVMModel : Classifier {
         return []
     }
     
-    public func setCustomInitializer(function: ((trainData: MLDataSet)->[Double])!) {
+    public func setCustomInitializer(_ function: ((_ trainData: MLDataSet)->[Double])!) {
         //  Ignore, as SVM doesn't use an initialization
     }
 
-    public func trainClassifier(trainData: MLClassificationDataSet) throws
+    public func trainClassifier(_ trainData: MLClassificationDataSet) throws
     {
         //  Verify the SVMModel is the right type
-        if type != .C_SVM_Classification || type != .ν_SVM_Classification { throw SVMError.InvalidModelType }
+        if type != .c_SVM_Classification || type != .ν_SVM_Classification { throw SVMError.invalidModelType }
         
         //  Verify the data set is the right type
-        if (trainData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
+        if (trainData.dataType != .classification) { throw DataTypeError.invalidDataType }
         
         //  Train on the data (ignore initialization, as SVM's do single-batch training)
         if (trainData is DataSet) {
@@ -64,13 +64,13 @@ extension SVMModel : Classifier {
         }
     }
     
-    public func continueTrainingClassifier(trainData: MLClassificationDataSet) throws
+    public func continueTrainingClassifier(_ trainData: MLClassificationDataSet) throws
     {
         //  Linear regression uses one-batch training (solved analytically)
-        throw MachineLearningError.ContinuationNotSupported
+        throw MachineLearningError.continuationNotSupported
     }
     
-    public func classifyOne(inputs: [Double]) ->Int
+    public func classifyOne(_ inputs: [Double]) ->Int
     {
         //  Get the support vector start index for each class
         var coeffStart = [0]
@@ -84,7 +84,7 @@ extension SVMModel : Classifier {
         }
         
         //  Allocate vote space for the classification
-        var vote = [Int](count: numClasses, repeatedValue: 0)
+        var vote = [Int](repeating: 0, count: numClasses)
         
         //  Initialize the decision values
         var decisionValues: [Double] = []
@@ -121,18 +121,18 @@ extension SVMModel : Classifier {
         return labels[maxIndex]
     }
     
-    public func classify(testData: MLClassificationDataSet) throws
+    public func classify(_ testData: MLClassificationDataSet) throws
     {
         //  Verify the SVMModel is the right type
-        if type != .C_SVM_Classification || type != .ν_SVM_Classification { throw SVMError.InvalidModelType }
+        if type != .c_SVM_Classification || type != .ν_SVM_Classification { throw SVMError.invalidModelType }
         
         //  Verify the data set is the right type
-        if (testData.dataType != .Classification) { throw DataTypeError.InvalidDataType }
-        if (supportVector.count <= 0) { throw MachineLearningError.NotTrained }
-        if (testData.inputDimension != supportVector[0].count) { throw DataTypeError.WrongDimensionOnInput }
+        if (testData.dataType != .classification) { throw DataTypeError.invalidDataType }
+        if (supportVector.count <= 0) { throw MachineLearningError.notTrained }
+        if (testData.inputDimension != supportVector[0].count) { throw DataTypeError.wrongDimensionOnInput }
         
         //  Put the data into a DataSet for SVM (it uses a DataSet so that it can be both regressor and classifier)
-        if let data = DataSet(dataType: .Classification, withInputsFrom: testData) {
+        if let data = DataSet(dataType: .classification, withInputsFrom: testData) {
         
             //  Predict
             predictValues(data)
@@ -144,7 +144,7 @@ extension SVMModel : Classifier {
             }
         }
         else {
-            throw MachineLearningError.DataWrongDimension
+            throw MachineLearningError.dataWrongDimension
         }
     }
 }

@@ -10,22 +10,22 @@ import Foundation
 import Accelerate
 
 
-public enum LinearRegressionError: ErrorType {
-    case ModelExceedsInputDimension
-    case MatrixSolutionError
-    case NegativeInLogOrPower
-    case DivideByZero
+public enum LinearRegressionError: Error {
+    case modelExceedsInputDimension
+    case matrixSolutionError
+    case negativeInLogOrPower
+    case divideByZero
 }
 
 
 ///  Function for subterm
 public enum SubtermFunction { case
-    None,
-    NaturalExponent,
-    Sine,
-    Cosine,
-    Log,
-    Power       //  uses power value of term raised to input
+    none,
+    naturalExponent,
+    sine,
+    cosine,
+    log,
+    power       //  uses power value of term raised to input
 }
 
 ///  Struct for a piece of a term of the linear equation being fitted
@@ -34,7 +34,7 @@ public struct LinearRegressionSubTerm
 {
     let inputIndex : Int
     public var power = 1.0
-    public var function = SubtermFunction.None
+    public var function = SubtermFunction.none
     public var divide = false      //  If true this term divides the previous subterm (ignored on first subterm), else multiply
     
     public init(withInput: Int)
@@ -42,28 +42,28 @@ public struct LinearRegressionSubTerm
         inputIndex = withInput
     }
     
-    public func getSubTermValue(withInputs: [Double]) throws -> Double
+    public func getSubTermValue(_ withInputs: [Double]) throws -> Double
     {
         var result = withInputs[inputIndex]
         if (power != 1.0) {
             let powerResult = pow(result, power)        //  Allow negatives if power is integer - if not, nan will result
-            if (result < 0.0 && powerResult.isNaN) { throw LinearRegressionError.NegativeInLogOrPower }
+            if (result < 0.0 && powerResult.isNaN) { throw LinearRegressionError.negativeInLogOrPower }
             result = powerResult
         }
         switch (function) {
-        case .None:
+        case .none:
             break
-        case .NaturalExponent:
+        case .naturalExponent:
             result = exp(result)
-        case .Sine:
+        case .sine:
             result = sin(result)
-        case .Cosine:
+        case .cosine:
             result = cos(result)
-        case .Log:
-            if (result < 0.0) { throw LinearRegressionError.NegativeInLogOrPower }
+        case .log:
+            if (result < 0.0) { throw LinearRegressionError.negativeInLogOrPower }
             result = log(result)
-        case .Power:       //  uses power value of term raised to input
-            if (power < 0.0) { throw LinearRegressionError.NegativeInLogOrPower }
+        case .power:       //  uses power value of term raised to input
+            if (power < 0.0) { throw LinearRegressionError.negativeInLogOrPower }
             result = pow(power, withInputs[inputIndex])
         }
         return result
@@ -88,7 +88,7 @@ public struct LinearRegressionTerm
         subterms.append(subTerm)
     }
     
-    public mutating func addSubTerm(subTerm: LinearRegressionSubTerm)
+    public mutating func addSubTerm(_ subTerm: LinearRegressionSubTerm)
     {
         subterms.append(subTerm)
     }
@@ -103,7 +103,7 @@ public struct LinearRegressionTerm
         return highestIndex
     }
     
-    public func getTermValue(withInputs: [Double]) throws -> Double
+    public func getTermValue(_ withInputs: [Double]) throws -> Double
     {
         var result = 1.0
         
@@ -115,7 +115,7 @@ public struct LinearRegressionTerm
                         result /= value
                     }
                     else {
-                        throw LinearRegressionError.DivideByZero
+                        throw LinearRegressionError.divideByZero
                     }
                 }
                 catch let error {
@@ -138,14 +138,14 @@ public struct LinearRegressionTerm
 
 ///  Class for linear (in parameter space) expression
 ///     model is (optional bias) + At₁ + Bt₂ + Ct₃ + ...  where t are the LinearRegressionTerms
-public class LinearRegressionModel : Regressor
+open class LinearRegressionModel : Regressor
 {
-    public private(set) var inputDimension : Int
-    public private(set) var outputDimension : Int
+    open fileprivate(set) var inputDimension : Int
+    open fileprivate(set) var outputDimension : Int
     var terms : [LinearRegressionTerm] = []
-    public var includeBias = true
-    public var regularization : Double?
-    public var Θ : [[Double]] = []
+    open var includeBias = true
+    open var regularization : Double?
+    open var Θ : [[Double]] = []
     
     public init(inputSize: Int, outputSize: Int)
     {
@@ -177,22 +177,22 @@ public class LinearRegressionModel : Regressor
         }
     }
     
-    public func addTerm(newTerm: LinearRegressionTerm)
+    open func addTerm(_ newTerm: LinearRegressionTerm)
     {
         terms.append(newTerm)
     }
     
-    public func getInputDimension() -> Int
+    open func getInputDimension() -> Int
     {
         return inputDimension
     }
     
-    public func getOutputDimension() -> Int
+    open func getOutputDimension() -> Int
     {
         return outputDimension
     }
     
-    public func getParameterDimension() -> Int
+    open func getParameterDimension() -> Int
     {
         var numParameters = terms.count
         if (includeBias) { numParameters += 1 }
@@ -200,25 +200,25 @@ public class LinearRegressionModel : Regressor
         return numParameters
     }
     
-    public func setParameters(parameters: [Double]) throws
+    open func setParameters(_ parameters: [Double]) throws
     {
-        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.notEnoughData }
         
         var numParameters = terms.count
         if (includeBias) { numParameters += 1 }
         var offset = 0
-        if (Θ.count < outputDimension) { Θ = [[Double]](count: outputDimension, repeatedValue: []) }
+        if (Θ.count < outputDimension) { Θ = [[Double]](repeating: [], count: outputDimension) }
         for index in 0..<outputDimension {
             Θ[index] = Array(parameters[offset..<(offset+numParameters)])
             offset += numParameters
         }
     }
     
-    public func setCustomInitializer(function: ((trainData: DataSet)->[Double])!) {
+    open func setCustomInitializer(_ function: ((_ trainData: DataSet)->[Double])!) {
         //  Ignore, as Linear Regression doesn't use an initialization
     }
     
-    public func getParameters() throws -> [Double]
+    open func getParameters() throws -> [Double]
     {
         var parameters : [Double] = []
         for index in 0..<outputDimension {
@@ -227,10 +227,10 @@ public class LinearRegressionModel : Regressor
         return parameters
     }
 
-    public func trainRegressor(trainData: DataSet) throws
+    open func trainRegressor(_ trainData: DataSet) throws
     {
         //  Verify that the data is regression data
-        if (trainData.dataType != DataSetType.Regression) { throw MachineLearningError.DataNotRegression }
+        if (trainData.dataType != DataSetType.regression) { throw MachineLearningError.dataNotRegression }
         
         //  Get the number of input values needed by the model
         var neededInputs = 0
@@ -241,12 +241,12 @@ public class LinearRegressionModel : Regressor
         
         //  Validate that the model has the dimension
         if (neededInputs >= inputDimension) {
-            throw LinearRegressionError.ModelExceedsInputDimension
+            throw LinearRegressionError.modelExceedsInputDimension
         }
         
         //  Validate the data size
         if (trainData.inputDimension != inputDimension || trainData.outputDimension != outputDimension) {
-            throw MachineLearningError.DataWrongDimension
+            throw MachineLearningError.dataWrongDimension
         }
         
         //  Get the number of terms in the matrix (columns)
@@ -254,17 +254,17 @@ public class LinearRegressionModel : Regressor
         
         //  Make sure we have enough data for a solution (at least 1 per term)
         if (trainData.size < numColumns) {
-            throw MachineLearningError.NotEnoughData
+            throw MachineLearningError.notEnoughData
         }
         
         //  Allocate the parameter array
-        Θ = [[Double]](count: outputDimension, repeatedValue: [])
+        Θ = [[Double]](repeating: [], count: outputDimension)
         
         //  We can use lapack dgels if no regularization term
         if (regularization == nil) {
        
             //  Make a column-major matrix of the data, with any bias term
-            var A = [Double](count: trainData.size * numColumns, repeatedValue: 0.0)
+            var A = [Double](repeating: 0.0, count: trainData.size * numColumns)
             var offset = 0
             if (includeBias) {
                 for _ in 0..<trainData.size {
@@ -286,7 +286,7 @@ public class LinearRegressionModel : Regressor
             
             //  Make a column-major vector of the training output matrix
             offset = 0
-            var y = [Double](count: trainData.size * outputDimension, repeatedValue: 0.0)
+            var y = [Double](repeating: 0.0, count: trainData.size * outputDimension)
             for column in 0..<outputDimension {
                 for index in 0..<trainData.size {
                     y[offset] = trainData.outputs![index][column]
@@ -296,7 +296,7 @@ public class LinearRegressionModel : Regressor
             
             //  Solve the matrix for the parameters Θ (DGELS)
             let jobTChar = "N" as NSString
-            var jobT : Int8 = Int8(jobTChar.characterAtIndex(0))          //  not transposed
+            var jobT : Int8 = Int8(jobTChar.character(at: 0))          //  not transposed
             var m : Int32 = Int32(trainData.size)
             var n : Int32 = Int32(numColumns)
             var nrhs = Int32(outputDimension)
@@ -305,13 +305,13 @@ public class LinearRegressionModel : Regressor
             var info : Int32 = 0
             dgels_(&jobT, &m, &n, &nrhs, &A, &m, &y, &m, &work, &lwork, &info)
             if (info != 0 || work[0] < 1) {
-                throw LinearRegressionError.MatrixSolutionError
+                throw LinearRegressionError.matrixSolutionError
             }
             lwork = Int32(work[0])
-            work = [Double](count: Int(work[0]), repeatedValue: 0.0)
+            work = [Double](repeating: 0.0, count: Int(work[0]))
             dgels_(&jobT, &m, &n, &nrhs, &A, &m, &y, &m, &work, &lwork, &info)
             if (info != 0 || work[0] < 1) {
-                throw LinearRegressionError.MatrixSolutionError
+                throw LinearRegressionError.matrixSolutionError
             }
             
             //  Extract the parameters from the results
@@ -330,7 +330,7 @@ public class LinearRegressionModel : Regressor
             let M : la_count_t = la_count_t(nNumPoints)
             
             //  Generate the A Matrix
-            var dA = [Double](count: trainData.size * numColumns, repeatedValue: 0.0)
+            var dA = [Double](repeating: 0.0, count: trainData.size * numColumns)
             var offset = 0
             for point in 0..<nNumPoints {
                 if (includeBias) {
@@ -362,7 +362,7 @@ public class LinearRegressionModel : Regressor
             }
             
             //  Iterate through each solution
-            var Y = [Double](count: trainData.size, repeatedValue: 0.0)
+            var Y = [Double](repeating: 0.0, count: trainData.size)
             for solution in 0..<outputDimension {
                 //  Generate the Y vector
                 for point in 0..<nNumPoints {
@@ -379,23 +379,23 @@ public class LinearRegressionModel : Regressor
                 let W = la_solve(AtA, AtY)
                 
                 //  Extract the results back into the learning parameter array
-                var parameters = [Double](count: numColumns, repeatedValue: 0.0)
+                var parameters = [Double](repeating: 0.0, count: numColumns)
                 la_vector_to_double_buffer(&parameters, 1, W)
                 Θ[solution] = parameters
             }
         }
     }
     
-    public func continueTrainingRegressor(trainData: DataSet) throws
+    open func continueTrainingRegressor(_ trainData: DataSet) throws
     {
         //  Linear regression uses one-batch training (solved analytically)
-        throw MachineLearningError.ContinuationNotSupported
+        throw MachineLearningError.continuationNotSupported
     }
     
-    public func predictOne(inputs: [Double]) throws ->[Double]
+    open func predictOne(_ inputs: [Double]) throws ->[Double]
     {
         //  Make sure we are trained
-        if (Θ.count < 1) { throw MachineLearningError.NotTrained }
+        if (Θ.count < 1) { throw MachineLearningError.notTrained }
         
         //  Get the number of input values needed by the model
         var neededInputs = 0
@@ -406,7 +406,7 @@ public class LinearRegressionModel : Regressor
         
         //  Validate that the model has the dimension
         if (neededInputs >= inputDimension) {
-            throw LinearRegressionError.ModelExceedsInputDimension
+            throw LinearRegressionError.modelExceedsInputDimension
         }
         
         //  Get the array of term values
@@ -436,12 +436,12 @@ public class LinearRegressionModel : Regressor
         return results
     }
     
-    public func predict(testData: DataSet) throws
+    open func predict(_ testData: DataSet) throws
     {
         //  Verify the data set is the right type
-        if (testData.dataType != .Regression) { throw MachineLearningError.DataNotRegression }
-        if (testData.inputDimension != inputDimension) { throw MachineLearningError.DataWrongDimension }
-        if (testData.outputDimension != outputDimension) { throw MachineLearningError.DataWrongDimension }
+        if (testData.dataType != .regression) { throw MachineLearningError.dataNotRegression }
+        if (testData.inputDimension != inputDimension) { throw MachineLearningError.dataWrongDimension }
+        if (testData.outputDimension != outputDimension) { throw MachineLearningError.dataWrongDimension }
         
         //  predict on each input
         testData.outputs = []

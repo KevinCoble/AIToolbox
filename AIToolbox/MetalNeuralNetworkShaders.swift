@@ -10,7 +10,7 @@
 extension String {
     init(lines:String...){
         self = ""
-        for (idx, item) in lines.enumerate() {
+        for (idx, item) in lines.enumerated() {
             self += "\(item)"
             if idx < lines.count-1 {
                 self += "\n"

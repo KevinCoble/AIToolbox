@@ -23,7 +23,7 @@ class NeuralNetworkTests: XCTestCase {
 
     func testSingleNode() {
         //  Create a 1 node network
-        var network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .SimpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil)])
+        var network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
         
         //  Initialize the weights
         network.initializeWeights(nil)
@@ -39,7 +39,7 @@ class NeuralNetworkTests: XCTestCase {
         XCTAssert(fabs(result[0] - 0.5) < 0.02, "network trained to constant")
         
         //  Create a 1 node network
-        network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .SimpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.RectifiedLinear, auxiliaryData: nil)])
+        network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.rectifiedLinear, auxiliaryData: nil)])
         
         //  Initialize the weights
         network.initializeWeights(nil)
@@ -58,7 +58,7 @@ class NeuralNetworkTests: XCTestCase {
     
     func testNetworkBooleanAnd() {
         //  Create a 1 node network
-        let network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .SimpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.HyperbolicTangent, auxiliaryData: nil)])
+        let network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil)])
         
         //  Initialize the weights
         network.initializeWeights(nil)
@@ -84,7 +84,7 @@ class NeuralNetworkTests: XCTestCase {
     
     func testNetworkAnalogAnd() {
         //  Create a 1 node network
-        let network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .SimpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil)])
+        let network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
         
         //  Initialize the weights
         network.initializeWeights(nil)
@@ -125,9 +125,9 @@ class NeuralNetworkTests: XCTestCase {
     func testNetworkXORNode() {     //  This test can sometimes fail because boolean inputs without batch training leads to gradient calculation issues
         //  Create a 1 hidden layer - 2 node network, with one output node, using two inputs
         let layerDefs : [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)] =
-            [(layerType: .SimpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.HyperbolicTangent, auxiliaryData: nil),
-             (layerType: .SimpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.HyperbolicTangent, auxiliaryData: nil),
-             (layerType: .SimpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.HyperbolicTangent, auxiliaryData: nil)]
+            [(layerType: .simpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil),
+             (layerType: .simpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil),
+             (layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil)]
         let network = NeuralNetwork(numInputs: 2, layerDefinitions: layerDefs)
         
         //  Initialize the weights
@@ -158,13 +158,13 @@ class NeuralNetworkTests: XCTestCase {
     func testNetworkBatchTraining() {
         //  Create a 1 hidden layer - 2 node network, with one output node, using two inputs
         let layerDefs : [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)] =
-            [(layerType: .SimpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.HyperbolicTangent, auxiliaryData: nil),
-             (layerType: .SimpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.HyperbolicTangent, auxiliaryData: nil),
-             (layerType: .SimpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.HyperbolicTangent, auxiliaryData: nil)]
+            [(layerType: .simpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil),
+             (layerType: .simpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil),
+             (layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil)]
         let network = NeuralNetwork(numInputs: 2, layerDefinitions: layerDefs)
         
         //  Create a data set of 4 training examples for the XOR function
-        let data = DataSet(dataType: .Regression, inputDimension: 2, outputDimension: 1)
+        let data = DataSet(dataType: .regression, inputDimension: 2, outputDimension: 1)
         do {
             try data.addDataPoint(input: [-1.0, -1.0], output:[-1.0])
             try data.addDataPoint(input: [1.0, -1.0], output:[1.0])
@@ -207,8 +207,8 @@ class NeuralNetworkTests: XCTestCase {
         //  Class 2 - centers on input 1 = 0.6, input 2 = 0.7
         //  Create a 1 hidden layer - 3 node network, with three output nodes, using two inputs
         let layerDefs : [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)] =
-            [(layerType: .SimpleFeedForward, numNodes: 3, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil),
-             (layerType: .SimpleFeedForward, numNodes: 3, activation: NeuralActivationFunction.SigmoidWithCrossEntropy, auxiliaryData: nil)]
+            [(layerType: .simpleFeedForward, numNodes: 3, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil),
+             (layerType: .simpleFeedForward, numNodes: 3, activation: NeuralActivationFunction.sigmoidWithCrossEntropy, auxiliaryData: nil)]
         let network = NeuralNetwork(numInputs: 2, layerDefinitions: layerDefs)
         
         //  Initialize the weights
@@ -265,7 +265,7 @@ class NeuralNetworkTests: XCTestCase {
         
         //  Create a recurrent net of 1 recurrent node
         let layerDefs : [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)] =
-            [(layerType: .SimpleRecurrent, numNodes: 1, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil)]
+            [(layerType: .simpleRecurrent, numNodes: 1, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil)]
         let network = NeuralNetwork(numInputs: 1, layerDefinitions: layerDefs)
         
         //  Initialize the weights of the network
@@ -280,7 +280,7 @@ class NeuralNetworkTests: XCTestCase {
             let thirdNumber = (Double(arc4random()) * 20.0 / Double(UInt32.max)) - 10.0
             
             //  Create a data set with the sequence.  Output is sigmoid of input plus previous output
-            let sequenceData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+            let sequenceData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
             do {
                 let output1 = sigmoid(firstNumber + 0.0)
                 try sequenceData.addDataPoint(input: [firstNumber], output: [output1])
@@ -332,7 +332,7 @@ class NeuralNetworkTests: XCTestCase {
         }
         
         //  Test
-        let sequenceData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let sequenceData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             let firstNumber = (Double(arc4random()) * 20.0 / Double(UInt32.max)) - 10.0
             let secondNumber = (Double(arc4random()) * 20.0 / Double(UInt32.max)) - 10.0
@@ -354,7 +354,7 @@ class NeuralNetworkTests: XCTestCase {
             print("Invalid sequence data set created")
         }
     }
-    func sigmoid(x: Double) -> Double {
+    func sigmoid(_ x: Double) -> Double {
         return 1.0 / (1.0 + exp(-x))
     }
     
@@ -362,8 +362,8 @@ class NeuralNetworkTests: XCTestCase {
         
         //  Create a recurrent net
         let layerDefs : [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)] =
-            [(layerType: .SimpleRecurrent, numNodes: 2, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil),
-             (layerType: .SimpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil)]
+            [(layerType: .simpleRecurrent, numNodes: 2, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil),
+             (layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil)]
         let network = NeuralNetwork(numInputs: 1, layerDefinitions: layerDefs)
         
         //  Initialize the weights of the network
@@ -373,7 +373,7 @@ class NeuralNetworkTests: XCTestCase {
 //        for index in 0..<5000 {
         for _ in 0..<10000 {
             //  Create a data set with the sequence
-            let sequenceData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+            let sequenceData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
             do {
                 var lastInput = 0.0
                 for _ in 0..<10 {
@@ -414,7 +414,7 @@ class NeuralNetworkTests: XCTestCase {
         //  Create a test sequence
         
         //  Create a data set with the sequence
-        let sequenceData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let sequenceData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             try sequenceData.addTestDataPoint(input: [-5.0])        //  Not high
             try sequenceData.addTestDataPoint(input: [9.0])         //  High
@@ -566,7 +566,7 @@ class NeuralNetworkTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }

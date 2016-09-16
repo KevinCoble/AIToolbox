@@ -109,11 +109,11 @@ class GraphTests: XCTestCase {
 
     func testDepthFirstPerformance() {
         // This is an example of a performance test case.
-        self.measureBlock() {
+        self.measure() {
             // Put the code you want to measure the time of here.
-            self.graph.getDepthFirstPath(fromNode: self.nodes[0], searchCriteria: {$0 === self.nodes[9]})
+            _ = self.graph.getDepthFirstPath(fromNode: self.nodes[0], searchCriteria: {$0 === self.nodes[9]})
 //!!            self.graph.getDepthFirstNextPath(fromNode: self.nodes[0], lastPath: result, searchCriteria: {$0 === self.nodes[9]})
-            self.graph.getDepthFirstNextPath(searchCriteria: {$0 === self.nodes[9]})
+            _ = self.graph.getDepthFirstNextPath(searchCriteria: {$0 === self.nodes[9]})
         }
     }
 
@@ -157,10 +157,10 @@ class GraphTests: XCTestCase {
     
     func testBreadthFirstPerformance() {
         // This is an example of a performance test case.
-        self.measureBlock() {
+        self.measure() {
             // Put the code you want to measure the time of here.
-            self.graph.getBreadthFirstPath(fromNode: self.nodes[0], searchCriteria: {$0 === self.nodes[9]})
-            self.graph.getBreadthFirstNextPath(searchCriteria: {$0 === self.nodes[9]})
+            _ = self.graph.getBreadthFirstPath(fromNode: self.nodes[0], searchCriteria: {$0 === self.nodes[9]})
+            _ = self.graph.getBreadthFirstNextPath(searchCriteria: {$0 === self.nodes[9]})
         }
     }
     
@@ -205,10 +205,10 @@ class GraphTests: XCTestCase {
     
     func testHillClimbPerformance() {
         // This is an example of a performance test case.
-        self.measureBlock() {
+        self.measure() {
             // Put the code you want to measure the time of here.
-            self.graph.getHillClimbPath(fromNode: self.nodes[0], nodeHeuristic: {-Double($0.value)}, searchCriteria: {$0 === self.nodes[9]})
-            self.graph.getHillClimbNextPath(nodeHeuristic: {-Double($0.value)}, searchCriteria: {$0 === self.nodes[9]})
+            _ = self.graph.getHillClimbPath(fromNode: self.nodes[0], nodeHeuristic: {-Double($0.value)}, searchCriteria: {$0 === self.nodes[9]})
+            _ = self.graph.getHillClimbNextPath(nodeHeuristic: {-Double($0.value)}, searchCriteria: {$0 === self.nodes[9]})
         }
     }
     

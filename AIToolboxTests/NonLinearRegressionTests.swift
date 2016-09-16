@@ -30,7 +30,7 @@ class NonLinearRegressionTests: XCTestCase {
         equation.parameters = [Double(arc4random()) * 100.0 / Double(UInt32.max) - 50.0, Double(arc4random()) * 4.0 / Double(UInt32.max) - 2.0]
         
         //  Create a dataset to train on
-        let trainData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let trainData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             for _ in 0..<1000 {
                 let x = [Double(arc4random()) * 10.0 / Double(UInt32.max) - 5.0]
@@ -43,7 +43,7 @@ class NonLinearRegressionTests: XCTestCase {
         }
         
         //  Create a dataset to test on
-        let testData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let testData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             for _ in 0..<100 {
                 let x = [Double(arc4random()) * 10.0 / Double(UInt32.max) - 5.0]
@@ -84,7 +84,7 @@ class NonLinearRegressionTests: XCTestCase {
         equation.parameters = [Double(arc4random()) * 100.0 / Double(UInt32.max) - 50.0, Double(arc4random()) * 4.0 / Double(UInt32.max) - 2.0]
         
         //  Create a dataset to train on
-        let trainData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let trainData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             for _ in 0..<1000 {
                 let x = [Double(arc4random()) * 10.0 / Double(UInt32.max) - 5.0]
@@ -97,7 +97,7 @@ class NonLinearRegressionTests: XCTestCase {
         }
         
         //  Create a dataset to test on
-        let testData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let testData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             for _ in 0..<100 {
                 let x = [Double(arc4random()) * 10.0 / Double(UInt32.max) - 5.0]
@@ -111,7 +111,7 @@ class NonLinearRegressionTests: XCTestCase {
         
         //  Create the SGD non-linear regressor
         let regressor = NonLinearRegression(equation: equation, batchSize: 100, initialStepSize: 0.1, multiplyBy: 1.5, afterIterations: 100)
-        regressor.setConvergence(.SmallAverageLoss, limit: 0.001)
+        regressor.setConvergence(.smallAverageLoss, limit: 0.001)
         
         //  Train the model
         do {
@@ -136,7 +136,7 @@ class NonLinearRegressionTests: XCTestCase {
         let equation = ExponentEquation()
         
         //  Create a dataset to train on (From "Solving NonLinear Least-Squares Problems with the Gauss-Newton and Levenberg-Marguardt Methods" by Alfonso CroEze, Lindsey Pittmand and Winnie Reynolds)
-        let trainData = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let trainData = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             try trainData.addDataPoint(input: [1.0], output: [8.3])
             try trainData.addDataPoint(input: [2.0], output: [11.0])
@@ -153,7 +153,7 @@ class NonLinearRegressionTests: XCTestCase {
         
         //  Create the SGD non-linear regressor
         let regressor = NonLinearRegression(equation: equation, batchSize: trainData.size)
-        regressor.setConvergence(.SmallParameterChange, limit: 0.0001)
+        regressor.setConvergence(.smallParameterChange, limit: 0.0001)
         
         //  Set an initializer function for the parameters (if not set, random parameters will be used)
         regressor.setCustomInitializer(GNInitializer)
@@ -166,13 +166,13 @@ class NonLinearRegressionTests: XCTestCase {
             print("Non-Linear Regression Training error")
         }
     }
-    func GNInitializer(trainData: MLDataSet) -> [Double] {
+    func GNInitializer(_ trainData: MLDataSet) -> [Double] {
         return [6.0, 0.3]
     }
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }
@@ -180,31 +180,31 @@ class NonLinearRegressionTests: XCTestCase {
 }
 
 //  Class for non-linear function -> exponent Ae^Bx (two parameters, one input, one output)
-public class ExponentEquation : NonLinearEquation {
-    public var parameters: [Double] = []
+open class ExponentEquation : NonLinearEquation {
+    open var parameters: [Double] = []
     
-    public func getInputDimension() -> Int
+    open func getInputDimension() -> Int
     {
         return 1
     }
-    public func getOutputDimension() -> Int
+    open func getOutputDimension() -> Int
     {
         return 1
     }
-    public func getParameterDimension() -> Int
+    open func getParameterDimension() -> Int
     {
         return 2
     }
-    public func setParameters(parameters: [Double]) throws
+    open func setParameters(_ parameters: [Double]) throws
     {
-        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.notEnoughData }
         self.parameters = parameters
     }
-    public func getOutputs(inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
+    open func getOutputs(_ inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
     {
         return [parameters[0] * exp(parameters[1] * inputs[0])]
     }
-    public func getGradient(inputs: [Double]) throws -> [Double]       //  Returns vector gradient with respect to parameters
+    open func getGradient(_ inputs: [Double]) throws -> [Double]       //  Returns vector gradient with respect to parameters
     {
         return [exp(parameters[1] * inputs[0]),
                 inputs[0] * parameters[0] * exp(parameters[1] * inputs[0])]
@@ -212,31 +212,31 @@ public class ExponentEquation : NonLinearEquation {
 }
 
 //  Class for simple function for testing -> A + Bx (two parameters, one input, one output)
-public class SimpleEquation : NonLinearEquation {
-    public var parameters: [Double] = []
+open class SimpleEquation : NonLinearEquation {
+    open var parameters: [Double] = []
     
-    public func getInputDimension() -> Int
+    open func getInputDimension() -> Int
     {
         return 1
     }
-    public func getOutputDimension() -> Int
+    open func getOutputDimension() -> Int
     {
         return 1
     }
-    public func getParameterDimension() -> Int
+    open func getParameterDimension() -> Int
     {
         return 2
     }
-    public func setParameters(parameters: [Double]) throws
+    open func setParameters(_ parameters: [Double]) throws
     {
-        if (parameters.count < getParameterDimension()) { throw MachineLearningError.NotEnoughData }
+        if (parameters.count < getParameterDimension()) { throw MachineLearningError.notEnoughData }
         self.parameters = parameters
     }
-    public func getOutputs(inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
+    open func getOutputs(_ inputs: [Double]) throws -> [Double]        //  Returns vector outputs sized for outputs
     {
                 return [parameters[0] + (parameters[1] * inputs[0])]
     }
-    public func getGradient(inputs: [Double]) throws -> [Double]       //  Returns vector gradient with respect to parameters
+    open func getGradient(_ inputs: [Double]) throws -> [Double]       //  Returns vector gradient with respect to parameters
     {
                 return [1.0,
                         inputs[0]]

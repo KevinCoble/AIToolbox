@@ -10,17 +10,17 @@ import Foundation
 import Accelerate
 
 
-public enum GaussianError: ErrorType {
-    case DimensionError
-    case ZeroInVariance
-    case InverseError
-    case BadVarianceValue
-    case DiagonalCovarianceOnly
-    case ErrorInSVDParameters
-    case SVDDidNotConverge
+public enum GaussianError: Error {
+    case dimensionError
+    case zeroInVariance
+    case inverseError
+    case badVarianceValue
+    case diagonalCovarianceOnly
+    case errorInSVDParameters
+    case svdDidNotConverge
 }
 
-public class Gaussian {
+open class Gaussian {
     //  Parameters
     var σsquared : Double
     var mean : Double
@@ -29,36 +29,36 @@ public class Gaussian {
     
     ///  Create a gaussian
     public init(mean: Double, variance: Double) throws {
-        if (variance < 0.0) { throw GaussianError.BadVarianceValue }
+        if (variance < 0.0) { throw GaussianError.badVarianceValue }
         self.mean = mean
         σsquared = variance
         multiplier = 1.0 / sqrt(σsquared * 2.0 * M_PI)
     }
     
-    public func setMean(mean: Double)
+    open func setMean(_ mean: Double)
     {
         self.mean = mean
     }
     
-    public func setVariance(variance: Double)
+    open func setVariance(_ variance: Double)
     {
         σsquared = variance
         multiplier = 1.0 / sqrt(σsquared * 2.0 * M_PI)
     }
     
-    public func setParameters(parameters: [Double]) throws
+    open func setParameters(_ parameters: [Double]) throws
     {
-        if (parameters.count < 2) { throw MachineLearningError.NotEnoughData }
+        if (parameters.count < 2) { throw MachineLearningError.notEnoughData }
         
         mean = parameters[0]
         setVariance(parameters[1])
         
     }
-    public func getParameterDimension() -> Int
+    open func getParameterDimension() -> Int
     {
         return 2  //  Mean and variance
     }
-    public func getParameters() throws -> [Double]
+    open func getParameters() throws -> [Double]
     {
         var parameters = [mean]
         parameters.append(σsquared)
@@ -66,20 +66,20 @@ public class Gaussian {
     }
     
     ///  Function to get the probability of an input value
-    public func getProbability(input: Double) -> Double {
+    open func getProbability(_ input: Double) -> Double {
         let exponent = (input - mean) * (input - mean) / (-2.0 * σsquared)
         return multiplier * exp(exponent)
     }
     
     ///  Function to get a random value
-    public func random() -> Double {
+    open func random() -> Double {
         return Gaussian.gaussianRandom(mean, standardDeviation: sqrt(σsquared))
     }
     
     static var y2 = 0.0
     static var use_last = false
     ///  static Function to get a random value for a given distribution
-    public static func gaussianRandom(mean : Double, standardDeviation : Double) -> Double
+    open static func gaussianRandom(_ mean : Double, standardDeviation : Double) -> Double
     {
         var y1 : Double
         if (use_last)		        /* use value from previous call */
@@ -108,7 +108,7 @@ public class Gaussian {
     }
 }
 
-public class MultivariateGaussian {
+open class MultivariateGaussian {
     
     //  Parameters
     let dimension: Int
@@ -126,27 +126,27 @@ public class MultivariateGaussian {
     public init(dimension: Int, diagonalCovariance: Bool = true) throws {
         self.dimension = dimension
         diagonalΣ = diagonalCovariance
-        if (dimension < 2) { throw GaussianError.DimensionError }
+        if (dimension < 2) { throw GaussianError.dimensionError }
         
         //  Start with 0 mean
-        μ = [Double](count: dimension, repeatedValue: 0.0)
+        μ = [Double](repeating: 0.0, count: dimension)
         
         //  Start with the identity matrix for covariance
         if (diagonalΣ) {
-            Σ = [Double](count: dimension, repeatedValue: 1.0)
-            invΣ = [Double](count: dimension, repeatedValue: 1.0)
+            Σ = [Double](repeating: 1.0, count: dimension)
+            invΣ = [Double](repeating: 1.0, count: dimension)
         }
         else {
-            Σ = [Double](count: dimension * dimension, repeatedValue: 0.0)
+            Σ = [Double](repeating: 0.0, count: dimension * dimension)
             for index in 0..<dimension { Σ[index * dimension + index] = 1.0 }
-            invΣ = [Double](count: dimension * dimension, repeatedValue: 0.0)       //  Will get calculated later
+            invΣ = [Double](repeating: 0.0, count: dimension * dimension)       //  Will get calculated later
         }
         
         //  Set the multiplier temporarily
         multiplier = 1.0
     }
     
-    private func getComputeValues() throws {
+    fileprivate func getComputeValues() throws {
         var denominator = pow(2.0 * M_PI, Double(dimension) * 0.5)
         
         //  Get the determinant and inverse of the covariance matrix
@@ -160,12 +160,12 @@ public class MultivariateGaussian {
         }
         else {
             let uploChar = "U" as NSString
-            var uplo : Int8 = Int8(uploChar.characterAtIndex(0))          //  use upper triangle
+            var uplo : Int8 = Int8(uploChar.character(at: 0))          //  use upper triangle
             var A = Σ       //  Make a copy so it isn't mangled
             var n : Int32 = Int32(dimension)
             var info : Int32 = 0
             dpotrf_(&uplo, &n, &A, &n, &info)
-            if (info != 0) { throw GaussianError.InverseError }
+            if (info != 0) { throw GaussianError.inverseError }
             //  Extract sqrtDeterminant from U by multiplying the diagonal  (U is multiplied by Utranspose after factorization)
             for index in 0..<dimension {
                 sqrtDeterminant *= A[index * dimension + index]
@@ -173,7 +173,7 @@ public class MultivariateGaussian {
             
             //  Get the inverse
             dpotri_(&uplo, &n, &A, &n, &info)
-            if (info != 0) { throw GaussianError.InverseError }
+            if (info != 0) { throw GaussianError.inverseError }
             
             //  Convert inverse U into symmetric full matrix for matrix multiply routines
             for row in 0..<dimension {
@@ -186,25 +186,25 @@ public class MultivariateGaussian {
         
         denominator *= sqrtDeterminant
         
-        if (denominator == 0.0) { throw GaussianError.ZeroInVariance }
+        if (denominator == 0.0) { throw GaussianError.zeroInVariance }
         multiplier = 1.0 / denominator
         
         haveCalcValues = true
     }
     
     ///  Function to set the mean
-    public func setMean(mean: [Double]) throws {
-        if (mean.count != dimension) { throw GaussianError.DimensionError }
+    open func setMean(_ mean: [Double]) throws {
+        if (mean.count != dimension) { throw GaussianError.dimensionError }
         μ = mean
     }
     
     
     ///  Function to set the covariance values.  Values are copied into symmetric sides of matrix
-    public func setCoVariance(inputIndex1: Int, inputIndex2: Int, value: Double) throws {
-        if (value < 0.0) { throw GaussianError.BadVarianceValue }
-        if (inputIndex1 < 0 || inputIndex1 >= dimension) { throw GaussianError.BadVarianceValue }
-        if (inputIndex2 < 0 || inputIndex2 >= dimension) { throw GaussianError.BadVarianceValue }
-        if (diagonalΣ && inputIndex1 != inputIndex2) { throw GaussianError.DiagonalCovarianceOnly }
+    open func setCoVariance(_ inputIndex1: Int, inputIndex2: Int, value: Double) throws {
+        if (value < 0.0) { throw GaussianError.badVarianceValue }
+        if (inputIndex1 < 0 || inputIndex1 >= dimension) { throw GaussianError.badVarianceValue }
+        if (inputIndex2 < 0 || inputIndex2 >= dimension) { throw GaussianError.badVarianceValue }
+        if (diagonalΣ && inputIndex1 != inputIndex2) { throw GaussianError.diagonalCovarianceOnly }
         
         Σ[inputIndex1 * dimension + inputIndex2] = value
         Σ[inputIndex2 * dimension + inputIndex1] = value
@@ -212,23 +212,23 @@ public class MultivariateGaussian {
         haveCalcValues = false
     }
     
-    public func setCovarianceMatrix(matrix: [Double]) throws {
-        if (diagonalΣ && matrix.count != dimension) { throw GaussianError.DiagonalCovarianceOnly }
-        if (!diagonalΣ && matrix.count != dimension * dimension) { throw GaussianError.DimensionError }
+    open func setCovarianceMatrix(_ matrix: [Double]) throws {
+        if (diagonalΣ && matrix.count != dimension) { throw GaussianError.diagonalCovarianceOnly }
+        if (!diagonalΣ && matrix.count != dimension * dimension) { throw GaussianError.dimensionError }
         Σ = matrix
         haveCalcValues = false
     }
     
-    public func setParameters(parameters: [Double]) throws
+    open func setParameters(_ parameters: [Double]) throws
     {
         let requiredSize = getParameterDimension()
-        if (parameters.count < requiredSize) { throw MachineLearningError.NotEnoughData }
+        if (parameters.count < requiredSize) { throw MachineLearningError.notEnoughData }
         
         μ = Array(parameters[0..<dimension])
         try setCovarianceMatrix(Array(parameters[dimension..<requiredSize]))
         
     }
-    public func getParameterDimension() -> Int
+    open func getParameterDimension() -> Int
     {
         var numParameters = dimension   //  size of the mean
         if (diagonalΣ) {
@@ -240,7 +240,7 @@ public class MultivariateGaussian {
         
         return numParameters
     }
-    public func getParameters() throws -> [Double]
+    open func getParameters() throws -> [Double]
     {
         var parameters = μ
         parameters += Σ
@@ -248,8 +248,8 @@ public class MultivariateGaussian {
     }
     
     ///  Function to get the probability of an input vector
-    public func getProbability(inputs: [Double]) throws -> Double {
-        if (inputs.count != dimension) { throw GaussianError.DimensionError }
+    open func getProbability(_ inputs: [Double]) throws -> Double {
+        if (inputs.count != dimension) { throw GaussianError.dimensionError }
         if (!haveCalcValues) {
             do {
                 try getComputeValues()
@@ -260,11 +260,11 @@ public class MultivariateGaussian {
         }
         
         //  Subtract the mean
-        var relative = [Double](count: dimension, repeatedValue: 0.0)
+        var relative = [Double](repeating: 0.0, count: dimension)
         vDSP_vsubD(μ, 1, inputs, 1, &relative, 1, vDSP_Length(dimension))
         
         //  Determine the exponent
-        var partial = [Double](count: dimension, repeatedValue: 0.0)
+        var partial = [Double](repeating: 0.0, count: dimension)
         if (diagonalΣ) {
             vDSP_vmulD(relative, 1, invΣ, 1, &partial, 1, vDSP_Length(dimension))
         }
@@ -280,9 +280,9 @@ public class MultivariateGaussian {
     
     ///  Function to get a set of random vectors
     ///  Setup is computationaly expensive, so call once to get multiple vectors
-    public func random(count: Int) throws -> [[Double]] {
-        var sqrtEigenValues = [Double](count: dimension, repeatedValue: 0.0)
-        var translationMatrix = [Double](count: dimension*dimension, repeatedValue: 0.0)
+    open func random(_ count: Int) throws -> [[Double]] {
+        var sqrtEigenValues = [Double](repeating: 0.0, count: dimension)
+        var translationMatrix = [Double](repeating: 0.0, count: dimension*dimension)
         if (diagonalΣ) {
             //  eigenValues are the diagonals - get sqrt of them for multiplication
             for element in 0..<dimension {
@@ -293,29 +293,29 @@ public class MultivariateGaussian {
             //  If a non-diagonal covariance matrix, get the eigenvalues and eigenvectors
             //  Get the SVD decomposition of the Σ matrix
             let jobZChar = "S" as NSString
-            var jobZ : Int8 = Int8(jobZChar.characterAtIndex(0))          //  return min(m,n) rows of Σ
+            var jobZ : Int8 = Int8(jobZChar.character(at: 0))          //  return min(m,n) rows of Σ
             var n : Int32 = Int32(dimension)
-            var u = [Double](count: dimension * dimension, repeatedValue: 0.0)
+            var u = [Double](repeating: 0.0, count: dimension * dimension)
             var work : [Double] = [0.0]
             var lwork : Int32 = -1        //  Ask for the best size of the work array
             let iworkSize = 8 * dimension
-            var iwork = [Int32](count: iworkSize, repeatedValue: 0)
+            var iwork = [Int32](repeating: 0, count: iworkSize)
             var info : Int32 = 0
             var A = Σ       //  Leave Σ intact
-            var eigenValues = [Double](count: dimension, repeatedValue: 0.0)
-            var eigenVectors = [Double](count: dimension*dimension, repeatedValue: 0.0)
+            var eigenValues = [Double](repeating: 0.0, count: dimension)
+            var eigenVectors = [Double](repeating: 0.0, count: dimension*dimension)
             dgesdd_(&jobZ, &n, &n, &A, &n, &eigenValues, &u, &n, &eigenVectors, &n, &work, &lwork, &iwork, &info)
             if (info != 0 || work[0] < 1) {
-                throw GaussianError.ErrorInSVDParameters
+                throw GaussianError.errorInSVDParameters
             }
             lwork = Int32(work[0])
-            work = [Double](count: Int(work[0]), repeatedValue: 0.0)
+            work = [Double](repeating: 0.0, count: Int(work[0]))
             dgesdd_(&jobZ, &n, &n, &A, &n, &eigenValues, &u, &n, &eigenVectors, &n, &work, &lwork, &iwork, &info)
             if (info < 0) {
-                throw GaussianError.ErrorInSVDParameters
+                throw GaussianError.errorInSVDParameters
             }
             if (info > 0) {
-                throw GaussianError.SVDDidNotConverge
+                throw GaussianError.svdDidNotConverge
             }
             
             //  Extract the eigenvectors multiplied by the square root of the eigenvalues - make a row-major matrix for dataset vector multiplication using vDSP
@@ -331,7 +331,7 @@ public class MultivariateGaussian {
         var results : [[Double]] = []
         for _ in 0..<count {
             //  Get random uniform vector
-            var entry = [Double](count: dimension, repeatedValue: 0.0)
+            var entry = [Double](repeating: 0.0, count: dimension)
             for element in 0..<dimension {
                 entry[element] = Gaussian.gaussianRandom(0.0, standardDeviation: 1.0)
             }

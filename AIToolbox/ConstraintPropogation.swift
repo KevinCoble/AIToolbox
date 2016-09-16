@@ -11,9 +11,9 @@ import Foundation
 // MARK: ConstraintProblemVariable
 ///  Class for assignment variable
 
-public class ConstraintProblemVariable {
+open class ConstraintProblemVariable {
     
-    public let domainSize: Int
+    open let domainSize: Int
     var possibleSettings : [Bool]
     var remainingPossibilityCount: Int
     var assignedValueIndex: Int?
@@ -23,25 +23,25 @@ public class ConstraintProblemVariable {
         self.domainSize = sizeOfDomain
         
         //  Allocate an array of the possible settings
-        possibleSettings = Array(count: sizeOfDomain, repeatedValue: true)
+        possibleSettings = Array(repeating: true, count: sizeOfDomain)
         
         //  Set the number of remaining possibilities
         remainingPossibilityCount = sizeOfDomain
     }
     
-    public var hasNoPossibleSettings : Bool {
+    open var hasNoPossibleSettings : Bool {
         get {
             return (remainingPossibilityCount == 0)
         }
     }
     
-    public var isSingleton : Bool {
+    open var isSingleton : Bool {
         get {
             return (assignedValueIndex == nil && remainingPossibilityCount == 1)
         }
     }
     
-    public var assignedValue : Int? {
+    open var assignedValue : Int? {
         get {
             return assignedValueIndex
         }
@@ -50,7 +50,7 @@ public class ConstraintProblemVariable {
         }
     }
     
-    public var smallestAllowedValue : Int? {
+    open var smallestAllowedValue : Int? {
         get {
             for index in 0..<domainSize {
                 if (possibleSettings[index]) {return index}
@@ -59,7 +59,7 @@ public class ConstraintProblemVariable {
         }
     }
     
-    public var largestAllowedValue : Int? {
+    open var largestAllowedValue : Int? {
         get {
             for index in 1...domainSize {
                 if (possibleSettings[domainSize - index]) {return domainSize - index}
@@ -68,14 +68,14 @@ public class ConstraintProblemVariable {
         }
     }
     
-    public func reset() {
+    open func reset() {
         for index in 0..<domainSize {
             possibleSettings[index] = true
             remainingPossibilityCount = domainSize
         }
     }
     
-    public func removeValuePossibility(varValueIndex: Int) -> Bool {        //  Return true if the possibility was actually removed
+    open func removeValuePossibility(_ varValueIndex: Int) -> Bool {        //  Return true if the possibility was actually removed
         if (varValueIndex < 0 || varValueIndex >= domainSize) { return false}
         
         var result = false
@@ -89,7 +89,7 @@ public class ConstraintProblemVariable {
         return result
     }
     
-    public func allowValuePossibility(varValueIndex: Int) -> Bool {        //  Return true if the possibility was actually returned
+    open func allowValuePossibility(_ varValueIndex: Int) -> Bool {        //  Return true if the possibility was actually returned
         if (varValueIndex < 0 || varValueIndex >= domainSize) { return false }
         
         var result = false
@@ -103,7 +103,7 @@ public class ConstraintProblemVariable {
         return result
     }
     
-    public func assignToNextPossibleValue() ->Bool {        //  Returns false if value cannot be assigned
+    open func assignToNextPossibleValue() ->Bool {        //  Returns false if value cannot be assigned
         if (remainingPossibilityCount == 0) {return false}
         
         if let currentAssignment = assignedValueIndex {
@@ -139,7 +139,7 @@ public class ConstraintProblemVariable {
         return true
     }
     
-    public func assignSingleton() -> Bool {
+    open func assignSingleton() -> Bool {
         if (remainingPossibilityCount != 1) { return false }
         
         for index in 0..<domainSize {
@@ -158,7 +158,7 @@ public class ConstraintProblemVariable {
 ///  Protocol for a constraint between two nodes
 public protocol ConstraintProblemConstraint {
     var isSelfConstraint: Bool { get }
-    func enforceConstraint(graphNodeList: [ConstraintProblemNode], forNodeIndex: Int) -> [EnforcedConstraint]
+    func enforceConstraint(_ graphNodeList: [ConstraintProblemNode], forNodeIndex: Int) -> [EnforcedConstraint]
 }
 
 public struct EnforcedConstraint {
@@ -168,14 +168,14 @@ public struct EnforcedConstraint {
 
 
 public enum StandardConstraintType {
-    case CantBeSameValueInOtherNode
-    case MustBeSameValueInOtherNode
-    case CantBeValue
-    case MustBeGreaterThanOtherNode
-    case MustBeLessThanOtherNode
+    case cantBeSameValueInOtherNode
+    case mustBeSameValueInOtherNode
+    case cantBeValue
+    case mustBeGreaterThanOtherNode
+    case mustBeLessThanOtherNode
 }
 
-public class InternalConstraint: ConstraintProblemConstraint {
+open class InternalConstraint: ConstraintProblemConstraint {
     
     let tType: StandardConstraintType
     let nIndex: Int             //  Variable set index for 'can't be value' types, else node index
@@ -185,36 +185,36 @@ public class InternalConstraint: ConstraintProblemConstraint {
         nIndex = index
     }
     
-    public func reciprocalConstraint(firstNodeIndex: Int) ->InternalConstraint? {
+    open func reciprocalConstraint(_ firstNodeIndex: Int) ->InternalConstraint? {
         switch tType {
-        case .CantBeSameValueInOtherNode:
-            let constraint = InternalConstraint(type: .CantBeSameValueInOtherNode, index: firstNodeIndex)
+        case .cantBeSameValueInOtherNode:
+            let constraint = InternalConstraint(type: .cantBeSameValueInOtherNode, index: firstNodeIndex)
             return constraint
-        case .MustBeSameValueInOtherNode:
-            let constraint = InternalConstraint(type: .MustBeSameValueInOtherNode, index: firstNodeIndex)
+        case .mustBeSameValueInOtherNode:
+            let constraint = InternalConstraint(type: .mustBeSameValueInOtherNode, index: firstNodeIndex)
             return constraint
-        case .CantBeValue:
+        case .cantBeValue:
             return nil  //  No reciprocal for this one
-        case .MustBeGreaterThanOtherNode:
-            let constraint = InternalConstraint(type: .MustBeLessThanOtherNode, index: firstNodeIndex)
+        case .mustBeGreaterThanOtherNode:
+            let constraint = InternalConstraint(type: .mustBeLessThanOtherNode, index: firstNodeIndex)
             return constraint
-        case .MustBeLessThanOtherNode:
-            let constraint = InternalConstraint(type: .MustBeGreaterThanOtherNode, index: firstNodeIndex)
+        case .mustBeLessThanOtherNode:
+            let constraint = InternalConstraint(type: .mustBeGreaterThanOtherNode, index: firstNodeIndex)
             return constraint
         }
     }
     
-    public var isSelfConstraint: Bool {
-        return (tType == .CantBeValue)
+    open var isSelfConstraint: Bool {
+        return (tType == .cantBeValue)
     }
     
-    public func enforceConstraint(graphNodeList: [ConstraintProblemNode], forNodeIndex: Int) -> [EnforcedConstraint] {
+    open func enforceConstraint(_ graphNodeList: [ConstraintProblemNode], forNodeIndex: Int) -> [EnforcedConstraint] {
         var changeList : [EnforcedConstraint] = []
         
         let variable = graphNodeList[forNodeIndex].variable
         
         switch tType {
-        case  .CantBeSameValueInOtherNode:
+        case  .cantBeSameValueInOtherNode:
             if let index = variable.assignedValueIndex {
                 let otherNode = graphNodeList[nIndex]
                 if (otherNode.variable.removeValuePossibility(index)) {
@@ -222,7 +222,7 @@ public class InternalConstraint: ConstraintProblemConstraint {
                 }
             }
             
-        case  .MustBeSameValueInOtherNode:
+        case  .mustBeSameValueInOtherNode:
             if let index = variable.assignedValueIndex {
                 let otherNode = graphNodeList[nIndex]
                 for otherIndex in 0..<otherNode.variable.domainSize {
@@ -234,12 +234,12 @@ public class InternalConstraint: ConstraintProblemConstraint {
                 }
             }
             
-        case .CantBeValue:
+        case .cantBeValue:
             if (variable.removeValuePossibility(nIndex)) {
                 changeList.append(EnforcedConstraint(nodeAffected: graphNodeList[forNodeIndex], domainIndexRemoved: nIndex))
             }
             
-        case .MustBeGreaterThanOtherNode:
+        case .mustBeGreaterThanOtherNode:
             //  Find smallest value allowed for the node
             if let smallestValue = variable.smallestAllowedValue {
                 if (smallestValue > 0) {
@@ -252,7 +252,7 @@ public class InternalConstraint: ConstraintProblemConstraint {
                 }
             }
         
-        case .MustBeLessThanOtherNode:
+        case .mustBeLessThanOtherNode:
             //  Find largest value allowed for the node
             if let largest = variable.largestAllowedValue {
                 let otherNode = graphNodeList[nIndex]
@@ -274,7 +274,7 @@ public class InternalConstraint: ConstraintProblemConstraint {
 // MARK:- ConstraintProblemNode
 ///  Class for a node with a variable and a set of constraints
 
-public class ConstraintProblemNode {
+open class ConstraintProblemNode {
     
     let variable : ConstraintProblemVariable
     
@@ -284,7 +284,7 @@ public class ConstraintProblemNode {
     
     var inQueue = false
     
-    public var variableIndexValue : Int? {
+    open var variableIndexValue : Int? {
         get {return variable.assignedValueIndex}
     }
     
@@ -298,19 +298,19 @@ public class ConstraintProblemNode {
         constraints = []
     }
     
-    func addConstraint(constraint: ConstraintProblemConstraint) {
+    func addConstraint(_ constraint: ConstraintProblemConstraint) {
         constraints.append(constraint)
     }
     
-    public func resetVariable() {
+    open func resetVariable() {
         variable.reset()
     }
     
-    public func processSelfConstraints(graphNodeList: [ConstraintProblemNode]) -> Bool
+    open func processSelfConstraints(_ graphNodeList: [ConstraintProblemNode]) -> Bool
     {
         for constraint in constraints {
             if (constraint.isSelfConstraint) {
-                constraint.enforceConstraint(graphNodeList, forNodeIndex: nodeIndex)
+                _ = constraint.enforceConstraint(graphNodeList, forNodeIndex: nodeIndex)
             }
         }
         
@@ -318,11 +318,11 @@ public class ConstraintProblemNode {
         return (!variable.hasNoPossibleSettings)
     }
     
-    public func clearConstraintsLastEnforced() {
+    open func clearConstraintsLastEnforced() {
         constraintsLastEnforced = []
     }
     
-    public func enforceConstraints(graphNodeList: [ConstraintProblemNode], nodeEnforcingConstraints: ConstraintProblemNode) -> Bool {
+    open func enforceConstraints(_ graphNodeList: [ConstraintProblemNode], nodeEnforcingConstraints: ConstraintProblemNode) -> Bool {
         //  Get our assigned domain index
         if let _ = variable.assignedValueIndex {
             //  Go through each attached constraint
@@ -334,24 +334,24 @@ public class ConstraintProblemNode {
         return true
     }
     
-    public func removeConstraintsLastEnforced() {
+    open func removeConstraintsLastEnforced() {
         for constraintEnforced in constraintsLastEnforced {
             constraintEnforced.nodeAffected.resetVariableDomainIndex(constraintEnforced.domainIndexRemoved)
         }
     }
     
-    public func resetVariableDomainIndex(resetIndex: Int) {
-        variable.allowValuePossibility(resetIndex)
+    open func resetVariableDomainIndex(_ resetIndex: Int) {
+        _ = variable.allowValuePossibility(resetIndex)
         
         //  If we were assigned, this un-assigns the node
         variable.assignedValueIndex = nil
     }
     
-    public func assignSingleton() -> Bool {
+    open func assignSingleton() -> Bool {
         return variable.assignSingleton()
     }
     
-    func addChangedNodesToQueue(queue: Queue<ConstraintProblemNode>) {
+    func addChangedNodesToQueue(_ queue: Queue<ConstraintProblemNode>) {
         for constraintEnforced in constraintsLastEnforced {
             if (!constraintEnforced.nodeAffected.inQueue) {
                 queue.enqueue(constraintEnforced.nodeAffected)
@@ -366,7 +366,7 @@ public class ConstraintProblemNode {
 // MARK: ConstraintProblem Class
 ///  Class for a constraint problem consisting of a collection of nodes.  The nodes are (sub)classes of ConstraintProblemNode.
 ///   Constraints are added with the problem set, or creating ConstraintProblemConstraint conforming classes and adding those
-public class ConstraintProblem {
+open class ConstraintProblem {
     //  Array of nodes in the list
     var graphNodeList : [ConstraintProblemNode] = []
     
@@ -376,7 +376,7 @@ public class ConstraintProblem {
     }
     
     ///  Method to set an array of ConstraintProblemNode (or subclass) to the problmeem graph
-    public func setNodeList(list: [ConstraintProblemNode]) {
+    open func setNodeList(_ list: [ConstraintProblemNode]) {
         graphNodeList = list
         
         //  Number each of the nodes
@@ -389,26 +389,26 @@ public class ConstraintProblem {
     }
     
     ///  Method to clear all constraints for the problem
-    public func clearConstraints() {
+    open func clearConstraints() {
         for node in graphNodeList {
             node.clearConstraints()
         }
     }
     
     ///  Method to add a value constraint to a node
-    public func addValueConstraintToNode(node: Int, invalidValue: Int) {
-        let constraint = InternalConstraint(type: .CantBeValue, index: invalidValue)
+    open func addValueConstraintToNode(_ node: Int, invalidValue: Int) {
+        let constraint = InternalConstraint(type: .cantBeValue, index: invalidValue)
         graphNodeList[node].addConstraint(constraint)
     }
    
     ///  Method to add a constraint between two nodes
-    public func addConstraintOfType(type: StandardConstraintType,  betweenNodeIndex firstnode: Int, andNodeIndex secondNode : Int) {
+    open func addConstraintOfType(_ type: StandardConstraintType,  betweenNodeIndex firstnode: Int, andNodeIndex secondNode : Int) {
         let constraint = InternalConstraint(type: type, index: secondNode)
         graphNodeList[firstnode].addConstraint(constraint)
     }
     
     ///  Method to add a set of reciprocal constraints between two nodes
-    public func addReciprocalConstraintsOfType(type: StandardConstraintType,  betweenNodeIndex firstNode: Int, andNodeIndex secondNode : Int) {
+    open func addReciprocalConstraintsOfType(_ type: StandardConstraintType,  betweenNodeIndex firstNode: Int, andNodeIndex secondNode : Int) {
         let constraint = InternalConstraint(type: type, index: secondNode)
         graphNodeList[firstNode].addConstraint(constraint)
         
@@ -418,14 +418,14 @@ public class ConstraintProblem {
     }
     
     ///  Method to add a custom constraint
-    public func addCustomConstraint(constraint: ConstraintProblemConstraint, toNode: Int) {
+    open func addCustomConstraint(_ constraint: ConstraintProblemConstraint, toNode: Int) {
         graphNodeList[toNode].addConstraint(constraint)
     }
 
     
     ///  Method to attempt to solve the problem using basic forward constraint propogation
     ///  Return true if a solution was found.  The node's variables will be set with the result
-    public func solveWithForwardPropogation() -> Bool {
+    open func solveWithForwardPropogation() -> Bool {
         //  Reset the variable possibilites for each node, then process self-inflicted constraints
         for node in graphNodeList {
             node.resetVariable()
@@ -436,7 +436,7 @@ public class ConstraintProblem {
         return forwardDFS(0)
     }
     
-    private func forwardDFS(node: Int) -> Bool {   //  Return fail if backtracking
+    fileprivate func forwardDFS(_ node: Int) -> Bool {   //  Return fail if backtracking
         //  Assign this node
         while (true) {
             //  Reset any previous consraint enforcements from the last assignment
@@ -464,7 +464,7 @@ public class ConstraintProblem {
     
     ///  Method to attempt to solve the problem using singleton propogation
     ///  Return true if a solution was found.  The node's variables will be set with the result
-    public func solveWithSingletonPropogation() -> Bool {
+    open func solveWithSingletonPropogation() -> Bool {
         //  Reset the variable possibilites for each node, then process self-inflicted constraints
         for node in graphNodeList {
             node.resetVariable()
@@ -475,7 +475,7 @@ public class ConstraintProblem {
         return singletonDFS(0)
     }
     
-    private func singletonDFS(node: Int) -> Bool {   //  Return fail if backtracking
+    fileprivate func singletonDFS(_ node: Int) -> Bool {   //  Return fail if backtracking
         let nextNode = node + 1
         
         //  If the node is assigned already (from singleton propogation), just iterate down
@@ -517,7 +517,7 @@ public class ConstraintProblem {
                 var singleton = queue.dequeue()
                 while (singleton != nil) {
                     //  Assign the singleton
-                    singleton!.assignSingleton()
+                    _ = singleton!.assignSingleton()
                     
                     //  Process constraints, adding the 'backtrack' list to this node
                     if (!singleton!.enforceConstraints(graphNodeList, nodeEnforcingConstraints: graphNodeList[node])) {
@@ -549,7 +549,7 @@ public class ConstraintProblem {
     ///  Method to attempt to solve the problem using full constraint propogation
     ///  Probably only useful if less-than, greater-than, or appropriate custom constraints are in the problem
     ///  Return true if a solution was found.  The node's variables will be set with the result
-    public func solveWithFullPropogation() -> Bool {
+    open func solveWithFullPropogation() -> Bool {
         //  Reset the variable possibilites for each node, then process self-inflicted constraints
         for node in graphNodeList {
             node.resetVariable()
@@ -560,7 +560,7 @@ public class ConstraintProblem {
         return fullDFS(0)
     }
     
-    private func fullDFS(node: Int) -> Bool {   //  Return fail if backtracking
+    fileprivate func fullDFS(_ node: Int) -> Bool {   //  Return fail if backtracking
         let nextNode = node + 1
         
         //  If the node is assigned already (from constraint propogation), just iterate down

@@ -24,7 +24,7 @@ class MetalNeuralNetworkTests: XCTestCase {
 
     func testSingleNode() {
         //  Test a single node
-        if let network = MetalNeuralNetwork(numInputs: 1, layerDefinitions: [(numNodes: 1, activation: NeuralActivationFunction.Sigmoid)]) {
+        if let network = MetalNeuralNetwork(numInputs: 1, layerDefinitions: [(numNodes: 1, activation: NeuralActivationFunction.sigmoid)]) {
             
             //  Train to output a constant 0.5
             for _ in 0..<1000 {
@@ -37,7 +37,7 @@ class MetalNeuralNetworkTests: XCTestCase {
         }
         
             //  Create a 1 node network
-        if let network = MetalNeuralNetwork(numInputs: 1, layerDefinitions: [(numNodes: 1, activation: NeuralActivationFunction.RectifiedLinear)]) {
+        if let network = MetalNeuralNetwork(numInputs: 1, layerDefinitions: [(numNodes: 1, activation: NeuralActivationFunction.rectifiedLinear)]) {
             
             //  Train to output a constant slope 0.5
             for _ in 0..<1000 {

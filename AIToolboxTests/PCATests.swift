@@ -30,7 +30,7 @@ class PCATests: XCTestCase {
         }
         
         //  Create a dataset that is on the basis vector, with a small amount of noise
-        let data = DataSet(dataType: .Regression, inputDimension: 3, outputDimension: 1)
+        let data = DataSet(dataType: .regression, inputDimension: 3, outputDimension: 1)
         var vector = [0.0, 0.0, 0.0]
         do {
             for _ in 0..<20 {
@@ -94,7 +94,7 @@ class PCATests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }

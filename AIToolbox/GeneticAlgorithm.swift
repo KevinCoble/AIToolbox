@@ -9,12 +9,12 @@
 import Foundation
 
 ///  Use this class to do genetic evolution of a population
-public class Population
+open class Population
 {
     var population = [Genome]()
     
-    public var mutationRate = 0.01   //  Default to a 1% mutation rate
-    public var sexualReproduction = true    //  Default to sexual reproduction
+    open var mutationRate = 0.01   //  Default to a 1% mutation rate
+    open var sexualReproduction = true    //  Default to sexual reproduction
     
     ///  Create the genome set for your population with this initializer
     public init(populationSize: Int, integerGeneLengths : [Int], doubleGeneLengths : [Int], doubleGeneRanges : [(min : Double, max : Double)])
@@ -26,7 +26,7 @@ public class Population
     }
     
     ///  Use this subscript to get to the population members genetic code
-    public subscript(index: Int) -> Genome? {
+    open subscript(index: Int) -> Genome? {
         if (index < 0 || index > population.count) {return nil}
         return population[index]
     }
@@ -35,7 +35,7 @@ public class Population
     ///  After running the population through a trial set (setting the scores), create a new population set from the existing one here
     ///  Pass in the expected minimum and maximum scores, so ranking of the popoulation members can be done
     ///  Returns the previous best scoring genome
-    public func createNextGeneration(expectedMinimumScore: Double, expectedMaximumScore: Double) -> Genome {
+    open func createNextGeneration(_ expectedMinimumScore: Double, expectedMaximumScore: Double) -> Genome {
         
         //  Scale each of the scores to be in a 1-100 range, and accumulate a total score
         let scale = 99.0 / (expectedMaximumScore - expectedMinimumScore)
@@ -48,7 +48,7 @@ public class Population
         }
         
         //  Sort the population
-        population.sortInPlace({$0.score > $1.score})
+        population.sort(by: {$0.score > $1.score})
         
         //  Create the new population with the set parameters
         var newPopulation = [Genome]()
@@ -104,13 +104,13 @@ public class Population
 }
 
 ///  Use this class to handle the genetic part of your application's population
-public class Genome {
+open class Genome {
     //  Gene collection
     var integerGeneSet : [IntegerGene]
     var doubleGeneSet : [DoubleGene]
     
     ///  Set the score of this individual here
-    public var score = 0.0
+    open var score = 0.0
     
     public init(integerGeneLengths : [Int], doubleGeneLengths : [Int], doubleGeneRanges : [(min : Double, max : Double)])
     {
@@ -155,7 +155,7 @@ public class Genome {
         }
     }
     
-    public func mutateWithProbability(probability: Double) {
+    open func mutateWithProbability(_ probability: Double) {
         for gene in integerGeneSet {
             gene.mutateWithProbability(probability)
         }
@@ -165,7 +165,7 @@ public class Genome {
     }
     
     ///  Use this member to get the value of an Integer gene allele
-    public func integerValueFromGene(gene: Int, sequenceIndex: Int) -> UInt32? {
+    open func integerValueFromGene(_ gene: Int, sequenceIndex: Int) -> UInt32? {
         //  Check the gene number
         if (gene < 0 || gene > integerGeneSet.count) {return nil}
         
@@ -177,7 +177,7 @@ public class Genome {
     }
     
     ///  Use this member to get the value of an Double gene allele
-    public func doubleValueFromGene(gene: Int, sequenceIndex: Int) -> Double? {
+    open func doubleValueFromGene(_ gene: Int, sequenceIndex: Int) -> Double? {
         //  Check the gene number
         if (gene < 0 || gene > doubleGeneSet.count) {return nil}
         
@@ -189,7 +189,7 @@ public class Genome {
     }
     
     ///  Use this member to initialize an Integer gene to a mutated set of these values
-    public func initializeIntegerGene(gene: Int, toValues:[UInt32], andMutateWithProbability: Double) -> Bool {
+    open func initializeIntegerGene(_ gene: Int, toValues:[UInt32], andMutateWithProbability: Double) -> Bool {
         //  Check the gene number
         if (gene < 0 || gene > integerGeneSet.count) {return false}
         
@@ -206,7 +206,7 @@ public class Genome {
     }
     
     ///  Use this member to initialize an Integer gene to a mutated set of these values
-    public func initializeDoubleGene(gene: Int, toValues:[Double], andMutateWithProbability: Double) -> Bool {
+    open func initializeDoubleGene(_ gene: Int, toValues:[Double], andMutateWithProbability: Double) -> Bool {
         //  Check the gene number
         if (gene < 0 || gene > doubleGeneSet.count) {return false}
         
@@ -224,7 +224,7 @@ public class Genome {
 }
 
 
-public class IntegerGene
+open class IntegerGene
 {
     var sequence : [UInt32] = []
     
@@ -245,7 +245,7 @@ public class IntegerGene
         }
     }
     
-    func mutateWithProbability(probability: Double)->Void {
+    func mutateWithProbability(_ probability: Double)->Void {
         //  Determine the total number of bits in the gene
         let numBits = sequence.count * 32
         
@@ -265,7 +265,7 @@ public class IntegerGene
         }
     }
     
-    func mateWithGene(mate : IntegerGene) -> IntegerGene {
+    func mateWithGene(_ mate : IntegerGene) -> IntegerGene {
         let newGene = IntegerGene()
         
         //  Get a random length between the two parents gene lengths
@@ -306,7 +306,7 @@ public class IntegerGene
 
 
 
-public class DoubleGene
+open class DoubleGene
 {
     var sequence : [Double] = []
     let range : (min : Double, max : Double)
@@ -332,7 +332,7 @@ public class DoubleGene
         }
     }
     
-    func mutateWithProbability(probability: Double)->Void {
+    func mutateWithProbability(_ probability: Double)->Void {
         //  Get the integer comparison number for the random number generator that matches the mutate probability
         let mutateThreshold = UInt32(probability * Double(UInt32.max))
         
@@ -351,7 +351,7 @@ public class DoubleGene
         }
     }
     
-    func mateWithGene(mate : DoubleGene) -> DoubleGene {
+    func mateWithGene(_ mate : DoubleGene) -> DoubleGene {
         let newGene = DoubleGene(range: range)
         
         //  Get a random length between the two parents gene lengths

@@ -86,7 +86,7 @@ class ConstraintPropogationTests: XCTestCase {
         //  Create each of the constraints and add them to the nodes
         for stateIndex in 0..<stateConnect.count {
             for touchingState in stateConnect[stateIndex] {
-                problem.addConstraintOfType(.CantBeSameValueInOtherNode, betweenNodeIndex: stateIndex, andNodeIndex: touchingState)
+                problem.addConstraintOfType(.cantBeSameValueInOtherNode, betweenNodeIndex: stateIndex, andNodeIndex: touchingState)
             }
         }
     }
@@ -146,7 +146,7 @@ class ConstraintPropogationTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock() {
+        self.measure() {
             // Put the code you want to measure the time of here.
         }
     }

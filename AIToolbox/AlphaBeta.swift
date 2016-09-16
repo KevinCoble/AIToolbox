@@ -9,33 +9,33 @@
 import Foundation
 
 ///  Subclass AlphaBetaNode to provide move generation and static evaluation routines
-public class AlphaBetaNode {
+open class AlphaBetaNode {
     
     public init() {
     }
     
-    public func generateMoves(forMaximizer: Bool) -> [AlphaBetaNode] {
+    open func generateMoves(_ forMaximizer: Bool) -> [AlphaBetaNode] {
         return []
     }
     
-    public func staticEvaluation() -> Double {
+    open func staticEvaluation() -> Double {
         return 0.0
     }
 }
 
-public class AlphaBetaGraph {
+open class AlphaBetaGraph {
     
     public init() {
     }
     
-    public func startAlphaBetaWithNode(startNode: AlphaBetaNode, forDepth: Int, startingAsMaximizer : Bool = true) -> AlphaBetaNode? {
+    open func startAlphaBetaWithNode(_ startNode: AlphaBetaNode, forDepth: Int, startingAsMaximizer : Bool = true) -> AlphaBetaNode? {
         //  Start the recursion
         let α = -Double.infinity
         let β = Double.infinity
         return alphaBeta(startNode, remainingDepth: forDepth, alpha: α, beta : β, maximizer: startingAsMaximizer, topLevel: true).winningNode
     }
     
-    func alphaBeta(currentNode: AlphaBetaNode, remainingDepth: Int, alpha : Double, beta : Double,  maximizer: Bool, topLevel : Bool) -> (value: Double, winningNode: AlphaBetaNode?) {
+    func alphaBeta(_ currentNode: AlphaBetaNode, remainingDepth: Int, alpha : Double, beta : Double,  maximizer: Bool, topLevel : Bool) -> (value: Double, winningNode: AlphaBetaNode?) {
         //  if this is a leaf node, return the static evaluation
         if (remainingDepth == 0) {
             return (value: currentNode.staticEvaluation(), winningNode: currentNode)
@@ -102,14 +102,14 @@ public class AlphaBetaGraph {
         }
     }
     
-    public func startAlphaBetaConcurrentWithNode(startNode: AlphaBetaNode, forDepth: Int, startingAsMaximizer : Bool = true) -> AlphaBetaNode? {
+    open func startAlphaBetaConcurrentWithNode(_ startNode: AlphaBetaNode, forDepth: Int, startingAsMaximizer : Bool = true) -> AlphaBetaNode? {
         //  Start the recursion
         let α = -Double.infinity
         let β = Double.infinity
         return alphaBetaConcurrent(startNode, remainingDepth: forDepth, alpha: α, beta : β, maximizer: startingAsMaximizer, topLevel: true).winningNode
     }
     
-    func alphaBetaConcurrent(currentNode: AlphaBetaNode, remainingDepth: Int, alpha : Double, beta : Double,  maximizer: Bool, topLevel : Bool) -> (value: Double, winningNode: AlphaBetaNode?) {
+    func alphaBetaConcurrent(_ currentNode: AlphaBetaNode, remainingDepth: Int, alpha : Double, beta : Double,  maximizer: Bool, topLevel : Bool) -> (value: Double, winningNode: AlphaBetaNode?) {
         //  if this is a leaf node, return the static evaluation
         if (remainingDepth == 0) {
             return (value: currentNode.staticEvaluation(), winningNode: currentNode)
@@ -130,11 +130,11 @@ public class AlphaBetaGraph {
         }
         
         //  Create the value array
-        var childValues : [Double] = Array(count: children.count, repeatedValue: 0.0)
+        var childValues : [Double] = Array(repeating: 0.0, count: children.count)
         
         //  Get the concurrent queue and group
-        let tQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
-        let  tGroup = dispatch_group_create()
+        let tQueue = DispatchQueue.global(qos: DispatchQoS.QoSClass.default)
+        let  tGroup = DispatchGroup()
         
         var winningNode : AlphaBetaNode?
         
@@ -154,13 +154,13 @@ public class AlphaBetaGraph {
             //  Iterate through the rest of the child nodes
             if (children.count > 1) {
                 for index in 1..<children.count {
-                    dispatch_group_async(tGroup, tQueue, {() -> Void in
+                    tQueue.async(group: tGroup, execute: {() -> Void in
                         childValues[index] = self.alphaBetaConcurrent(children[index], remainingDepth: nextDepth, alpha: α, beta: β, maximizer: false, topLevel: false).value
                     })
                 }
                 
                 //  Wait for the evaluations
-                dispatch_group_wait(tGroup, DISPATCH_TIME_FOREVER)
+                tGroup.wait()
                 
                 //  Prune and find best
                 for index in 1..<children.count {
@@ -192,13 +192,13 @@ public class AlphaBetaGraph {
             //  Iterate through the rest of the child nodes
             if (children.count > 1) {
                 for index in 1..<children.count {
-                    dispatch_group_async(tGroup, tQueue, {() -> Void in
+                    tQueue.async(group: tGroup, execute: {() -> Void in
                         childValues[index] = self.alphaBetaConcurrent(children[index], remainingDepth: nextDepth, alpha: α, beta: β, maximizer: true, topLevel: false).value
                     })
                 }
                 
                 //  Wait for the evaluations
-                dispatch_group_wait(tGroup, DISPATCH_TIME_FOREVER)
+                tGroup.wait()
                 
                 //  Prune and find best
                 for index in 1..<children.count {

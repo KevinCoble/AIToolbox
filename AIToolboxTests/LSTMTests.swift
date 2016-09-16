@@ -23,7 +23,7 @@ class LSTMTests: XCTestCase {
     
     func testSingleNode() {
         //  Create a 1 node network
-        var network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .LSTM, numNodes: 1, activation: NeuralActivationFunction.Sigmoid, auxiliaryData: nil)])
+        var network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .lstm, numNodes: 1, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
         
         //  Initialize the weights
         network.initializeWeights(nil)
@@ -39,7 +39,7 @@ class LSTMTests: XCTestCase {
         XCTAssert(fabs(result[0] - 0.5) < 0.02, "network trained to constant")
         
         //  Create a 1 node network
-        network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .LSTM, numNodes: 1, activation: NeuralActivationFunction.HyperbolicTangent, auxiliaryData: nil)])
+        network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .lstm, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil)])
         
         //  Initialize the weights
         network.initializeWeights(nil)
@@ -61,7 +61,7 @@ class LSTMTests: XCTestCase {
         //  Sequence is a 0 or 1 value with 0 for the output, followed by a 0,0 line followed by a two with the first value as the expected output
         //  Create some sequences
         var trainingSequences : [DataSet] = []
-        let dataSet0 = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let dataSet0 = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             try dataSet0.addDataPoint(input: [0.0], output: [0.0])
             try dataSet0.addDataPoint(input: [0.0], output: [0.0])
@@ -71,7 +71,7 @@ class LSTMTests: XCTestCase {
             print("Error converting string to sequence data")
         }
         trainingSequences.append(dataSet0)
-        let dataSet1 = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let dataSet1 = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             try dataSet1.addDataPoint(input: [1.0], output: [0.0])
             try dataSet0.addDataPoint(input: [0.0], output: [0.0])
@@ -83,7 +83,7 @@ class LSTMTests: XCTestCase {
         trainingSequences.append(dataSet1)
         
         var testingSequences : [DataSet] = []
-        let testDataSet0 = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let testDataSet0 = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             try testDataSet0.addDataPoint(input: [0.0], output: [0.0])
             try testDataSet0.addDataPoint(input: [0.0], output: [0.0])
@@ -93,7 +93,7 @@ class LSTMTests: XCTestCase {
             print("Error converting string to sequence data")
         }
         testingSequences.append(testDataSet0)
-        let testDataSet1 = DataSet(dataType: .Regression, inputDimension: 1, outputDimension: 1)
+        let testDataSet1 = DataSet(dataType: .regression, inputDimension: 1, outputDimension: 1)
         do {
             try testDataSet1.addDataPoint(input: [1.0], output: [0.0])
             try testDataSet1.addDataPoint(input: [0.0], output: [0.0])
@@ -106,7 +106,7 @@ class LSTMTests: XCTestCase {
         
         //  Create the LSTM network
         let network = NeuralNetwork(numInputs: 1, layerDefinitions: [
-            (layerType: .LSTM, numNodes: 1, activation: NeuralActivationFunction.HyperbolicTangent, auxiliaryData: nil),
+            (layerType: .lstm, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil),
             ])
         
         //  Initialize the network
@@ -244,7 +244,7 @@ class LSTMTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }
@@ -303,7 +303,7 @@ class LSTMTests: XCTestCase {
         }
     }
     
-    func stateLetterToDoubleArray(letter: String) -> [Double] {
+    func stateLetterToDoubleArray(_ letter: String) -> [Double] {
         switch (letter) {
         case "B":
             return [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -324,7 +324,7 @@ class LSTMTests: XCTestCase {
         }
     }
     
-    func predictedLettersFromDoubleArray(array: [Double]) -> String {
+    func predictedLettersFromDoubleArray(_ array: [Double]) -> String {
         var str = ""
         
         if (array[0] > 0.5) { str += "B" }
@@ -338,11 +338,11 @@ class LSTMTests: XCTestCase {
         return str
     }
     
-    func convertStringToSequence(grammerString: String) -> DataSet {
+    func convertStringToSequence(_ grammerString: String) -> DataSet {
         var characters = grammerString.characters.map { String($0) }
         let length = characters.count
         characters.append("x")      //  Add an unused character for the prediction target at the end of the grammer string
-        let dataSet = DataSet(dataType: .Regression, inputDimension: 7, outputDimension: 7)
+        let dataSet = DataSet(dataType: .regression, inputDimension: 7, outputDimension: 7)
         for index in 0..<length {
             let inputs = stateLetterToDoubleArray(characters[index])
             let outputs = stateLetterToDoubleArray(characters[index+1])

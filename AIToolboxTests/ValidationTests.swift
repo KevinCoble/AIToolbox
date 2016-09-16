@@ -23,7 +23,7 @@ class ValidationTests: XCTestCase {
 
     func testSimpleValidation() {
         //  Create a data set, using 2x² + 3x + 4 as the target function
-        let data = DataSet(dataType : .Regression, inputDimension : 1, outputDimension : 1)
+        let data = DataSet(dataType : .regression, inputDimension : 1, outputDimension : 1)
         do {
             for _ in 0..<500 {
                 let x = Double(arc4random()) * 200.0 / Double(UInt32.max) - 100.0
@@ -36,12 +36,12 @@ class ValidationTests: XCTestCase {
         }
         
         //  Create a validation set, with three different linear regression models
-        let validation = Validation(type: .Regression)
+        let validation = Validation(type: .regression)
         let line = LinearRegressionModel(inputSize: 1, outputSize: 1, polygonOrder: 1)          //   Ax + B
         let quadratic = LinearRegressionModel(inputSize: 1, outputSize: 1, polygonOrder: 2)     //   Ax² + Bx + C
         let exponential = LinearRegressionModel(inputSize: 1, outputSize: 1)                    //   Ae^x
         var exponentialSubTerm = LinearRegressionSubTerm(withInput: 0)
-        exponentialSubTerm.function = SubtermFunction.NaturalExponent
+        exponentialSubTerm.function = SubtermFunction.naturalExponent
         var exponentialTerm = LinearRegressionTerm()
         exponentialTerm.addSubTerm(exponentialSubTerm)
         exponential.addTerm(exponentialTerm)
@@ -66,7 +66,7 @@ class ValidationTests: XCTestCase {
     
     func testNFoldValidation() {
         //  Create a data set, using 2x² + 3x + 4 as the target function
-        let data = DataSet(dataType : .Regression, inputDimension : 1, outputDimension : 1)
+        let data = DataSet(dataType : .regression, inputDimension : 1, outputDimension : 1)
         do {
             for i in 0..<5 {
                 let x =  Double(i) * 10
@@ -79,12 +79,12 @@ class ValidationTests: XCTestCase {
         }
         
         //  Create a validation set, with three different linear regression models
-        let validation = Validation(type: .Regression)
+        let validation = Validation(type: .regression)
         let line = LinearRegressionModel(inputSize: 1, outputSize: 1, polygonOrder: 1)          //   Ax + B
         let quadratic = LinearRegressionModel(inputSize: 1, outputSize: 1, polygonOrder: 2)     //   Ax² + Bx + C
         let exponential = LinearRegressionModel(inputSize: 1, outputSize: 1)                    //   Ae^x
         var exponentialSubTerm = LinearRegressionSubTerm(withInput: 0)
-        exponentialSubTerm.function = SubtermFunction.NaturalExponent
+        exponentialSubTerm.function = SubtermFunction.naturalExponent
         var exponentialTerm = LinearRegressionTerm()
         exponentialTerm.addSubTerm(exponentialSubTerm)
         exponential.addTerm(exponentialTerm)
@@ -109,7 +109,7 @@ class ValidationTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }

@@ -10,15 +10,15 @@ import Foundation
 import Accelerate
 
 ///  Errors that MDP routines can throw
-public enum MDPErrors: ErrorType {
-    case MDPNotSolved
-    case FailedSolving
-    case ErrorCreatingSampleSet
-    case ErrorCreatingSampleTargetValues
-    case ModelInputDimensionError
-    case ModelOutputDimensionError
-    case InvalidState
-    case NoDataForState
+public enum MDPErrors: Error {
+    case mdpNotSolved
+    case failedSolving
+    case errorCreatingSampleSet
+    case errorCreatingSampleTargetValues
+    case modelInputDimensionError
+    case modelOutputDimensionError
+    case invalidState
+    case noDataForState
 }
 
 ///  Structure that defines an episode for a MDP
@@ -31,18 +31,18 @@ public struct MDPEpisode {
         events = []
     }
     
-    public mutating func addEvent(event: (action: Int, resultState: Int, reward: Double))
+    public mutating func addEvent(_ event: (action: Int, resultState: Int, reward: Double))
     {
         events.append(event)
     }
 }
 
 ///  Class to solve Markov Decision Process problems
-public class MDP {
+open class MDP {
     var numStates : Int         //  If discrete states
     var numActions : Int
     var γ : Double
-    public var convergenceLimit = 0.0000001
+    open var convergenceLimit = 0.0000001
     
     //  Continuous state variables
     var numSamples = 10000
@@ -50,9 +50,9 @@ public class MDP {
     var nonDeterministicSampleSize = 20  //  Number of samples to take if resulting model state is not deterministic
     
     //  Calculation results for discrete state/actions
-    public var π : [Int]!
-    public var V : [Double]!
-    public var Q : [[(action: Int, count: Int, q_a: Double)]]!       //  Array of expected rewards when taking the action from the state (array sized to state size)
+    open var π : [Int]!
+    open var V : [Double]!
+    open var Q : [[(action: Int, count: Int, q_a: Double)]]!       //  Array of expected rewards when taking the action from the state (array sized to state size)
     var α =  0.0        //  Future weight for TD algorithms
     
     ///  Init MDP.  Set states to 0 for continuous states
@@ -64,7 +64,7 @@ public class MDP {
     }
     
     ///  Method to set the parameters for continuous state fittedValueIteration MDP's
-    public func setContinousStateParameters(sampleSize: Int, deterministic: Bool, nonDetSampleSize: Int = 20)
+    open func setContinousStateParameters(_ sampleSize: Int, deterministic: Bool, nonDetSampleSize: Int = 20)
     {
         numSamples = sampleSize
         deterministicModel = deterministic
@@ -73,12 +73,12 @@ public class MDP {
     
     ///  Method to solve using value iteration
     ///  Returns array of actions for each state
-    public func valueIteration(getActions: ((fromState: Int) -> [Int]),
-            getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
-            getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) -> [Int]
+    open func valueIteration(_ getActions: ((_ fromState: Int) -> [Int]),
+            getResults: ((_ fromState: Int, _ action : Int) -> [(state: Int, probability: Double)]),
+            getReward: ((_ fromState: Int, _ action : Int, _ toState: Int) -> Double)) -> [Int]
     {
-        π = [Int](count: numStates, repeatedValue: 0)
-        V = [Double](count: numStates, repeatedValue: 0.0)
+        π = [Int](repeating: 0, count: numStates)
+        V = [Double](repeating: 0.0, count: numStates)
         
         var difference = convergenceLimit + 1.0
         while (difference > convergenceLimit) {    //  Go till convergence
@@ -87,14 +87,14 @@ public class MDP {
             for state in 0..<numStates {
                 //  Get the maximum value for all possible actions from this state
                 var maxNewValue = -Double.infinity
-                let actions = getActions(fromState: state)
+                let actions = getActions(state)
                 if actions.count == 0 { maxNewValue = 0.0 }    //  If an end state, future value is 0
                 for action in actions {
                     //  Sum the expected rewards from all possible outcomes from the action
                     var newValue = 0.0
-                    let results = getResults(fromState: state, action: action)
+                    let results = getResults(state, action)
                     for result in results {
-                        newValue += result.probability * (getReward(fromState: state, action: action, toState: result.state) + (γ * V[result.state]))
+                        newValue += result.probability * (getReward(state, action, result.state) + (γ * V[result.state]))
                     }
                     
                     //  If this is the best so far, store it
@@ -115,12 +115,12 @@ public class MDP {
     
     ///  Method to solve using policy iteration
     ///  Returns array of actions for each state
-    public func policyIteration(getActions: ((fromState: Int) -> [Int]),
-                               getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
-                               getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) throws -> [Int]
+    open func policyIteration(_ getActions: ((_ fromState: Int) -> [Int]),
+                               getResults: ((_ fromState: Int, _ action : Int) -> [(state: Int, probability: Double)]),
+                               getReward: ((_ fromState: Int, _ action : Int, _ toState: Int) -> Double)) throws -> [Int]
     {
-        π = [Int](count: numStates, repeatedValue: -1)
-        V = [Double](count: numStates, repeatedValue: 0.0)
+        π = [Int](repeating: -1, count: numStates)
+        V = [Double](repeating: 0.0, count: numStates)
         
         var policyChanged = true
         while (policyChanged) {    //  Go till convergence
@@ -128,16 +128,16 @@ public class MDP {
             
             //  Set the policy to the best action given the current values
             for state in 0..<numStates {
-                let actions = getActions(fromState: state)
+                let actions = getActions(state)
                 if (actions.count > 0) {
                     var bestAction = actions[0]
                     var bestReward = -Double.infinity
                     for action in actions {
                         //  Determine expected reward for each action
                         var expectedReward = 0.0
-                        let results = getResults(fromState: state, action: action)
+                        let results = getResults(state, action)
                         for result in results {
-                            expectedReward += result.probability * (getReward(fromState: state, action: action, toState: result.state) + (γ * V[result.state]))
+                            expectedReward += result.probability * (getReward(state, action, result.state) + (γ * V[result.state]))
                         }
                         if (expectedReward > bestReward) {
                             bestReward = expectedReward
@@ -151,28 +151,28 @@ public class MDP {
             }
             
             //  Solve for the new values
-            var matrix = [Double](count: numStates * numStates, repeatedValue: 0.0) //  Row is state, column is resulting state
-            var constants = [Double](count: numStates, repeatedValue: 0.0)
+            var matrix = [Double](repeating: 0.0, count: numStates * numStates) //  Row is state, column is resulting state
+            var constants = [Double](repeating: 0.0, count: numStates)
             for state in 0..<numStates {
                 matrix[state * numStates + state] = 1.0
                 if π[state] >= 0 {
-                    let results = getResults(fromState: state, action: π[state])
+                    let results = getResults(state, π[state])
                     for result in results {
                         matrix[result.state * numStates + state] -= result.probability * γ
-                        constants[state] += result.probability * getReward(fromState: state, action: π[state], toState: result.state)
+                        constants[state] += result.probability * getReward(state, π[state], result.state)
                     }
                 }
             }
             var dimA = Int32(numStates)
             var colB = Int32(1)
-            var ipiv = [Int32](count: numStates, repeatedValue: 0)
+            var ipiv = [Int32](repeating: 0, count: numStates)
             var info: Int32 = 0
             dgesv_(&dimA, &colB, &matrix, &dimA, &ipiv, &constants, &dimA, &info)
             if (info == 0) {
                 V = constants
             }
             else {
-                throw MDPErrors.FailedSolving
+                throw MDPErrors.failedSolving
             }
         }
         
@@ -180,22 +180,22 @@ public class MDP {
     }
     
     ///  Once valueIteration or policyIteration has been used, use this function to get the action for any particular state
-    public func getAction(forState: Int) throws -> Int
+    open func getAction(_ forState: Int) throws -> Int
     {
-        if (π == nil) { throw MDPErrors.MDPNotSolved }
-        if (forState < 0 || forState >= numStates) { throw MDPErrors.InvalidState }
+        if (π == nil) { throw MDPErrors.mdpNotSolved }
+        if (forState < 0 || forState >= numStates) { throw MDPErrors.invalidState }
         return π[forState]
     }
     
     
     ///  Initialize MDP for a discrete state Monte Carlo evaluation
-    public func initDiscreteStateMonteCarlo()
+    open func initDiscreteStateMonteCarlo()
     {
-        Q = [[(action: Int, count: Int, q_a: Double)]](count: numStates, repeatedValue: [])
+        Q = [[(action: Int, count: Int, q_a: Double)]](repeating: [], count: numStates)
     }
     
     //  Function to update Q for a state and action, with the given reward
-    func updateQ(fromState: Int, action: Int, reward: Double)
+    func updateQ(_ fromState: Int, action: Int, reward: Double)
     {
         //  Find the action in the Q array
         var index = -1
@@ -219,11 +219,11 @@ public class MDP {
     }
     
     ///  Evaluate an episode of a discrete state Monte Carlo evaluation using 'every-visit'
-    public func evaluateMonteCarloEpisodeEveryVisit(episode: MDPEpisode)
+    open func evaluateMonteCarloEpisodeEveryVisit(_ episode: MDPEpisode)
     {
         //  Iterate backwards through the episode, accumulating reward and assigning to Q
         var accumulatedReward = 0.0
-        for index in (episode.events.count-1).stride(to: 0, by: -1) {
+        for index in stride(from: (episode.events.count-1), to: 0, by: -1) {
             //  Get the reward
             accumulatedReward *= γ
             accumulatedReward += episode.events[index].reward
@@ -240,10 +240,10 @@ public class MDP {
     }
     
     ///  Evaluate an episode of a discrete state Monte Carlo evaluation using 'first-visit'
-    public func evaluateMonteCarloEpisodeFirstVisit(episode: MDPEpisode)
+    open func evaluateMonteCarloEpisodeFirstVisit(_ episode: MDPEpisode)
     {
         //  Find the first instance of each state in the episode
-        var firstInstance  = [Int](count: numStates, repeatedValue: -1)
+        var firstInstance  = [Int](repeating: -1, count: numStates)
         for index in 0..<episode.events.count {
             if (firstInstance[episode.events[index].resultState] < 0) {
                 firstInstance[episode.events[index].resultState] = index
@@ -252,7 +252,7 @@ public class MDP {
         
         //  Iterate backwards through the episode, accumulating reward and assigning to V
         var accumulatedReward = 0.0
-        for index in (episode.events.count-1).stride(to: 0, by: -1) {
+        for index in stride(from: (episode.events.count-1), to: 0, by: -1) {
             //  Get the reward
             accumulatedReward *= γ
             accumulatedReward += episode.events[index].reward
@@ -273,10 +273,10 @@ public class MDP {
     
     
     ///  Initialize MDP for a discrete state Temporal-Difference evaluation with given future-reward weighting
-    public func initDiscreteStateTD(α: Double)
+    open func initDiscreteStateTD(_ α: Double)
     {
         self.α = α
-        Q = [[(action: Int, count: Int, q_a: Double)]](count: numStates, repeatedValue: [])
+        Q = [[(action: Int, count: Int, q_a: Double)]](repeating: [], count: numStates)
         
         //  Initialize all state/action values to 0 (we don't know what states are terminal, and those must be 0, while others are arbitrary)
         for state in 0..<numStates {
@@ -287,7 +287,7 @@ public class MDP {
     }
     
     ///  Evaluate an episode of a discrete state Temporal difference evaluation using 'SARSA'
-    public func evaluateTDEpisodeSARSA(episode: MDPEpisode)
+    open func evaluateTDEpisodeSARSA(_ episode: MDPEpisode)
     {
         var S = episode.startState
         for index in 0..<episode.events.count {
@@ -310,7 +310,7 @@ public class MDP {
     
     ///  Evaluate an episode of a discrete state Temporal difference evaluation using 'Q-Learning'
     ///  Assumes actions taken during episode are 'exploratory', not just greedy
-    public func evaluateTDEpisodeQLearning(episode: MDPEpisode)
+    open func evaluateTDEpisodeQLearning(_ episode: MDPEpisode)
     {
         var S = episode.startState
         for index in 0..<episode.events.count {
@@ -331,13 +331,13 @@ public class MDP {
     }
     
     ///  Once Monte Carlo or TD episodes have been evaluated, use this function to get the current best (greedy) action for any particular state
-    public func getGreedyAction(forState: Int) throws -> Int
+    open func getGreedyAction(_ forState: Int) throws -> Int
     {
         //  Validate inputs
-        if (Q == nil) { throw MDPErrors.MDPNotSolved }
-        if (forState < 0 || forState >= numStates) { throw MDPErrors.InvalidState }
+        if (Q == nil) { throw MDPErrors.mdpNotSolved }
+        if (forState < 0 || forState >= numStates) { throw MDPErrors.invalidState }
         
-        if (Q[forState].count <= 0) { throw MDPErrors.NoDataForState }
+        if (Q[forState].count <= 0) { throw MDPErrors.noDataForState }
         
         //  Get the action that has the most expected reward
         var bestAction = 0
@@ -353,7 +353,7 @@ public class MDP {
     }
     
     ///  Once Monte Carlo or TD episodes have been evaluated, use this function to get the ε-greedy action for any particular state (greedy except random ε fraction)
-    public func getεGreedyAction(forState: Int, ε : Double) throws -> Int
+    open func getεGreedyAction(_ forState: Int, ε : Double) throws -> Int
     {
         if ((Double(arc4random()) / Double(RAND_MAX)) > ε) {
             //  Return a random action
@@ -365,10 +365,10 @@ public class MDP {
     }
     
     ///  Method to generate an episode, assuming there is an internal model
-    public func generateEpisode(getStartingState: (() -> Int),
-                                getActions: ((fromState: Int) -> [Int]),
-                                getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
-                                getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) throws -> MDPEpisode
+    open func generateEpisode(_ getStartingState: (() -> Int),
+                                getActions: ((_ fromState: Int) -> [Int]),
+                                getResults: ((_ fromState: Int, _ action : Int) -> [(state: Int, probability: Double)]),
+                                getReward: ((_ fromState: Int, _ action : Int, _ toState: Int) -> Double)) throws -> MDPEpisode
     {
         //  Get the start state
         var currentState = getStartingState()
@@ -399,19 +399,19 @@ public class MDP {
     }
     
     ///  Method to generate an event, assuming there is an internal model
-    public func generateEvent(fromState: Int,
-                                getActions: ((fromState: Int) -> [Int]),
-                                getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
-                                getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) throws -> (action: Int, resultState: Int, reward: Double)!
+    open func generateEvent(_ fromState: Int,
+                                getActions: ((_ fromState: Int) -> [Int]),
+                                getResults: ((_ fromState: Int, _ action : Int) -> [(state: Int, probability: Double)]),
+                                getReward: ((_ fromState: Int, _ action : Int, _ toState: Int) -> Double)) throws -> (action: Int, resultState: Int, reward: Double)!
     {
-        let actions = getActions(fromState: fromState)
+        let actions = getActions(fromState)
         if (actions.count == 0) { return nil }
         
         //  Pick an action at random
         let actionIndex = Int(arc4random_uniform(UInt32(actions.count)))
         
         //  Get the results
-        let results = getResults(fromState: fromState, action: actions[actionIndex])
+        let results = getResults(fromState, actions[actionIndex])
         
         //  Get the result based on the probability
         let resultProbability = Double(arc4random()) / Double(RAND_MAX)
@@ -426,16 +426,16 @@ public class MDP {
         }
         
         //  Get the reward
-        let reward = getReward(fromState: fromState, action: actions[actionIndex], toState: results[selectedResult].state)
+        let reward = getReward(fromState, actions[actionIndex], results[selectedResult].state)
         
         return (action: actions[actionIndex], resultState: results[selectedResult].state, reward: reward)
     }
     
     ///  Method to generate an episode, assuming there is an internal model, but actions are ε-greedy from current learning
-    public func generateεEpisode(getStartingState: (() -> Int),
+    open func generateεEpisode(_ getStartingState: (() -> Int),
                                 ε: Double,
-                                getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
-                                getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) throws -> MDPEpisode
+                                getResults: ((_ fromState: Int, _ action : Int) -> [(state: Int, probability: Double)]),
+                                getReward: ((_ fromState: Int, _ action : Int, _ toState: Int) -> Double)) throws -> MDPEpisode
     {
         //  Get the start state
         var currentState = getStartingState()
@@ -466,15 +466,15 @@ public class MDP {
     }
     
     ///  Method to generate an event, assuming there is an internal model, but actions are ε-greedy from current learning
-    public func generateεEvent(fromState: Int,
+    open func generateεEvent(_ fromState: Int,
                               ε: Double,
-                              getResults: ((fromState: Int, action : Int) -> [(state: Int, probability: Double)]),
-                              getReward: ((fromState: Int, action : Int, toState: Int) -> Double)) throws -> (action: Int, resultState: Int, reward: Double)!
+                              getResults: ((_ fromState: Int, _ action : Int) -> [(state: Int, probability: Double)]),
+                              getReward: ((_ fromState: Int, _ action : Int, _ toState: Int) -> Double)) throws -> (action: Int, resultState: Int, reward: Double)!
     {
         let action = try getεGreedyAction(fromState, ε : ε)
         
         //  Get the results
-        let results = getResults(fromState: fromState, action: action)
+        let results = getResults(fromState, action)
         if (results.count == 0) { return nil }
         
         //  Get the result based on the probability
@@ -490,20 +490,20 @@ public class MDP {
         }
         
         //  Get the reward
-        let reward = getReward(fromState: fromState, action: action, toState: results[selectedResult].state)
+        let reward = getReward(fromState, action, results[selectedResult].state)
         
         return (action: action, resultState: results[selectedResult].state, reward: reward)
     }
     
     ///  Computes a regression model that translates the state feature mapping to V
-    public func fittedValueIteration(getRandomState: (() -> [Double]),
-                              getResultingState: ((fromState: [Double], action : Int) -> [Double]),
-                              getReward: ((fromState: [Double], action:Int, toState: [Double]) -> Double),
+    open func fittedValueIteration(_ getRandomState: (() -> [Double]),
+                              getResultingState: ((_ fromState: [Double], _ action : Int) -> [Double]),
+                              getReward: ((_ fromState: [Double], _ action:Int, _ toState: [Double]) -> Double),
                               fitModel: Regressor) throws
     {
         //  Get a set of random states
         let sample = getRandomState()
-        let sampleStates = DataSet(dataType: .Regression, inputDimension: sample.count, outputDimension: 1)
+        let sampleStates = DataSet(dataType: .regression, inputDimension: sample.count, outputDimension: 1)
         do {
             try sampleStates.addDataPoint(input: sample, output: [0])
             //  Get the rest of the random state samples
@@ -512,15 +512,15 @@ public class MDP {
             }
         }
         catch {
-            throw MDPErrors.ErrorCreatingSampleSet
+            throw MDPErrors.errorCreatingSampleSet
         }
         
         //  Make sure the model fits our usage of it
-        if (fitModel.getInputDimension() != sample.count) {throw MDPErrors.ModelInputDimensionError}
-        if (fitModel.getOutputDimension() != 1) {throw MDPErrors.ModelOutputDimensionError}
+        if (fitModel.getInputDimension() != sample.count) {throw MDPErrors.modelInputDimensionError}
+        if (fitModel.getOutputDimension() != 1) {throw MDPErrors.modelOutputDimensionError}
         
         //  It is recommended that the model starts with parameters as the null vector so initial inresults are 'no expected reward for each position'.
-        let initParameters = [Double](count:fitModel.getParameterDimension(), repeatedValue: 0.0)
+        let initParameters = [Double](repeating: 0.0, count: fitModel.getParameterDimension())
         do {
             try fitModel.setParameters(initParameters)
         }
@@ -541,20 +541,20 @@ public class MDP {
                         var state : [Double]
                         do {
                             state = try sampleStates.getInput(index)
-                            let resultState = getResultingState(fromState: state, action: action)
+                            let resultState = getResultingState(state, action)
                             let Vprime = try fitModel.predictOne(resultState)
-                            let expectedReward = getReward(fromState: state, action:action, toState: resultState) + γ * Vprime[0]
+                            let expectedReward = getReward(state, action, resultState) + γ * Vprime[0]
                             if (expectedReward > maximumReward) { maximumReward = expectedReward }
                         }
                         catch {
-                            throw MDPErrors.ErrorCreatingSampleTargetValues
+                            throw MDPErrors.errorCreatingSampleTargetValues
                         }
                     }
                     do {
                         try sampleStates.setOutput(index, newOutput: [maximumReward])
                     }
                     catch {
-                        throw MDPErrors.ErrorCreatingSampleTargetValues
+                        throw MDPErrors.errorCreatingSampleTargetValues
                     }
                 }
             }
@@ -568,12 +568,12 @@ public class MDP {
                             var state : [Double]
                             do {
                                 state = try sampleStates.getInput(index)
-                                let resultState = getResultingState(fromState: state, action: action)
+                                let resultState = getResultingState(state, action)
                                 let Vprime = try fitModel.predictOne(resultState)
-                                expectedReward += getReward(fromState: state, action:action, toState: resultState)  + γ * Vprime[0]
+                                expectedReward += getReward(state, action, resultState)  + γ * Vprime[0]
                             }
                             catch {
-                                throw MDPErrors.ErrorCreatingSampleTargetValues
+                                throw MDPErrors.errorCreatingSampleTargetValues
                             }
                         }
                         expectedReward /= Double(nonDeterministicSampleSize)
@@ -583,7 +583,7 @@ public class MDP {
                         try sampleStates.setOutput(index, newOutput: [maximumReward])
                     }
                     catch {
-                        throw MDPErrors.ErrorCreatingSampleTargetValues
+                        throw MDPErrors.errorCreatingSampleTargetValues
                     }
                 }
             }
@@ -593,25 +593,25 @@ public class MDP {
                 try fitModel.trainRegressor(sampleStates)
             }
             catch {
-                throw MDPErrors.FailedSolving
+                throw MDPErrors.failedSolving
             }
         }
     }
     
     ///  Once fittedValueIteration has been used, use this function to get the action for any particular state
-    public func getAction(forState: [Double],
-                   getResultingState: ((fromState: [Double], action : Int) -> [Double]),
-                   getReward: ((fromState: [Double], action:Int, toState: [Double]) -> Double),
+    open func getAction(_ forState: [Double],
+                   getResultingState: ((_ fromState: [Double], _ action : Int) -> [Double]),
+                   getReward: ((_ fromState: [Double], _ action:Int, _ toState: [Double]) -> Double),
                    fitModel: Regressor) -> Int
     {
         var maximumReward = -Double.infinity
         var bestAction = 0
         if (deterministicModel) {
             for action in 0..<numActions {
-                let resultState = getResultingState(fromState: forState, action: action)
+                let resultState = getResultingState(forState, action)
                 do {
                     let Vprime = try fitModel.predictOne(resultState)
-                    let expectedReward = getReward(fromState: forState, action:action, toState: resultState) + Vprime[0]
+                    let expectedReward = getReward(forState, action, resultState) + Vprime[0]
                     if (expectedReward > maximumReward) {
                         maximumReward = expectedReward
                         bestAction = action
@@ -626,10 +626,10 @@ public class MDP {
             for action in 0..<numActions {
                 var expectedReward = 0.0
                 for _ in 0..<nonDeterministicSampleSize {
-                    let resultState = getResultingState(fromState: forState, action: action)
+                    let resultState = getResultingState(forState, action)
                     do {
                         let Vprime = try fitModel.predictOne(resultState)
-                        expectedReward += getReward(fromState: forState, action:action, toState: resultState) +  Vprime[0]
+                        expectedReward += getReward(forState, action, resultState) +  Vprime[0]
                     }
                     catch {
                         expectedReward = 0.0    //  Error in system that should be caught elsewhere
@@ -647,18 +647,18 @@ public class MDP {
     }
     
     ///  Once fittedValueIteration has been used, use this function to get the ordered list of actions, from best to worst
-    public func getActionOrder(forState: [Double],
-                          getResultingState: ((fromState: [Double], action : Int) -> [Double]),
-                          getReward: ((fromState: [Double], action:Int, toState: [Double]) -> Double),
+    open func getActionOrder(_ forState: [Double],
+                          getResultingState: ((_ fromState: [Double], _ action : Int) -> [Double]),
+                          getReward: ((_ fromState: [Double], _ action:Int, _ toState: [Double]) -> Double),
                           fitModel: Regressor) -> [Int]
     {
         var actionTuple : [(action: Int, expectedReward: Double)] = []
         if (deterministicModel) {
             for action in 0..<numActions {
-                let resultState = getResultingState(fromState: forState, action: action)
+                let resultState = getResultingState(forState, action)
                 do {
                     let Vprime = try fitModel.predictOne(resultState)
-                    let expectedReward = getReward(fromState: forState, action:action, toState: resultState) + Vprime[0]
+                    let expectedReward = getReward(forState, action, resultState) + Vprime[0]
                     actionTuple.append((action: action, expectedReward: expectedReward))
                 }
                 catch {
@@ -670,10 +670,10 @@ public class MDP {
             for action in 0..<numActions {
                 var expectedReward = 0.0
                 for _ in 0..<nonDeterministicSampleSize {
-                    let resultState = getResultingState(fromState: forState, action: action)
+                    let resultState = getResultingState(forState, action)
                     do {
                         let Vprime = try fitModel.predictOne(resultState)
-                        expectedReward += getReward(fromState: forState, action:action, toState: resultState) +  Vprime[0]
+                        expectedReward += getReward(forState, action, resultState) +  Vprime[0]
                     }
                     catch {
                         expectedReward = 0.0    //  Error in system that should be caught elsewhere
@@ -685,16 +685,16 @@ public class MDP {
         }
         
         //  Get the ordered list of actions
-        actionTuple.sortInPlace({$0.expectedReward > $1.expectedReward})
+        actionTuple.sort(by: {$0.expectedReward > $1.expectedReward})
         var actionList : [Int] = []
         for tuple in actionTuple { actionList.append(tuple.action) }
         return actionList
     }
     
     ///  Function to extract the current Q* values (expected reward from each state when following greedy policy)
-    public func getQStar() ->[Double]
+    open func getQStar() ->[Double]
     {
-        var Qstar = [Double](count: numStates, repeatedValue: -Double.infinity)
+        var Qstar = [Double](repeating: -Double.infinity, count: numStates)
         for state in 0..<numStates {
             for q in Q[state] {
                 let q = q.q_a / Double(q.count)

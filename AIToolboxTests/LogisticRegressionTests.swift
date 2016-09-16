@@ -24,7 +24,7 @@ class LogisticRegressionTests: XCTestCase {
     //  Test the binary data case
     func testBinary() {
         //  Create test case from Wikipedia article example - https://en.wikipedia.org/wiki/Logistic_regression
-        let data = DataSet(dataType: .Classification, inputDimension: 1, outputDimension: 1)
+        let data = DataSet(dataType: .classification, inputDimension: 1, outputDimension: 1)
         do {
             try data.addDataPoint(input: [0.50], dataClass:0)
             try data.addDataPoint(input: [0.75], dataClass:0)
@@ -52,7 +52,7 @@ class LogisticRegressionTests: XCTestCase {
         }
         
         //  Create and train a logistic regression
-        let lr = LogisticRegression(numInputs : 1, solvingMethod: .SGD)
+        let lr = LogisticRegression(numInputs : 1, solvingMethod: .sgd)
         do {
             try lr.trainClassifier(data)
         }
@@ -61,7 +61,7 @@ class LogisticRegressionTests: XCTestCase {
         }
         
         //  Create the test set
-        let test = DataSet(dataType: .Classification, inputDimension: 1, outputDimension: 1)
+        let test = DataSet(dataType: .classification, inputDimension: 1, outputDimension: 1)
         do {
             try test.addTestDataPoint(input: [1.0])         //  Fail
             try test.addTestDataPoint(input: [2.0])         //  Fail
@@ -102,7 +102,7 @@ class LogisticRegressionTests: XCTestCase {
 
     func testPerformanceExample() {
         // This is an example of a performance test case.
-        self.measureBlock {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }
