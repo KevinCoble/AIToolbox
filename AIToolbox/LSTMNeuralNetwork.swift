@@ -813,4 +813,10 @@ final class LSTMNeuralLayer: NeuralLayer {
             node.getLastRecurrentValue()
         }
     }
+    
+    func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
+    {
+        //!!
+        return true
+    }
 }

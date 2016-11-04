@@ -503,4 +503,10 @@ final class RecurrentNeuralLayer: NeuralLayer {
             node.getLastRecurrentValue()
         }
     }
+    
+    func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
+    {
+        //!!
+        return true
+    }
 }

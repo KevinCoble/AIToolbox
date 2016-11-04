@@ -2,7 +2,7 @@
 A toolbox of AI modules written in Swift:  Graphs/Trees, Linear Regression, Support Vector Machines, Neural Networks, PCA, KMeans, Genetic Algorithms, MDP, Mixture of Gaussians, Logistic Regression
 
 This framework uses the Accelerate library to speed up computations.
-Written for Swift 2.2.  Will update to 3 when officially released
+Written for Swift 3.0.  Earlier versions are Swift 2.2 compatible
 
 SVM ported from the public domain LIBSVM repository
 See https://www.csie.ntu.edu.tw/~cjlin/libsvm/ for more information
@@ -11,6 +11,8 @@ The Metal Neural Network uses the Metal framework for a Neural Network using the
 
 Use the XCTest files for examples on how to use the classes
 
+### New deep-network classes for convolutional networks (see Convolution project for example use)
+### New neural-network basic layer (doesn't use a node class, so faster)
 ### New protocols for dataset types - you can now use your own data classes if they implement these protocols
 
 Playgrounds for Linear Regression, SVM, and Neural Networks are available
@@ -55,6 +57,7 @@ Classes/Algorithms supported:
         feed-forward or simple recurrent layers can be mixed in one network
         simple network training using GPU via Apple's Metal
         LSTM network layer implemented - needs more testing
+        gradient check routines
 
     Support Vector Machine
         Classification
@@ -87,6 +90,12 @@ Classes/Algorithms supported:
         Use to select model or parameters of model
         Simple validation (percentage of data becomes test data)
         N-Fold validation
+
+    Deep-Network
+        Convolution layers
+        Pooling layers
+        Fully-connected NN layers
+        multi-threaded
 
     Plotting
         NSView based MLView for displaying regression data, classification data, functions, and classifier areas!
