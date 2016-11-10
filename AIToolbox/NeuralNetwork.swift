@@ -12,6 +12,7 @@ import Accelerate
 public enum NeuronLayerType {
     case simpleFeedForwardWithNodes
     case simpleFeedForward
+    case simpleRecurrentWithNodes
     case simpleRecurrent
     case lstm
 }
@@ -252,6 +253,54 @@ final class SimpleNeuralNode {
     {
         h = outputHistory.removeLast()
     }
+    
+    func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
+    {
+        var result = true
+        
+        //  Iterate through each parameter
+        for index in 0..<W.count {
+            let oldValue = W[index]
+            
+            //  Get the network loss with a small addition to the parameter
+            W[index] += ε
+            _ = network.feedForward(x)
+            var plusLoss : [Double]
+            do {
+                plusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            
+            //  Get the network loss with a small subtraction from the parameter
+            W[index] = oldValue - ε
+            _ = network.feedForward(x)
+            var minusLoss : [Double]
+            do {
+                minusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            W[index] = oldValue
+            
+            //  Iterate over the results
+            for resultIndex in 0..<plusLoss.count {
+                //  Get the numerical gradient estimate  𝟃E/𝟃W
+                let gradient = (plusLoss[resultIndex] - minusLoss[resultIndex]) / (2.0 * ε)
+                
+                //  Compare with the analytical gradient
+                let difference = abs(gradient - 𝟃E𝟃W[index])
+                //                print("difference = \(difference)")
+                if (difference > Δ) {
+                    result = false
+                }
+            }
+        }
+        
+        return result
+    }
 }
 
 ///  Class for a feed-forward network with individual nodes (slower, but easier to get into details)
@@ -454,8 +503,12 @@ final class SimpleNeuralLayerWithNodes: NeuralLayer {
     
     func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
     {
-        //!!
-        return true
+        //  Have each node check it's own gradients
+        var result = true
+        for node in nodes {
+            if (!node.gradientCheck(x: x, ε: ε, Δ: Δ, network: network)) { result = false }
+        }
+        return result
     }
 }
 
@@ -750,7 +803,7 @@ final class SimpleNeuralLayer: NeuralLayer {
                 
                 //  Compare with the analytical gradient
                 let difference = abs(gradient - 𝟃E𝟃W[index])
-                print("difference = \(difference)")
+//                print("difference = \(difference)")
                 if (difference > Δ) {
                     result = false
                 }
@@ -787,6 +840,8 @@ open class NeuralNetwork: Classifier, Regressor {
                 layer = SimpleNeuralLayerWithNodes(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
             case .simpleFeedForward:
                 layer = SimpleNeuralLayer(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
+            case .simpleRecurrentWithNodes:
+                layer = RecurrentNeuralLayerWithNodes(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
             case .simpleRecurrent:
                 layer = RecurrentNeuralLayer(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
             case .lstm:
@@ -1315,7 +1370,15 @@ open class NeuralNetwork: Classifier, Regressor {
     {
         //  Feed forward and do a single gradient update
         //  Get the results of a feedForward run (each node remembers its own output)
-        let h = feedForward(inputs)
+        var h = feedForward(inputs)
+        if (hasRecurrentLayers) {
+            //  Recurrent layers need their outputs saved for the recurrent inputs
+            for layer in layers {
+                layer.storeRecurrentValues()
+            }
+            //  Calculate h using the stored inputs
+            h = feedForward(inputs)
+        }
         
         //  Calculate 𝟃E/𝟃h - the error with respect to the outputs
         //  For now, we are hard-coding a least squared error  E = 0.5 * (h - expected)²  -->   𝟃E/𝟃h = (h - expected)

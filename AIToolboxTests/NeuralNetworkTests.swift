@@ -43,7 +43,7 @@ class NeuralNetworkTests: XCTestCase {
         XCTAssert(result, "Gradient check none single node")
         
         //  Create a 2 hidden layer - 2 node network, with one output node, using two inputs
-        let layerDefs : [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)] =
+        var layerDefs : [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)] =
             [(layerType: .simpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil),
              (layerType: .simpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil),
              (layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil)]
@@ -51,6 +51,28 @@ class NeuralNetworkTests: XCTestCase {
         network.initializeWeights(nil)
         result = network.gradientCheck(inputs: [1.0, -1.0], expectedOutputs: [0.0], ε: 0.0001, Δ: 0.00001)
         XCTAssert(result, "Gradient check tanh three layers")
+        
+        //  Create a 2 hidden layer - 2 node network, with one output node, using two inputs - using layers with node classes
+        layerDefs =
+            [(layerType: .simpleFeedForwardWithNodes, numNodes: 2, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil),
+             (layerType: .simpleFeedForwardWithNodes, numNodes: 2, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil),
+             (layerType: .simpleFeedForwardWithNodes, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil)]
+        network = NeuralNetwork(numInputs: 2, layerDefinitions: layerDefs)
+        network.initializeWeights(nil)
+        result = network.gradientCheck(inputs: [1.0, -1.0], expectedOutputs: [0.0], ε: 0.0001, Δ: 0.00001)
+        XCTAssert(result, "Gradient check tanh three layers with nodes")
+        
+        //  Create a 1 layer RNN
+        network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .simpleRecurrent, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil)])
+        network.initializeWeights(nil)
+        result = network.gradientCheck(inputs: [1.0], expectedOutputs: [0.0], ε: 0.0001, Δ: 0.00001)
+        XCTAssert(result, "Gradient check RNN")
+        
+        //  Create a 1 layer RNN
+        network = NeuralNetwork(numInputs: 1, layerDefinitions: [(layerType: .simpleRecurrentWithNodes, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil)])
+        network.initializeWeights(nil)
+        result = network.gradientCheck(inputs: [1.0], expectedOutputs: [0.0], ε: 0.0001, Δ: 0.00001)
+        XCTAssert(result, "Gradient check RNN with nodes")
     }
 
     func testSingleNode() {

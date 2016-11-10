@@ -45,47 +45,49 @@ final class RecurrentNeuralNode {
     //  Initialize the weights
     func initWeights(_ startWeights: [Double]!)
     {
-        if let startWeights = startWeights {
-            if (startWeights.count == 1) {
-                W = [Double](repeating: startWeights[0], count: numInputs)
-                U = [Double](repeating: startWeights[0], count: numFeedback)
-            }
-            else if (startWeights.count == numInputs+numFeedback) {
-                //  Full weight array, just split into the two weight arrays
-                W = Array(startWeights[0..<numInputs])
-                U = Array(startWeights[numInputs..<numInputs+numFeedback])
-            }
-            else {
-                W = []
-                var index = 0 //  First number (if more than 1) goes into the bias weight, then repeat the initial
-                for _ in 0..<numInputs-1  {
-                    if (index >= startWeights.count-1) { index = 0 }      //  Wrap if necessary
-                    W.append(startWeights[index])
-                    index += 1
-                }
-                W.append(startWeights[startWeights.count-1])     //  Add the bias term
-                
-                index = 0
-                U = []
-                for _ in 0..<numFeedback  {
-                    if (index >= startWeights.count-1) { index = 1 }      //  Wrap if necessary
-                    U.append(startWeights[index])
-                    index += 1
-                }
-            }
-        }
-        else {
-            W = []
-            for _ in 0..<numInputs-1  {
-                W.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numInputs-1)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
-            }
-            W.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
-            
-            U = []
-            for _ in 0..<numFeedback  {
-                U.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numFeedback)))    //  feedback weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
-            }
-        }
+        W = [0.1, 0.2]
+        U = [0.4]
+//        if let startWeights = startWeights {
+//            if (startWeights.count == 1) {
+//                W = [Double](repeating: startWeights[0], count: numInputs)
+//                U = [Double](repeating: startWeights[0], count: numFeedback)
+//            }
+//            else if (startWeights.count == numInputs+numFeedback) {
+//                //  Full weight array, just split into the two weight arrays
+//                W = Array(startWeights[0..<numInputs])
+//                U = Array(startWeights[numInputs..<numInputs+numFeedback])
+//            }
+//            else {
+//                W = []
+//                var index = 0 //  First number (if more than 1) goes into the bias weight, then repeat the initial
+//                for _ in 0..<numInputs-1  {
+//                    if (index >= startWeights.count-1) { index = 0 }      //  Wrap if necessary
+//                    W.append(startWeights[index])
+//                    index += 1
+//                }
+//                W.append(startWeights[startWeights.count-1])     //  Add the bias term
+//                
+//                index = 0
+//                U = []
+//                for _ in 0..<numFeedback  {
+//                    if (index >= startWeights.count-1) { index = 1 }      //  Wrap if necessary
+//                    U.append(startWeights[index])
+//                    index += 1
+//                }
+//            }
+//        }
+//        else {
+//            W = []
+//            for _ in 0..<numInputs-1  {
+//                W.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numInputs-1)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+//            }
+//            W.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
+//            
+//            U = []
+//            for _ in 0..<numFeedback  {
+//                U.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numFeedback)))    //  feedback weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+//            }
+//        }
     }
     
     func feedForward(_ x: [Double], hPrev: [Double]) -> Double
@@ -283,9 +285,99 @@ final class RecurrentNeuralNode {
         if (hPrev == nil) { return 0.0 }
         return hPrev!
     }
+    
+    func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
+    {
+        var result = true
+        
+        //  Iterate through each W parameter
+        for index in 0..<W.count {
+            let oldValue = W[index]
+            
+            //  Get the network loss with a small addition to the parameter
+            W[index] += ε
+            _ = network.feedForward(x)
+            var plusLoss : [Double]
+            do {
+                plusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            
+            //  Get the network loss with a small subtraction from the parameter
+            W[index] = oldValue - ε
+            _ = network.feedForward(x)
+            var minusLoss : [Double]
+            do {
+                minusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            W[index] = oldValue
+            
+            //  Iterate over the results
+            for resultIndex in 0..<plusLoss.count {
+                //  Get the numerical gradient estimate  𝟃E/𝟃W
+                let gradient = (plusLoss[resultIndex] - minusLoss[resultIndex]) / (2.0 * ε)
+                
+                //  Compare with the analytical gradient
+                let difference = abs(gradient - 𝟃E𝟃W[index])
+                //                print("difference = \(difference)")
+                if (difference > Δ) {
+                    result = false
+                }
+            }
+        }
+        
+        //  Iterate through each U parameter
+        for index in 0..<U.count {
+            let oldValue = U[index]
+            
+            //  Get the network loss with a small addition to the parameter
+            U[index] += ε
+            _ = network.feedForward(x)
+            var plusLoss : [Double]
+            do {
+                plusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            
+            //  Get the network loss with a small subtraction from the parameter
+            U[index] = oldValue - ε
+            _ = network.feedForward(x)
+            var minusLoss : [Double]
+            do {
+                minusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            U[index] = oldValue
+            
+            //  Iterate over the results
+            for resultIndex in 0..<plusLoss.count {
+                //  Get the numerical gradient estimate  𝟃E/𝟃U
+                let gradient = (plusLoss[resultIndex] - minusLoss[resultIndex]) / (2.0 * ε)
+                
+                //  Compare with the analytical gradient
+                let difference = abs(gradient - 𝟃E𝟃U[index])
+                //                print("difference = \(difference)")
+                if (difference > Δ) {
+                    result = false
+                }
+            }
+        }
+        
+        return result
+    }
 }
 
-final class RecurrentNeuralLayer: NeuralLayer {
+///  Class for a recurrent network layer with individual nodes (slower, but easier to get into details)
+final class RecurrentNeuralLayerWithNodes: NeuralLayer {
     //  Nodes
     var nodes : [RecurrentNeuralNode]
     var bpttSequenceIndex: Int
@@ -367,7 +459,7 @@ final class RecurrentNeuralLayer: NeuralLayer {
         //  Gather the previous outputs for the feedback
         var hPrev : [Double] = []
         for node in nodes {
-            hPrev.append(node.h)
+            hPrev.append(node.getPreviousOutputValue())
         }
         
         var outputs : [Double] = []
@@ -506,7 +598,406 @@ final class RecurrentNeuralLayer: NeuralLayer {
     
     func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
     {
-        //!!
-        return true
+        var result = true
+        for node in nodes {
+            if (!node.gradientCheck(x: x, ε: ε, Δ: Δ, network: network)) { result = false }
+        }
+        return result
     }
 }
+
+
+///  Class for a recurrent network layer without individual nodes (faster, but some things hidden in the matrix math)
+final class RecurrentNeuralLayer: NeuralLayer {
+    var activation : NeuralActivationFunction
+    var numInputs = 0
+    var numNodes : Int
+    var W : [Double] = []      //  Weights for inputs from previous layer
+    var U : [Double] = []      //  Weights for recurrent input data from this layer
+    var h : [Double] //  Last result calculated
+    var outputHistory : [[Double]] //  History of output for the sequence
+    var 𝟃E𝟃z : [Double]      //  Gradient in error with respect to weighted sum
+    var 𝟃E𝟃W : [Double] = []  //  Accumulated weight W change gradient
+    var 𝟃E𝟃U : [Double] = []  //  Accumulated weight U change gradient
+    var bpttSequenceIndex : Int
+
+    ///  Create the neural network layer based on a tuple (number of nodes, activation function)
+    init(numInputs : Int, layerDefinition: (layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?))
+    {
+        activation = layerDefinition.activation
+        self.numInputs = numInputs
+        self.numNodes = layerDefinition.numNodes
+        h = [Double](repeating: 0.0, count: numNodes)
+        outputHistory = []
+        𝟃E𝟃z = [Double](repeating: 0.0, count: numNodes)
+        bpttSequenceIndex = 0
+    }
+    
+    //  Initialize the weights
+    func initWeights(_ startWeights: [Double]!)
+    {
+        let numWeights = (numInputs + 1) * numNodes   //  Add bias offset
+        let numRcurrentWeights = numNodes * numNodes   //  Add bias offset
+        W = []
+        U = []
+        if let startWeights = startWeights {
+            if (startWeights.count >= numNodes * (numInputs + 1 + numNodes)) {
+                //  If there are enough weights for all nodes, split the weights and initialize
+                W = Array(startWeights[0..<(numNodes * (numInputs + 1))])
+                U = Array(startWeights[(numNodes * (numInputs + 1))..<(numNodes * (numInputs + 1 + numNodes))])
+            }
+            else {
+                //  If there are not enough weights for all nodes, initialize each weight set with the set given
+                var index = 0
+                for _ in 0..<((numInputs + 1) * numNodes) {
+                    W.append(startWeights[index])
+                    index += 1
+                    if (index >= startWeights.count) { index = 0 }
+                }
+                for _ in 0..<(numNodes * numNodes) {
+                    U.append(startWeights[index])
+                    index += 1
+                    if (index >= startWeights.count) { index = 0 }
+                }
+            }
+        }
+        else {
+            //  No specified weights - just initialize normally
+            //  Allocate the weight array using 'Xavier' initialization
+            var weightDiviser: Double
+            if (activation == .rectifiedLinear) {
+                weightDiviser = 1 / sqrt(Double(numInputs) * 0.5)
+            }
+            else {
+                weightDiviser = 1 / sqrt(Double(numInputs))
+            }
+            for _ in 0..<numWeights {
+                W.append(Gaussian.gaussianRandom(0.0, standardDeviation : 1.0) * weightDiviser)
+            }
+            if (activation == .rectifiedLinear) {
+                weightDiviser = 1 / sqrt(Double(numNodes) * 0.5)
+            }
+            else {
+                weightDiviser = 1 / sqrt(Double(numNodes))
+            }
+            for _ in 0..<numRcurrentWeights {
+                U.append(Gaussian.gaussianRandom(0.0, standardDeviation : 1.0) * weightDiviser)
+            }
+        }
+    }
+    
+    func getWeights() -> [Double]
+    {
+        var weights = W
+        weights += U
+        return weights
+    }
+    
+    func getLastOutput() -> [Double]
+    {
+        return h
+    }
+    
+    func getNodeCount() -> Int
+    {
+        return numNodes
+    }
+    
+    func getWeightsPerNode()-> Int
+    {
+        return numInputs + numNodes + 1
+    }
+    
+    func getActivation()-> NeuralActivationFunction
+    {
+        return activation
+    }
+    
+    func feedForward(_ x: [Double]) -> [Double]
+    {
+        //  Gather the previous outputs for the feedback
+        var hPrev : [Double] = []
+        if let temp = outputHistory.last {
+            hPrev = temp
+        }
+        else {
+            hPrev = [Double](repeating: 0.0, count: numNodes)
+        }
+        
+        var z = [Double](repeating: 0.0, count: numNodes)
+        var uz = [Double](repeating: 0.0, count: numNodes)
+        //  Assume input array already has bias constant 1.0 appended
+        //  Fully-connected nodes means all nodes get the same input array
+        vDSP_mmulD(W, 1, x, 1, &z, 1, vDSP_Length(numNodes), 1, vDSP_Length(numInputs+1))
+        vDSP_mmulD(U, 1, hPrev, 1, &uz, 1, vDSP_Length(numNodes), 1, vDSP_Length(numNodes))
+        vDSP_vaddD(z, 1, uz, 1, &z, 1, vDSP_Length(numNodes))
+        
+        //  Run through the non-linearity
+        var sum = 0.0
+        for node in 0..<numNodes {
+            switch (activation) {
+            case .none:
+                h[node] = z[node]
+                break
+            case .hyperbolicTangent:
+                h[node] = tanh(z[node])
+                break
+            case .sigmoidWithCrossEntropy:
+                h[node] = 1.0 / (1.0 + exp(-z[node]))
+                sum += h[node]
+                break
+            case .sigmoid:
+                h[node] = 1.0 / (1.0 + exp(-z[node]))
+                break
+            case .rectifiedLinear:
+                h[node] = z[node]
+                if (z[node] < 0) { h[node] = 0.0 }
+                break
+            case .softSign:
+                h[node] = z[node] / (1.0 + abs(z[node]))
+                break
+            case .softMax:
+                h[node] = exp(z[node])
+                break
+            }
+        }
+        
+        if (activation == .softMax) {
+            var scale = 1.0 / sum       //  Do division once for efficiency
+            vDSP_vsmulD(h, 1, &scale, &h, 1, vDSP_Length(numNodes))
+        }
+        
+        return h
+    }
+    
+    func getFinalLayer𝟃E𝟃zs(_ 𝟃E𝟃h: [Double])
+    {
+        //  Calculate 𝟃E/𝟃z from 𝟃E/𝟃h
+        switch (activation) {
+        case .none:
+            𝟃E𝟃z = 𝟃E𝟃h
+            break
+        case .hyperbolicTangent:
+            vDSP_vsqD(h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  h²
+            let ones = [Double](repeating: 1.0, count: numNodes)
+            vDSP_vsubD(𝟃E𝟃z, 1, ones, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  1 - h²
+            vDSP_vmulD(𝟃E𝟃z, 1, 𝟃E𝟃h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  𝟃E𝟃h * (1 - h²)
+            break
+        case .sigmoidWithCrossEntropy:
+            fallthrough
+        case .sigmoid:
+            vDSP_vsqD(h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  h²
+            vDSP_vsubD(𝟃E𝟃z, 1, h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  h - h²
+            vDSP_vmulD(𝟃E𝟃z, 1, 𝟃E𝟃h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  𝟃E𝟃h * (h - h²)
+            break
+        case .rectifiedLinear:
+            for i in 0..<numNodes {
+                𝟃E𝟃z[i] = h[i] <= 0.0 ? 0.0 : 𝟃E𝟃h[i]
+            }
+            break
+        case .softSign:
+            for i in 0..<numNodes {
+                //  Reconstitute z from h
+                var z : Double
+                //!! - this might be able to be sped up with vector operations
+                if (h[i] < 0) {        //  Negative z
+                    z = h[i] / (1.0 + h[i])
+                    𝟃E𝟃z[i] = -𝟃E𝟃h[i] / ((1.0 + z) * (1.0 + z))
+                }
+                else {              //  Positive z
+                    z = h[i] / (1.0 - h[i])
+                    𝟃E𝟃z[i] = 𝟃E𝟃h[i] / ((1.0 + z) * (1.0 + z))
+                }
+            }
+            break
+        case .softMax:
+            //  This should be done outside of the layer
+            break
+        }
+    }
+    
+    func getLayer𝟃E𝟃zs(_ nextLayer: NeuralLayer)
+    {
+        //  Get 𝟃E/𝟃h from the next layer
+        var 𝟃E𝟃h = [Double](repeating: 0.0, count: numNodes)
+        for node in 0..<numNodes {
+            𝟃E𝟃h[node] = nextLayer.get𝟃E𝟃hForNodeInPreviousLayer(node)
+        }
+        
+        //  Calculate 𝟃E/𝟃z from 𝟃E/𝟃h
+        getFinalLayer𝟃E𝟃zs(𝟃E𝟃h)
+    }
+    
+    func get𝟃E𝟃hForNodeInPreviousLayer(_ inputIndex: Int) ->Double
+    {
+        var sum = 0.0
+        var offset = inputIndex
+        for node in 0..<numNodes {
+            sum += 𝟃E𝟃z[node] * W[offset]
+            offset += numInputs+1
+        }
+        return sum
+    }
+    
+    func clearWeightChanges()
+    {
+        𝟃E𝟃W = [Double](repeating: 0.0, count: W.count)
+        𝟃E𝟃U = [Double](repeating: 0.0, count: U.count)
+    }
+    
+    func appendWeightChanges(_ x: [Double]) -> [Double]
+    {
+        //  Gather the previous outputs for the feedback
+        var hPrev : [Double] = []
+        if let temp = outputHistory.last {
+            hPrev = temp
+        }
+        else {
+            hPrev = [Double](repeating: 0.0, count: numNodes)
+        }
+        
+        //  Assume input array already has bias constant 1.0 appended
+        //  Update each weight accumulation
+        var weightWChange = [Double](repeating: 0.0, count: W.count)
+        vDSP_mmulD(𝟃E𝟃z, 1, x, 1, &weightWChange, 1, vDSP_Length(numNodes), vDSP_Length(numInputs+1), 1)
+        vDSP_vaddD(weightWChange, 1, 𝟃E𝟃W, 1, &𝟃E𝟃W, 1, vDSP_Length(W.count))
+        var weightUChange = [Double](repeating: 0.0, count: U.count)
+        vDSP_mmulD(𝟃E𝟃z, 1, hPrev, 1, &weightUChange, 1, vDSP_Length(numNodes), vDSP_Length(numNodes), 1)
+        vDSP_vaddD(weightUChange, 1, 𝟃E𝟃U, 1, &𝟃E𝟃U, 1, vDSP_Length(U.count))
+        
+        return h
+    }
+    
+    func updateWeightsFromAccumulations(_ averageTrainingRate: Double, weightDecay: Double)
+    {
+        //  Update the weights from the accumulations
+        if (weightDecay < 1) { decayWeights(weightDecay) }
+        var trainRate = -averageTrainingRate
+        vDSP_vsmaD(𝟃E𝟃W, 1, &trainRate, W, 1, &W, 1, vDSP_Length(W.count))
+        vDSP_vsmaD(𝟃E𝟃U, 1, &trainRate, U, 1, &U, 1, vDSP_Length(U.count))
+    }
+    
+    func decayWeights(_ decayFactor : Double)
+    {
+        var decay = decayFactor
+        vDSP_vsmulD(W, 1, &decay, &W, 1, vDSP_Length(W.count))
+        vDSP_vsmulD(U, 1, &decay, &U, 1, vDSP_Length(U.count))
+    }
+    
+    func getSingleNodeClassifyValue() -> Double
+    {
+        if (activation == .hyperbolicTangent || activation == .rectifiedLinear) { return 0.0 }
+        return 0.5
+    }
+    
+    func resetSequence()
+    {
+        //  Have each node reset
+        h = [Double](repeating: 0.0, count: numNodes)
+        outputHistory = [[Double](repeating: 0.0, count: numNodes)]       //  first 'previous' value is zero
+        𝟃E𝟃z = [Double](repeating: 0.0, count: numNodes)                 //  Backward propogation previous 𝟃E𝟃z (𝟃E𝟃z from next time step in sequence) is zero
+    }
+    
+    func storeRecurrentValues()
+    {
+        outputHistory.append(h)
+    }
+    
+    func retrieveRecurrentValues(_ sequenceIndex: Int)
+    {
+        bpttSequenceIndex =  sequenceIndex
+        
+        //  Set the last recurrent value in the history array to the last output
+        h = outputHistory.removeLast()
+    }
+    
+    func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
+    {
+        var result = true
+        
+        //  Iterate through each W parameter
+        for index in 0..<W.count {
+            let oldValue = W[index]
+            
+            //  Get the network loss with a small addition to the parameter
+            W[index] += ε
+            _ = network.feedForward(x)
+            var plusLoss : [Double]
+            do {
+                plusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            
+            //  Get the network loss with a small subtraction from the parameter
+            W[index] = oldValue - ε
+            _ = network.feedForward(x)
+            var minusLoss : [Double]
+            do {
+                minusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            W[index] = oldValue
+            
+            //  Iterate over the results
+            for resultIndex in 0..<plusLoss.count {
+                //  Get the numerical gradient estimate  𝟃E/𝟃W
+                let gradient = (plusLoss[resultIndex] - minusLoss[resultIndex]) / (2.0 * ε)
+                
+                //  Compare with the analytical gradient
+                let difference = abs(gradient - 𝟃E𝟃W[index])
+                //                print("difference = \(difference)")
+                if (difference > Δ) {
+                    result = false
+                }
+            }
+        }
+        
+        //  Iterate through each U parameter
+        for index in 0..<U.count {
+            let oldValue = U[index]
+            
+            //  Get the network loss with a small addition to the parameter
+            U[index] += ε
+            _ = network.feedForward(x)
+            var plusLoss : [Double]
+            do {
+                plusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            
+            //  Get the network loss with a small subtraction from the parameter
+            U[index] = oldValue - ε
+            _ = network.feedForward(x)
+            var minusLoss : [Double]
+            do {
+                minusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            U[index] = oldValue
+            
+            //  Iterate over the results
+            for resultIndex in 0..<plusLoss.count {
+                //  Get the numerical gradient estimate  𝟃E/𝟃U
+                let gradient = (plusLoss[resultIndex] - minusLoss[resultIndex]) / (2.0 * ε)
+                
+                //  Compare with the analytical gradient
+                let difference = abs(gradient - 𝟃E𝟃U[index])
+                //                print("difference = \(difference)")
+                if (difference > Δ) {
+                    result = false
+                }
+            }
+        }
+        
+        return result
+    }
+}
+

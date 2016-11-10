@@ -679,7 +679,7 @@ final class LSTMNeuralLayer: NeuralLayer {
         //  Gather the previous outputs for the feedback
         var hPrev : [Double] = []
         for node in nodes {
-            hPrev.append(node.h)
+            hPrev.append(node.getPreviousOutputValue())
         }
         
         var outputs : [Double] = []
