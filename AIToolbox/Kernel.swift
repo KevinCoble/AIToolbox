@@ -9,7 +9,7 @@
 import Foundation
 import Accelerate
 
-public enum SVMKernalType   //  SVM kernal type
+public enum SVMKernelType   //  SVM kernel type
 {
     case linear
     case polynomial
@@ -19,12 +19,12 @@ public enum SVMKernalType   //  SVM kernal type
 }
 
 public struct KernelParameters {
-    let type: SVMKernalType
+    let type: SVMKernelType
     let degree: Int         //  for polynomial
     let gamma: Double       //  for polynomial, radialbasis, sigmoid
     let coef0: Double       //  for polynomial, sigmoid
     
-    public init(type: SVMKernalType, degree: Int, gamma: Double, coef0: Double) {
+    public init(type: SVMKernelType, degree: Int, gamma: Double, coef0: Double) {
         self.type = type
         self.degree = degree
         self.gamma = gamma
@@ -41,9 +41,9 @@ class Kernel {
     //  Diagonal items squared (for RBF)
     let x_square: [Double]!
     
-    let kernalType: SVMKernalType
-    //  Closure with kernal function - initialize with lazy-var to avoid 'Variable kernal_function used before initialized' error when just a 'let'
-    lazy var kernal_function : (Int, Int) -> Double = self.initKernalFunction()
+    let kernelType: SVMKernelType
+    //  Closure with kernel function - initialize with lazy-var to avoid 'Variable kernel_function used before initialized' error when just a 'let'
+    lazy var kernel_function : (Int, Int) -> Double = self.initKernelFunction()
     lazy var QDiagonal : [Double] = self.initQDiagonal()
     let degree: Int
     let gamma: Double
@@ -51,7 +51,7 @@ class Kernel {
     
     init(parameters: KernelParameters, data: MLCombinedDataSet)
     {
-        kernalType = parameters.type
+        kernelType = parameters.type
         problemData = data
         self.degree = parameters.degree
         self.gamma = parameters.gamma
@@ -65,8 +65,8 @@ class Kernel {
         }
     }
     
-    func initKernalFunction() -> ((Int, Int) -> Double) {
-        switch (kernalType) {
+    func initKernelFunction() -> ((Int, Int) -> Double) {
+        switch (kernelType) {
         case .linear:
             return dotProduct
             
@@ -88,7 +88,7 @@ class Kernel {
         var returnArray: [Double] = []
         
         for i in 0..<problemData.size {
-            returnArray.append(kernal_function(i,i))
+            returnArray.append(kernel_function(i,i))
         }
         
         return returnArray
@@ -205,7 +205,7 @@ class SVCKernel : Kernel {
     {
         var data: [Double] = []
         for j in 0..<problemData.size {
-            data.append(outputs[i] * outputs[j] * kernal_function(i,j))
+            data.append(outputs[i] * outputs[j] * kernel_function(i,j))
         }
         
         return data
@@ -218,7 +218,7 @@ class OneClassKernel : Kernel {
     {
         var data: [Double] = []
         for j in 0..<problemData.size {
-            data.append(kernal_function(i,j))
+            data.append(kernel_function(i,j))
         }
         
         return data
@@ -240,7 +240,7 @@ class SVRKernel : Kernel {
         var returnArray: [Double] = []
         
         for i in 0..<problemData.size {
-            returnArray.append(kernal_function(i,i))
+            returnArray.append(kernel_function(i,i))
         }
         
         return returnArray + returnArray
@@ -255,7 +255,7 @@ class SVRKernel : Kernel {
         for j in 0..<(problemData.size*2) {
             var real_j = j
             if (real_j >= problemData.size) {real_j -= problemData.size}
-            data.append(signI * sign[j] * kernal_function(real_i, real_j))
+            data.append(signI * sign[j] * kernel_function(real_i, real_j))
         }
         
         return data

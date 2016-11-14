@@ -54,6 +54,7 @@ protocol NeuralLayer {
     func feedForward(_ x: [Double]) -> [Double]
     func initWeights(_ startWeights: [Double]!)
     func getWeights() -> [Double]
+    func setRMSPropDecay(_ decay: Double?)
     func getLastOutput() -> [Double]
     func getFinalLayer𝟃E𝟃zs(_ 𝟃E𝟃h: [Double])
     func getLayer𝟃E𝟃zs(_ nextLayer: NeuralLayer)
@@ -83,6 +84,7 @@ final class SimpleNeuralNode {
     var 𝟃E𝟃h : Double      //  Gradient in error with respect to output of this node
     var 𝟃E𝟃z : Double      //  Gradient in error with respect to weighted sum
     var 𝟃E𝟃W : [Double]   //  Accumulated weight change gradient
+    var rmspropDecay : Double?      //  Decay rate for rms prop weight updates.  If nil, rmsprop is not used
     
     ///  Create the neural network node with a set activation function
     init(numInputs : Int, activationFunction: NeuralActivationFunction)
@@ -122,6 +124,11 @@ final class SimpleNeuralNode {
             }
             W.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
         }
+    }
+    
+    func setRMSPropDecay(_ decay: Double?)
+    {
+        rmspropDecay = decay
     }
     
     func feedForward(_ x: [Double]) -> Double
@@ -354,6 +361,13 @@ final class SimpleNeuralLayerWithNodes: NeuralLayer {
         return weights
     }
     
+    func setRMSPropDecay(_ decay: Double?)
+    {
+        for node in nodes {
+            node.setRMSPropDecay(decay)
+        }
+    }
+    
     func getLastOutput() -> [Double]
     {
         var h: [Double] = []
@@ -522,6 +536,7 @@ final class SimpleNeuralLayer: NeuralLayer {
     var outputHistory : [[Double]] //  History of output for the sequence
     var 𝟃E𝟃z : [Double]      //  Gradient in error with respect to weighted sum
     var 𝟃E𝟃W : [Double] = []  //  Accumulated weight change gradient
+    var rmspropDecay : Double?      //  Decay rate for rms prop weight updates.  If nil, rmsprop is not used
     
     ///  Create the neural network layer based on a tuple (number of nodes, activation function)
     init(numInputs : Int, layerDefinition: (layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?))
@@ -575,6 +590,11 @@ final class SimpleNeuralLayer: NeuralLayer {
     func getWeights() -> [Double]
     {
         return W
+    }
+    
+    func setRMSPropDecay(_ decay: Double?)
+    {
+        rmspropDecay = decay
     }
     
     func getLastOutput() -> [Double]
@@ -825,6 +845,7 @@ open class NeuralNetwork: Classifier, Regressor {
     var hasRecurrentLayers = false
     var expectedOutput : [Double]?      //  Expected output for gradient checks
     
+    
     ///  Create the neural network based on an array of tuples, one for each non-input layer (number of nodes, activation function)
     ///     The input layer is defined by the number of inputs only.  The network is fully connected, including a bias term
     ///     If being used for classification, have the output (last) layer have the number of nodes equal to the number of classes
@@ -878,6 +899,13 @@ open class NeuralNetwork: Classifier, Regressor {
         let numberOfOutputNodes = layers.last!.getNodeCount()
         if (numberOfOutputNodes == 1) { return 2 }
         return numberOfOutputNodes
+    }
+    
+    open func setRMSPropDecay(decay: Double?)
+    {
+        for layer in layers {
+            layer.setRMSPropDecay(decay)
+        }
     }
     
     ///  FeedForward routine

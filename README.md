@@ -11,13 +11,13 @@ The Metal Neural Network uses the Metal framework for a Neural Network using the
 
 Use the XCTest files for examples on how to use the classes
 
-### New deep-network classes for convolutional networks (see Convolution project for example use)
-### New neural-network basic layer (doesn't use a node class, so faster)
-### New protocols for dataset types - you can now use your own data classes if they implement these protocols
-
 Playgrounds for Linear Regression, SVM, and Neural Networks are available
 
-Classes/Algorithms supported:
+##  Manual
+
+I have started a [manual](Manual/AIToolbox.md) for the framework.  It is a work-in-progress, but adds some useful explanation to pieces of the framework
+
+##Classes/Algorithms supported:
 
     Graphs/Trees
         Depth-first search
@@ -109,3 +109,5 @@ This framework is made available with the [Apache license](LICENSE.md).
 ##  Contributions
 
 See the [contribution document](CONTRIBUTIONS.md) for information on contributing to this framework
+
+

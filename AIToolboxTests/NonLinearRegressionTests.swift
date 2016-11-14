@@ -148,7 +148,7 @@ class NonLinearRegressionTests: XCTestCase {
             try trainData.addDataPoint(input: [8.0], output: [55.9])
         }
         catch {
-            print("error creating test data")
+            print("error creating training data")
         }
         
         //  Create the SGD non-linear regressor

@@ -57,7 +57,7 @@ open class SVMModel
     {
         type = problemType
         
-        //  Initialize the kernal parameters to a linear kernal
+        //  Initialize the kernel parameters to a linear kernel
         kernelParams = kernelSettings
     }
     
@@ -1116,7 +1116,7 @@ internal class Solver {
             }
         }
         
-        //  Get the kernal for the solution
+        //  Get the kernel for the solution
         kernel = SVCKernel(parameters: kernelParams, data: problemData!, outputs: outputs)
         
         //  Initialize the gradients
@@ -1481,7 +1481,7 @@ internal class Solver {
         }
         for _ in (n+1)..<data.size { α.append(0.0) }
         
-        //  Get the kernal for the solution
+        //  Get the kernel for the solution
         kernel = OneClassKernel(parameters: kernelParams, data: problemData!)
         
         //  Initialize the gradients
@@ -1515,7 +1515,7 @@ internal class Solver {
             }
         }
         
-        //  Get the kernal for the solution
+        //  Get the kernel for the solution
         kernel = SVRKernel(parameters: kernelParams, data: problemData!)
         
         //  Solve the quadratic program
@@ -1583,7 +1583,7 @@ internal class Solver_ν : Solver
             }
         }
         
-        //  Get the kernal for the solution
+        //  Get the kernel for the solution
         kernel = SVCKernel(parameters: kernelParams, data: problemData!, outputs: outputs)
         
         //  Initialize the gradients
@@ -1794,7 +1794,7 @@ internal class Solver_ν : Solver
             }
         }
         
-        //  Get the kernal for the solution
+        //  Get the kernel for the solution
         kernel = SVRKernel(parameters: kernelParams, data: problemData!)
         
         //  Solve the quadratic program
