@@ -34,6 +34,7 @@ There is a lot to the AIToolbox framework, so this manual (when completed) will 
 * [Using a Trained Neural Network](#UsingNN)
 
 Classes
+Structures
 [Enumerations](Enumerations.md)
 [Protocols](Protocols.md)
 
