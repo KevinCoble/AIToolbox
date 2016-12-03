@@ -106,6 +106,37 @@ open class Gaussian {
         
         return( mean + y1 * standardDeviation )
     }
+    
+    static var y2Float: Float = 0.0
+    static var use_lastFloat = false
+    ///  static Function to get a random value for a given distribution
+    open static func gaussianRandomFloat(_ mean : Float, standardDeviation : Float) -> Float
+    {
+        var y1 : Float
+        if (use_last)		        /* use value from previous call */
+        {
+            y1 = y2Float
+            use_last = false
+        }
+        else
+        {
+            var w : Float = 1.0
+            var x1 : Float = 0.0
+            var x2 : Float = 0.0
+            repeat {
+                x1 = 2.0 * (Float(arc4random()) / Float(UInt32.max)) - 1.0
+                x2 = 2.0 * (Float(arc4random()) / Float(UInt32.max)) - 1.0
+                w = x1 * x1 + x2 * x2
+            } while ( w >= 1.0 )
+            
+            w = sqrt( (-2.0 * log( w ) ) / w )
+            y1 = x1 * w
+            y2Float = x2 * w
+            use_last = true
+        }
+        
+        return( mean + y1 * standardDeviation )
+    }
 }
 
 open class MultivariateGaussian {

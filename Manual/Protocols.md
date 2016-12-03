@@ -1,6 +1,69 @@
 # Protocols
 This section of the manual describes all the details of the Swift protocols used by the AIToolbox framework.
 
+##AlphaBetaNode
+The AlphaBetaNode protocol defines the two required functions for a node in an alpha-beta pruning search problem.  The nodes need to generate the child nodes (the 'moves' from the current node state), and be able to be evaluated so the most advantageous path can be determined.  The protocol has the following required functions:
+
+####generateMoves
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>generateMoves(_ forMaximizer: Bool) -> [AlphaBetaNode]</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method returns the complete list of child nodes (the moves available starting from this node's state)</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<td>forMaximizer</td>
+		<td>Bool</td>
+		<td>Whether these moves are for the player you are trying to maximize (pass in a true value), or for the opponent, who you are trying to minimize the score</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>[AlphaBetaNode] - The nodes that have a state equal to all the possible moves starting from this node's state</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+####staticEvaluation
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>staticEvaluation() -> Double</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method returns the evaluated worth of the node's state</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Double - The estimated worth of the state for the node</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
 ##Classifier
 The Classifier protocol is an interface used by the majority of classification models in AIToolbox.  Using the protocol allows all the models to behave the same, allowing them to use **Validation** methods for parameter tuning and model selection without custom code.  The protocol has the following required functions:
 

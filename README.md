@@ -11,11 +11,11 @@ The Metal Neural Network uses the Metal framework for a Neural Network using the
 
 Use the XCTest files for examples on how to use the classes
 
-Playgrounds for Linear Regression, SVM, and Neural Networks are available
+Playgrounds for Linear Regression, SVM, and Neural Networks are available.  Now available in both macOS and iOS versions.
 
 ##  Manual
 
-I have started a [manual](Manual/AIToolbox.md) for the framework.  It is a work-in-progress, but adds some useful explanation to pieces of the framework
+I have started a [manual](Manual/AIToolbox.md) for the framework.  It is a work-in-progress, but adds some useful explanation to pieces of the framework.  All protocols, structures, and enumerations are well defined.  Class descriptions are there, but not class variables and methods.
 
 ##Classes/Algorithms supported:
 
@@ -99,6 +99,7 @@ I have started a [manual](Manual/AIToolbox.md) for the framework.  It is a work-
 
     Plotting
         NSView based MLView for displaying regression data, classification data, functions, and classifier areas!
+        UIView based MLView for iOS applications, same as NSView based for macOS
 ![Regression Plot Image](PlotImage.png)
 ![Classification Plot Image](PlotImage2.png)
 

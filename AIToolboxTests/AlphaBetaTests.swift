@@ -52,21 +52,20 @@ let staticEvaluationValues = [0, 0, 0, 0, 0, 0, 0, 8, 7, 3, 0, 0, 0, 9, 8, 0, 0,
 class TestAlphaBetaNode : AlphaBetaNode {
     
     let creationIndex : Int
-    override init() {
+    init() {
         creationIndex = staticEvaluationIndex
         staticEvaluationIndex += 1
         print("created node \(creationIndex)")
-        super.init()
     }
     
-    override func generateMoves(_ forMaximizer: Bool) -> [AlphaBetaNode] {
+    func generateMoves(_ forMaximizer: Bool) -> [AlphaBetaNode] {
         var returnMoves : [AlphaBetaNode] = []
         print("created children of \(creationIndex)")
         returnMoves.append(TestAlphaBetaNode())
         returnMoves.append(TestAlphaBetaNode())
         return returnMoves
     }
-    override func staticEvaluation() -> Double {
+    func staticEvaluation() -> Double {
         let value = Double(staticEvaluationValues[creationIndex])
         print("static evaluation of \(creationIndex) resulting in \(value)")
         return value

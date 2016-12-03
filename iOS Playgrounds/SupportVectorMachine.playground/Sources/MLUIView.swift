@@ -1,4 +1,4 @@
-import Cocoa
+import UIKit
 
 
 public enum MLViewError: Error {
@@ -35,15 +35,15 @@ public enum MLViewLegendLocation {
 open class MLPlotSymbol {
     
     //  Symbol information
-    open var symbolColor: NSColor
+    open var symbolColor: UIColor
     open var symbolSize: CGFloat = 7.0
     open var symbolShape: MLPlotSymbolShape = .circle
     
-    public init(color: NSColor) {
+    public init(color: UIColor) {
         symbolColor = color
     }
     
-    public convenience init(color: NSColor, symbolShape: MLPlotSymbolShape, symbolSize: CGFloat) {
+    public convenience init(color: UIColor, symbolShape: MLPlotSymbolShape, symbolSize: CGFloat) {
         self.init(color: color)
         
         self.symbolShape = symbolShape
@@ -56,27 +56,31 @@ open class MLPlotSymbol {
         
         switch (symbolShape) {
         case .circle:
-            let circleRect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.5), symbolSize, symbolSize)
-            let cPath: NSBezierPath = NSBezierPath(ovalIn: circleRect)
+            let circleRect = CGRect(x: point.x - (symbolSize * 0.5), y: point.y - (symbolSize * 0.5), width: symbolSize, height: symbolSize)
+            let cPath: UIBezierPath = UIBezierPath(ovalIn: circleRect)
             cPath.fill()
         case .rectangle:
-            let rect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.5), symbolSize, symbolSize)
-            NSRectFill(rect)
+            let rect = CGRect(x:point.x - (symbolSize * 0.5), y: point.y - (symbolSize * 0.5), width: symbolSize, height: symbolSize)
+            let bpath = UIBezierPath(rect: rect)
+            bpath.fill()
         case .plus:
-            let hrect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.1), symbolSize, symbolSize * 0.2)
-            NSRectFill(hrect)
-            let vrect = NSMakeRect(point.x - (symbolSize * 0.1), point.y - (symbolSize * 0.5), symbolSize * 0.2, symbolSize)
-            NSRectFill(vrect)
+            let hrect = CGRect(x: point.x - (symbolSize * 0.5), y: point.y - (symbolSize * 0.1), width: symbolSize, height: symbolSize * 0.2)
+            var bpath = UIBezierPath(rect: hrect)
+            bpath.fill()
+            let vrect = CGRect(x: point.x - (symbolSize * 0.1), y: point.y - (symbolSize * 0.5), width: symbolSize * 0.2, height: symbolSize)
+            bpath = UIBezierPath(rect: vrect)
+            bpath.fill()
         case .minus:
-            let rect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.1), symbolSize, symbolSize * 0.2)
-            NSRectFill(rect)
+            let rect = CGRect(x: point.x - (symbolSize * 0.5), y: point.y - (symbolSize * 0.1), width: symbolSize, height: symbolSize * 0.2)
+            let bpath = UIBezierPath(rect: rect)
+            bpath.fill()
         }
         
     }
 }
 
 public protocol MLViewItem {
-    func setColor(_ color: NSColor)       //  Sets the default color for the item
+    func setColor(_ color: UIColor)       //  Sets the default color for the item
     func setScale(_ scale: (minX: Double, maxX: Double, minY: Double, maxY: Double))      //  Sets the scale to the provided factors, or the item can calculate it's own
     func draw(_ bounds: CGRect)
     func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)?     //  Return the scale factors used by the item
@@ -101,7 +105,7 @@ open class MLViewRegressionDataSet: MLViewItem {
     open var roundScales = true
 
     //  Symbol information
-    open var symbol = MLPlotSymbol(color: NSColor.green)
+    open var symbol = MLPlotSymbol(color: UIColor.green)
     
     //  Axis scaling ranges
     var minX = 0.0
@@ -114,7 +118,7 @@ open class MLViewRegressionDataSet: MLViewItem {
         self.dataset = dataset
     }
     
-    public convenience init(dataset: DataSet, color: NSColor) throws {
+    public convenience init(dataset: DataSet, color: UIColor) throws {
         try self.init(dataset: dataset)
         
         setColor(color)
@@ -130,7 +134,7 @@ open class MLViewRegressionDataSet: MLViewItem {
         scaleToData = calculateScale
     }
     
-    open func setColor(_ color: NSColor)       //  Sets the default color for the item
+    open func setColor(_ color: UIColor)       //  Sets the default color for the item
     {
         symbol.symbolColor = color
     }
@@ -169,7 +173,7 @@ open class MLViewRegressionDataSet: MLViewItem {
                 }
                 //  Calculate the plot position and draw
                 let x = (CGFloat(x_source[sourceIndexXAxis] - minX) * scaleFactorX) * bounds.width + bounds.origin.x
-                let y = (CGFloat(y_source[sourceIndexYAxis] - minY) * scaleFactorY) * bounds.height + bounds.origin.y
+                let y = (bounds.origin.y + bounds.size.height) - (CGFloat(y_source[sourceIndexYAxis] - minY) * scaleFactorY) * bounds.height
                 symbol.drawAt(CGPoint(x: x, y: y))
             }
         }
@@ -293,14 +297,14 @@ open class MLViewClassificationDataSet: MLViewItem {
         //  Set a symbol for each of them
         symbols = []
         let colors = [
-            NSColor.green,
-            NSColor.red,
-            NSColor.blue,
-            NSColor.cyan,
-            NSColor.magenta,
-            NSColor.yellow,
-            NSColor.gray,
-            NSColor.black
+            UIColor.green,
+            UIColor.red,
+            UIColor.blue,
+            UIColor.cyan,
+            UIColor.magenta,
+            UIColor.yellow,
+            UIColor.gray,
+            UIColor.black
         ]
         let shapes = [
             MLPlotSymbolShape.circle,
@@ -336,7 +340,7 @@ open class MLViewClassificationDataSet: MLViewItem {
     }
     
     //  Sets ALL symbols to the specified color
-    open func setColor(_ color: NSColor)       //  Sets the default color for the item
+    open func setColor(_ color: UIColor)       //  Sets the default color for the item
     {
         for symbol in symbols {
             symbol.symbolColor = color
@@ -394,7 +398,7 @@ open class MLViewClassificationDataSet: MLViewItem {
                 }
                 //  Calculate the plot position
                 let x = (CGFloat(x_source[sourceIndexXAxis] - minX) * scaleFactorX) * bounds.width + bounds.origin.x
-                let y = (CGFloat(y_source[sourceIndexYAxis] - minY) * scaleFactorY) * bounds.height + bounds.origin.y
+                let y = (bounds.origin.y + bounds.size.height) - (CGFloat(y_source[sourceIndexYAxis] - minY) * scaleFactorY) * bounds.height
                 //  Get the label index
                 do {
                     let label = try dataset.getClass(point)
@@ -521,7 +525,7 @@ open class MLViewRegressionLine: MLViewItem {
     var inputVector : [Double] = []
     
     //  Line information
-    open var lineColor = NSColor.red
+    open var lineColor = UIColor.red
     open var lineThickness : CGFloat = 1.0
     
     //  Axis scaling ranges
@@ -536,13 +540,13 @@ open class MLViewRegressionLine: MLViewItem {
         inputVector = [Double](repeating: 0.0, count: regressor.getInputDimension())
     }
     
-    public convenience init(regressor: Regressor, color: NSColor) {
+    public convenience init(regressor: Regressor, color: UIColor) {
         self.init(regressor: regressor)
         
         setColor(color)
     }
     
-    open func setColor(_ color: NSColor)       //  Sets the default color for the item
+    open func setColor(_ color: UIColor)       //  Sets the default color for the item
     {
         lineColor = color
     }
@@ -557,60 +561,34 @@ open class MLViewRegressionLine: MLViewItem {
     
     open func draw(_ bounds: CGRect) {
         //  Save the current state
-        NSGraphicsContext.saveGraphicsState()
-        
-        //  Set a clip region - the lines aren't usually with the bounds
-        NSRectClip(bounds)
-        
-        //  Get the scaling factors
-        let scaleFactorX = CGFloat(1.0 / (maxX - minX))
-        let scaleFactorY = CGFloat(1.0 / (maxY - minY))
-        
-        //  Set the color
-        lineColor.setStroke()
-        
-        //  Get the pixel granularity
-        let pixelX = (maxX - minX) / Double(bounds.width)
-        let path = NSBezierPath()
-        path.lineWidth = lineThickness
+        if let context = UIGraphicsGetCurrentContext() {
+            context.saveGState()
+            
+            //  Set a clip region - the lines aren't usually with the bounds
+            context.clip(to: bounds)
+            
+            //  Get the scaling factors
+            let scaleFactorX = CGFloat(1.0 / (maxX - minX))
+            let scaleFactorY = CGFloat(1.0 / (maxY - minY))
+            
+            //  Set the color
+            lineColor.setStroke()
+            
+            //  Get the pixel granularity
+            let pixelX = (maxX - minX) / Double(bounds.width)
+            let path = UIBezierPath()
+            path.lineWidth = lineThickness
 
-        do {
-            //  Get the first pixel
-            var xIterator = minX - (pixelX * 0.5)
-            var inputs = inputVector
-            if (sourceTypeXAxis == .dataInput) {
-                inputs[sourceIndexXAxis] = xIterator
-            }
-            let outputs = try regressor.predictOne(inputs)
-            //  Get the X axis value
-            var xValue : Double
-            if (sourceTypeXAxis == .dataInput) {
-                xValue = inputs[sourceIndexXAxis]
-            }
-            else {
-                xValue = outputs[sourceIndexXAxis]
-            }
-            //  Get the Y axis value
-            var yValue : Double
-            if (sourceTypeYAxis == .dataInput) {
-                yValue = inputs[sourceIndexYAxis]
-            }
-            else {
-                yValue = outputs[sourceIndexYAxis]
-            }
-            //  Get the point coordinates
-            let x = (CGFloat(xValue - minX) * scaleFactorX) * bounds.width + bounds.origin.x
-            let y = (CGFloat(yValue - minY) * scaleFactorY) * bounds.height + bounds.origin.y
-            path.move(to: CGPoint(x: x, y: y))
-
-            //  Iterate through each pixel
-            while (xIterator < maxX) {
-                inputs = inputVector
+            do {
+                //  Get the first pixel
+                var xIterator = minX - (pixelX * 0.5)
+                var inputs = inputVector
                 if (sourceTypeXAxis == .dataInput) {
                     inputs[sourceIndexXAxis] = xIterator
                 }
                 let outputs = try regressor.predictOne(inputs)
                 //  Get the X axis value
+                var xValue : Double
                 if (sourceTypeXAxis == .dataInput) {
                     xValue = inputs[sourceIndexXAxis]
                 }
@@ -618,6 +596,7 @@ open class MLViewRegressionLine: MLViewItem {
                     xValue = outputs[sourceIndexXAxis]
                 }
                 //  Get the Y axis value
+                var yValue : Double
                 if (sourceTypeYAxis == .dataInput) {
                     yValue = inputs[sourceIndexYAxis]
                 }
@@ -626,20 +605,47 @@ open class MLViewRegressionLine: MLViewItem {
                 }
                 //  Get the point coordinates
                 let x = (CGFloat(xValue - minX) * scaleFactorX) * bounds.width + bounds.origin.x
-                let y = (CGFloat(yValue - minY) * scaleFactorY) * bounds.height + bounds.origin.y
-                xIterator += pixelX
-                path.line(to: CGPoint(x: x, y: y))
-            }
+                let y = (bounds.origin.y + bounds.size.height) - (CGFloat(yValue - minY) * scaleFactorY) * bounds.height
+                path.move(to: CGPoint(x: x, y: y))
 
-            //  Draw the line
-            path.stroke()
+                //  Iterate through each pixel
+                while (xIterator < maxX) {
+                    inputs = inputVector
+                    if (sourceTypeXAxis == .dataInput) {
+                        inputs[sourceIndexXAxis] = xIterator
+                    }
+                    let outputs = try regressor.predictOne(inputs)
+                    //  Get the X axis value
+                    if (sourceTypeXAxis == .dataInput) {
+                        xValue = inputs[sourceIndexXAxis]
+                    }
+                    else {
+                        xValue = outputs[sourceIndexXAxis]
+                    }
+                    //  Get the Y axis value
+                    if (sourceTypeYAxis == .dataInput) {
+                        yValue = inputs[sourceIndexYAxis]
+                    }
+                    else {
+                        yValue = outputs[sourceIndexYAxis]
+                    }
+                    //  Get the point coordinates
+                    let x = (CGFloat(xValue - minX) * scaleFactorX) * bounds.width + bounds.origin.x
+                    let y = (bounds.origin.y + bounds.size.height) - (CGFloat(yValue - minY) * scaleFactorY) * bounds.height
+                    xIterator += pixelX
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
+
+                //  Draw the line
+                path.stroke()
+            }
+            catch {
+                //  Skip this regressor
+            }
+            
+            //  Restore the current state
+            context.restoreGState()
         }
-        catch {
-            //  Skip this regressor
-        }
-        
-        //  Restore the current state
-        NSGraphicsContext.restoreGraphicsState()
     }
     
     open func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
@@ -691,8 +697,8 @@ open class MLViewClassificationArea: MLViewItem {
     var inputVector : [Double] = []
     
     //  Label color information
-    open var unknownColor = NSColor.white
-    open var colors : [NSColor]
+    open var unknownColor = UIColor.white
+    open var colors : [UIColor]
     open var granularity = 4      ///  Size of 'pixels' area is drawn in
     
     //  Axis scaling ranges
@@ -705,24 +711,30 @@ open class MLViewClassificationArea: MLViewItem {
         self.classifier = classifier
         
         let startColors = [
-            NSColor.green,
-            NSColor.red,
-            NSColor.blue,
-            NSColor.cyan,
-            NSColor.magenta,
-            NSColor.yellow,
-            NSColor.gray,
-            NSColor.black
+            UIColor.green,
+            UIColor.red,
+            UIColor.blue,
+            UIColor.cyan,
+            UIColor.magenta,
+            UIColor.yellow,
+            UIColor.gray,
+            UIColor.black
         ]
         let numClasses = classifier.getNumberOfClasses()
         colors = []
         var colorIndex = 0
         var fadeValue : CGFloat = 0.5
         for _ in 0..<numClasses {
-            let red = (1.0 - startColors[colorIndex].redComponent) * fadeValue + startColors[colorIndex].redComponent
-            let green = (1.0 - startColors[colorIndex].greenComponent) * fadeValue + startColors[colorIndex].greenComponent
-            let blue = (1.0 - startColors[colorIndex].blueComponent) * fadeValue + startColors[colorIndex].blueComponent
-            let color = NSColor(red: red, green: green, blue: blue, alpha: 1.0)
+            var red : CGFloat = 0.0
+            var green : CGFloat = 0.0
+            var blue : CGFloat = 0.0
+            var alpha : CGFloat = 0.0
+            if (startColors[colorIndex].getRed(&red, green: &green, blue: &blue, alpha: &alpha)) {
+                red = (1.0 - red) * fadeValue + red
+                green = (1.0 - green) * fadeValue + green
+                blue = (1.0 - blue) * fadeValue + blue
+            }
+            let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
             colors.append(color)
             colorIndex += 1
             if (colorIndex >= startColors.count) {
@@ -735,13 +747,13 @@ open class MLViewClassificationArea: MLViewItem {
     }
     
     //  Convenience constructor to create plot object and set colors for the classification labels
-    public convenience init(classifier: Classifier, colors: [NSColor]) {
+    public convenience init(classifier: Classifier, colors: [UIColor]) {
         self.init(classifier: classifier)
         
         self.colors = colors
     }
     
-    open func setColor(_ color: NSColor)       //  Sets the default color for the item
+    open func setColor(_ color: UIColor)       //  Sets the default color for the item
     {
         unknownColor = color
     }
@@ -757,7 +769,8 @@ open class MLViewClassificationArea: MLViewItem {
     open func draw(_ bounds: CGRect) {
         //  draw the 'other' color
         unknownColor.setFill()
-        NSRectFill(bounds)
+        let bpath = UIBezierPath(rect: bounds)
+        bpath.fill()
         
         //  Get the scaling factors
         let scaleFactorX = CGFloat(1.0 / (maxX - minX))
@@ -789,7 +802,7 @@ open class MLViewClassificationArea: MLViewItem {
                 while (yIterator < maxY) {
                     //  Get the rectangle start coordinates
                     let x = (CGFloat(xIterator - minX) * scaleFactorX) * bounds.width + bounds.origin.x
-                    let y = (CGFloat(yIterator - minY) * scaleFactorY) * bounds.height + bounds.origin.y
+                    let y = (bounds.origin.y + bounds.size.height) - (CGFloat(yIterator - minY) * scaleFactorY) * bounds.height - grainHeight
                     
                     //  Get the rectangle
                     let rect = CGRect(x: x, y: y, width: grainWidth, height: grainHeight)
@@ -819,7 +832,7 @@ open class MLViewClassificationArea: MLViewItem {
                         colors[label].set()
                         
                         //  Fill the rectangle
-                        let bp = NSBezierPath(rect: rect)
+                        let bp = UIBezierPath(rect: rect)
                         bp.fill()
                         bp.stroke()
                     }
@@ -878,6 +891,7 @@ open class MLViewAxisLabel: MLViewItem {
     //  Drawing offset
     var xOffset : CGFloat = 0.0
     var yOffset : CGFloat = 0.0
+    var viewHeight : CGFloat = 0.0
     var xAxisHeight : CGFloat = 0.0
     var yAxisWidth : CGFloat = 0.0
     
@@ -888,15 +902,15 @@ open class MLViewAxisLabel: MLViewItem {
     var maxY = 100.0
     
     //  Axis appearance
-    open var XAxisColor = NSColor.gray
-    open var YAxisColor = NSColor.gray
+    open var XAxisColor = UIColor.gray
+    open var YAxisColor = UIColor.gray
     open var MajorTickDivisions = 5
     open var MinorTicksDivisionsPerMajorTick = 5
     open var XAxisMajorTickHeight : CGFloat = 6.0
     open var XAxisMinorTickHeight : CGFloat = 3.0
     open var YAxisMajorTickWidth : CGFloat = 6.0
     open var YAxisMinorTickWidth : CGFloat = 3.0
-    open var labelFont = NSFont(name: "Helvetica Neue", size: 10.0)
+    open var labelFont = UIFont(name: "Helvetica Neue", size: 10.0)
     open var XAxisLabelDecimalDigits = 2
     open var YAxisLabelDecimalDigits = 2
     
@@ -909,12 +923,13 @@ open class MLViewAxisLabel: MLViewItem {
         showYAxis = showY
     }
     
-    open func setOffsets(_ x: CGFloat, y: CGFloat) {
+    open func setOffsets(_ x: CGFloat, y: CGFloat, height: CGFloat) {
         xOffset = x
         yOffset = y
+        viewHeight = height
     }
 
-    open func setColor(_ color: NSColor) {
+    open func setColor(_ color: UIColor) {
         XAxisColor = color
         YAxisColor = color
     }
@@ -939,28 +954,28 @@ open class MLViewAxisLabel: MLViewItem {
             
             let format = String(format: "%%.%df", XAxisLabelDecimalDigits)
             XAxisColor.set()
-            let path = NSBezierPath()
-            let yPos = yOffset + xLabelHeight + 2.0
+            let path = UIBezierPath()
+            let yPos = viewHeight - (yOffset + xLabelHeight + 2.0)
             path.move(to: CGPoint(x: bounds.origin.x, y: yPos))
-            path.line(to: CGPoint(x: bounds.origin.x + bounds.width, y: yPos))
+            path.addLine(to: CGPoint(x: bounds.origin.x + bounds.width, y: yPos))
             path.stroke()
             for i in 0...MajorTickDivisions {
                 let xpos = bounds.width * CGFloat(i) / CGFloat(MajorTickDivisions) + bounds.origin.x
                 path.removeAllPoints()
                 path.move(to: CGPoint(x: xpos, y: yPos))
-                path.line(to: CGPoint(x: xpos, y: yPos + XAxisMajorTickHeight))
+                path.addLine(to: CGPoint(x: xpos, y: yPos - XAxisMajorTickHeight))
                 path.stroke()
                 let value = (maxX - minX) * Double(i) / Double(MajorTickDivisions) + minX
                 let label = String(format: format, value)
-                let labelSize = label.size(withAttributes: labelAttributes)
-                let labelRect = CGRect(x: xpos - labelSize.width * 0.5, y: yPos - 2.0 - labelSize.height, width: labelSize.width, height: labelSize.height)
+                let labelSize = label.size(attributes: labelAttributes)
+                let labelRect = CGRect(x: xpos - labelSize.width * 0.5, y: yPos + 2.0, width: labelSize.width, height: labelSize.height)
                 label.draw(in: labelRect, withAttributes: labelAttributes)
                 if (MinorTicksDivisionsPerMajorTick > 1) {
                     for j in 1..<MinorTicksDivisionsPerMajorTick {
                         let minorXpos = bounds.width * CGFloat(j) / CGFloat(MajorTickDivisions * MinorTicksDivisionsPerMajorTick)  + xpos
                         path.removeAllPoints()
                         path.move(to: CGPoint(x: minorXpos, y: yPos))
-                        path.line(to: CGPoint(x: minorXpos, y: yPos + XAxisMinorTickHeight))
+                        path.addLine(to: CGPoint(x: minorXpos, y: yPos - XAxisMinorTickHeight))
                         path.stroke()
                     }
                 }
@@ -980,28 +995,28 @@ open class MLViewAxisLabel: MLViewItem {
             
             let format = String(format: "%%.%df", YAxisLabelDecimalDigits)
             YAxisColor.set()
-            let path = NSBezierPath()
+            let path = UIBezierPath()
             let xPos = xOffset + yMaxLabelWidth + 2.0
             path.move(to: CGPoint(x: xPos, y: bounds.origin.y))
-            path.line(to: CGPoint(x: xPos, y: bounds.origin.y + bounds.height))
+            path.addLine(to: CGPoint(x: xPos, y: bounds.origin.y + bounds.height))
             path.stroke()
             for i in 0...MajorTickDivisions {
-                let ypos = bounds.height * CGFloat(i) / CGFloat(MajorTickDivisions) + bounds.origin.y
+                let ypos = (bounds.origin.y + bounds.size.height) - (bounds.height * CGFloat(i) / CGFloat(MajorTickDivisions))
                 path.removeAllPoints()
                 path.move(to: CGPoint(x: xPos, y: ypos))
-                path.line(to: CGPoint(x: xPos + YAxisMajorTickWidth, y: ypos))
+                path.addLine(to: CGPoint(x: xPos + YAxisMajorTickWidth, y: ypos))
                 path.stroke()
                 let value = (maxY - minY) * Double(i) / Double(MajorTickDivisions) + minY
                 let label = String(format: format, value)
-                let labelSize = label.size(withAttributes: labelAttributes)
+                let labelSize = label.size(attributes: labelAttributes)
                 let labelRect = CGRect(x: xOffset, y: ypos - (labelSize.height * 0.5), width: yMaxLabelWidth, height: labelSize.height)
                 label.draw(in: labelRect, withAttributes: labelAttributes)
                 if (MinorTicksDivisionsPerMajorTick > 1) {
                     for j in 1..<MinorTicksDivisionsPerMajorTick {
-                        let minorYpos = bounds.height * CGFloat(j) / CGFloat(MajorTickDivisions * MinorTicksDivisionsPerMajorTick)  + ypos
+                        let minorYpos = ypos - (bounds.height * CGFloat(j) / CGFloat(MajorTickDivisions * MinorTicksDivisionsPerMajorTick))
                         path.removeAllPoints()
                         path.move(to: CGPoint(x: xPos, y: minorYpos))
-                        path.line(to: CGPoint(x: xPos + YAxisMinorTickWidth, y: minorYpos))
+                        path.addLine(to: CGPoint(x: xPos + YAxisMinorTickWidth, y: minorYpos))
                         path.stroke()
                     }
                 }
@@ -1027,9 +1042,9 @@ open class MLViewAxisLabel: MLViewItem {
             //NSTextAlignment: textalign,
             NSFontAttributeName: labelFont!
         ] as [String : Any]
-        let labelSize = "123.4".size(withAttributes: labelAttributes)
+        let labelSize = "123.4".size(attributes: labelAttributes)
         
-        xAxisHeight = XAxisMajorTickHeight + 2.0     //  Tick plus marging
+        xAxisHeight = XAxisMajorTickHeight + 2.0     //  Tick plus margin
         xAxisHeight += labelSize.height
         xLabelHeight = labelSize.height
         return xAxisHeight
@@ -1056,7 +1071,7 @@ open class MLViewAxisLabel: MLViewItem {
         for i in 0...MajorTickDivisions {
             let value = (maxY - minY) * Double(i) / Double(MajorTickDivisions) + minY
             let label = String(format: format, value)
-            let labelSize = label.size(withAttributes: labelAttributes)
+            let labelSize = label.size(attributes: labelAttributes)
             if (labelSize.width > yMaxLabelWidth) { yMaxLabelWidth = labelSize.width }
         }
         
@@ -1082,7 +1097,7 @@ open class MLViewAxisLabel: MLViewItem {
 open class MLLegendItem {
     var label = "item"
     var symbol: MLPlotSymbol?   //  If nil, then line style item
-    var lineColor = NSColor.red
+    var lineColor = UIColor.red
     var lineThickness : CGFloat = 1.0
     var itemHeight : CGFloat = 0.0
     
@@ -1139,9 +1154,9 @@ open class MLViewLegend: MLViewItem {
     var yPosition : CGFloat = 0.0
     
     //  Text information
-    open var fontColor = NSColor.black
-    open var titleFont = NSFont(name: "Helvetica Neue", size: 14.0)
-    open var itemFont = NSFont(name: "Helvetica Neue", size: 12.0)
+    open var fontColor = UIColor.black
+    open var titleFont = UIFont(name: "Helvetica Neue", size: 14.0)
+    open var itemFont = UIFont(name: "Helvetica Neue", size: 12.0)
     open var title = ""
     
     //  Items
@@ -1165,7 +1180,7 @@ open class MLViewLegend: MLViewItem {
         self.items += items
     }
     
-    open func setColor(_ color: NSColor) {
+    open func setColor(_ color: UIColor) {
         fontColor =  color
     }
     open func setScale(_ scale: (minX: Double, maxX: Double, minY: Double, maxY: Double)) {
@@ -1196,7 +1211,7 @@ open class MLViewLegend: MLViewItem {
         var titleSize = CGSize.zero
         var legendSize = CGSize.zero
         if (!title.isEmpty) {
-            titleSize = title.size(withAttributes: titleAttributes)
+            titleSize = title.size(attributes: titleAttributes)
             legendSize = titleSize
         }
         
@@ -1204,7 +1219,7 @@ open class MLViewLegend: MLViewItem {
         var maxLabelSize : CGFloat = 0.0
         var maxSymbolSize : CGFloat = 0.0
         for item in items {
-            let labelSize = item.label.size(withAttributes: titleAttributes)
+            let labelSize = item.label.size(attributes: titleAttributes)
             var itemHeight = labelSize.height
             if (labelSize.width > maxLabelSize) { maxLabelSize = labelSize.width }
             if let symbol = item.symbol {
@@ -1226,34 +1241,30 @@ open class MLViewLegend: MLViewItem {
         switch (location) {
         case .upperLeft:
             xPosition = bounds.origin.x
-            yPosition = bounds.height + bounds.origin.y
+            yPosition = bounds.origin.y
         case .upperRight:
             xPosition = bounds.width - legendSize.width + bounds.origin.x
-            yPosition = bounds.height + bounds.origin.y
+            yPosition = bounds.origin.y
         case .lowerLeft:
             xPosition = bounds.origin.x
-            yPosition = legendSize.height + bounds.origin.y
+            yPosition = bounds.height + bounds.origin.y - legendSize.height
         case .lowerRight:
             xPosition = bounds.width - legendSize.width + bounds.origin.x
-            yPosition = legendSize.height + bounds.origin.y
+            yPosition = bounds.height + bounds.origin.y - legendSize.height
         case .custom:
             break   //  position already set
         }
         
         //  If specified, draw the title
         if (!title.isEmpty) {
-            let rect = CGRect(x: xPosition, y: yPosition - titleSize.height, width: legendSize.width, height: titleSize.height)
+            let rect = CGRect(x: xPosition, y: yPosition, width: legendSize.width, height: titleSize.height)
             title.draw(in: rect, withAttributes: titleAttributes)
         }
         
         //  Draw each item
-        var labelRect = CGRect(x: xPosition + 2.0, y: yPosition - titleSize.height, width: maxLabelSize, height: 1.0)
-        var symbolRect = CGRect(x: xPosition + 2.0 + maxLabelSize + 4.0, y: yPosition - titleSize.height, width: maxSymbolSize, height: 1.0)
+        var labelRect = CGRect(x: xPosition + 2.0, y: yPosition + titleSize.height, width: maxLabelSize, height: 1.0)
+        var symbolRect = CGRect(x: xPosition + 2.0 + maxLabelSize + 4.0, y: yPosition + titleSize.height, width: maxSymbolSize, height: 1.0)
         for item in items {
-            //  Move the rectangles down
-            labelRect.origin.y -= item.itemHeight
-            symbolRect.origin.y -= item.itemHeight
-            
             //  Set the height of the rectangles to the item height
             labelRect.size.height = item.itemHeight + 2.0
             symbolRect.size.height = item.itemHeight + 2.0
@@ -1267,14 +1278,18 @@ open class MLViewLegend: MLViewItem {
                 symbol.drawAt(center)
             }
             else {
-                let path = NSBezierPath()
+                let path = UIBezierPath()
                 item.lineColor.setStroke()
                 path.lineWidth = item.lineThickness
                 let y = symbolRect.origin.y + (item.itemHeight * 0.5)
                 path.move(to: CGPoint(x: symbolRect.origin.x + item.lineThickness, y: y))
-                path.line(to: CGPoint(x: symbolRect.origin.x + symbolRect.width - item.lineThickness, y: y))
+                path.addLine(to: CGPoint(x: symbolRect.origin.x + symbolRect.width - item.lineThickness, y: y))
                 path.stroke()
             }
+            
+            //  Move the rectangles down
+            labelRect.origin.y += item.itemHeight
+            symbolRect.origin.y += item.itemHeight
         }
     }
     open func getScale() -> (minX: Double, maxX: Double, minY: Double, maxY: Double)? {
@@ -1294,7 +1309,7 @@ open class MLViewLegend: MLViewItem {
 }
 
 ///  Class to view Machine Learning data, include data sets, regression lines, classification zones
-open class MLView: NSView {
+open class MLView: UIView {
     
     
     //  Machine learning items to plot
@@ -1328,8 +1343,9 @@ open class MLView: NSView {
 
     override open func draw(_ rect: CGRect) {
         //  draw the background
-        NSColor.white.setFill()
-        NSRectFill(bounds)
+        UIColor.white.setFill()
+        let bpath = UIBezierPath(rect: bounds)
+        bpath.fill()
         
         //  Start the initial scaling at 0-100
         var currentScaling = (minX: 0.0, maxX: 100.0, minY: 0.0, maxY: 100.0)
@@ -1351,7 +1367,7 @@ open class MLView: NSView {
         for plotItem in plotItems {
             if plotItem is MLViewAxisLabel {
                 let axisLabel = plotItem as! MLViewAxisLabel
-                axisLabel.setOffsets(yAxisLabelSpace, y: xAxisLabelSpace)
+                axisLabel.setOffsets(yAxisLabelSpace, y: xAxisLabelSpace, height: drawRect.size.height)
                 xAxisLabelSpace += axisLabel.getXAxisHeight()
                 yAxisLabelSpace += axisLabel.getYAxisWidth()
             }
@@ -1359,7 +1375,7 @@ open class MLView: NSView {
         
         //  Get the draw rectangle without the margins and labels
         drawRect.origin.x += yAxisLabelSpace
-        drawRect.origin.y += xAxisLabelSpace
+        drawRect.origin.y += yMargin
         drawRect.size.width -= xMargin + yAxisLabelSpace
         drawRect.size.height -= yMargin + xAxisLabelSpace
         

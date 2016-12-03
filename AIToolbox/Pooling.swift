@@ -6,7 +6,7 @@
 //  Copyright © 2016 Kevin Coble. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 import Accelerate
 
 public enum PoolingType : Int {

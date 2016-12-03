@@ -10,62 +10,93 @@ import Foundation
 import Accelerate
 
 public enum NeuronLayerType {
+    case simpleFeedForwardWithNodes
     case simpleFeedForward
+    case simpleRecurrentWithNodes
     case simpleRecurrent
+    case lstm
 }
 
-public enum NeuralActivationFunction {
-    case none
-    case hyberbolicTangent
+public enum NeuralActivationFunction : Int {
+    case none=0
+    case hyperbolicTangent
     case sigmoid
     case sigmoidWithCrossEntropy
     case rectifiedLinear
     case softSign
     case softMax        //  Only valid on output (last) layer
+    
+    func getString() ->String
+    {
+        switch self {
+        case .none:
+            return "None"
+        case .hyperbolicTangent:
+            return "tanh"
+        case .sigmoid:
+            return "Sigmoid"
+        case .sigmoidWithCrossEntropy:
+            return "Sigmoid with X-entropy"
+        case .rectifiedLinear:
+            return "Rect. Linear"
+        case .softSign:
+            return "Soft-sign"
+        case .softMax:
+            return "Soft-Max"
+        }
+    }
 }
 
 protocol NeuralLayer {
     func getNodeCount() -> Int
     func getWeightsPerNode()-> Int
     func getActivation()-> NeuralActivationFunction
-    func getLayerOutputs(_ inputs: [Double]) -> [Double]
+    func feedForward(_ x: [Double]) -> [Double]
     func initWeights(_ startWeights: [Double]!)
     func getWeights() -> [Double]
-    func getFinalLayerDelta(_ expectedOutputs: [Double])
-    func getLayerDelta(_ nextLayer: NeuralLayer)
-    func getSumOfWeightsTimesDelta(_ weightIndex: Int) ->Double
+    func setRMSPropDecay(_ decay: Double?)
+    func getLastOutput() -> [Double]
+    func getFinalLayer𝟃E𝟃zs(_ 𝟃E𝟃h: [Double])
+    func getLayer𝟃E𝟃zs(_ nextLayer: NeuralLayer)
+    func get𝟃E𝟃hForNodeInPreviousLayer(_ inputIndex: Int) ->Double
     func clearWeightChanges()
-    func updateWeights(_ inputs: [Double], trainingRate: Double, weightDecay: Double) -> [Double]
     func appendWeightChanges(_ inputs: [Double]) -> [Double]
     func updateWeightsFromAccumulations(_ averageTrainingRate: Double, weightDecay: Double)
     func decayWeights(_ decayFactor : Double)
     func getSingleNodeClassifyValue() -> Double
     func resetSequence()
     func storeRecurrentValues()
-    func retrieveRecurrentValues()
+    func retrieveRecurrentValues(_ sequenceIndex: Int)
+    func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork) -> Bool
+}
+
+public enum NeuralNetworkError: Error {
+    case expectedOutputNotSet
 }
 
 final class SimpleNeuralNode {
     //  Activation function
     let activation : NeuralActivationFunction
     let numWeights : Int        //  Includes bias weight
-    var weights : [Double]
-    var lastWeightedSum : Double //  Last weights dot-producted with inputs - remembered for training purposes
-    var lastOutput : Double //  Last result calculated
+    var W : [Double]      //  Weight vector
+    var h : Double //  Last result calculated
     var outputHistory : [Double] //  History of output for the sequence
-    var delta : Double      //  Difference in expected output to calculated result - weighted sum from all nodes this node outputs too
-    var accumulatedWeightChanges : [Double]?
+    var 𝟃E𝟃h : Double      //  Gradient in error with respect to output of this node
+    var 𝟃E𝟃z : Double      //  Gradient in error with respect to weighted sum
+    var 𝟃E𝟃W : [Double]   //  Accumulated weight change gradient
+    var rmspropDecay : Double?      //  Decay rate for rms prop weight updates.  If nil, rmsprop is not used
     
     ///  Create the neural network node with a set activation function
     init(numInputs : Int, activationFunction: NeuralActivationFunction)
     {
         activation = activationFunction
         numWeights = numInputs + 1  //  Add one weight for the bias term
-        weights = []
-        lastWeightedSum = 0.0
-        lastOutput = 0.0
+        W = []
+        h = 0.0
         outputHistory = []
-        delta = 0.0
+        𝟃E𝟃h = 0.0
+        𝟃E𝟃z = 0.0
+        𝟃E𝟃W = []
     }
     
     //  Initialize the weights
@@ -73,130 +104,111 @@ final class SimpleNeuralNode {
     {
         if let startWeights = startWeights {
             if (startWeights.count == 1) {
-                weights = [Double](repeating: startWeights[0], count: numWeights)
+                W = [Double](repeating: startWeights[0], count: numWeights)
             }
             else {
-                weights = []
+                W = []
                 var index = 0 //  Last number (if more than 1) goes into the bias weight, then repeat the ones that come before
                 for _ in 0..<numWeights-1  {
                     if (index >= startWeights.count-1) { index = 0 }      //  Wrap if necessary
-                    weights.append(startWeights[index])
+                    W.append(startWeights[index])
                     index += 1
                 }
-                weights.append(startWeights[startWeights.count-1])     //  Add the bias term
+                W.append(startWeights[startWeights.count-1])     //  Add the bias term
             }
         }
         else {
-            weights = []
+            W = []
             for _ in 0..<numWeights-1  {
-                weights.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numWeights-1)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+                W.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numWeights-1)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
             }
-            weights.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
+            W.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
         }
     }
     
-    func getNodeOutput(_ inputs: [Double]) -> Double
+    func setRMSPropDecay(_ decay: Double?)
     {
-        //  Get the weighted sum
-        vDSP_dotprD(weights, 1, inputs, 1, &lastWeightedSum, vDSP_Length(weights.count))
+        rmspropDecay = decay
+    }
+    
+    func feedForward(_ x: [Double]) -> Double
+    {
+        //  Get the weighted sum:  z = W⋅x
+        var z = 0.0
+        vDSP_dotprD(W, 1, x, 1, &z, vDSP_Length(W.count))
         
-        //  Use the activation function function for the nonlinearity
+        //  Use the activation function function for the nonlinearity:  h = act(z)
         switch (activation) {
             case .none:
-                lastOutput = lastWeightedSum
+                h = z
                 break
-            case .hyberbolicTangent:
-                lastOutput = tanh(lastWeightedSum)
+            case .hyperbolicTangent:
+                h = tanh(z)
                 break
             case .sigmoidWithCrossEntropy:
                 fallthrough
             case .sigmoid:
-                lastOutput = 1.0 / (1.0 + exp(-lastWeightedSum))
+                h = 1.0 / (1.0 + exp(-z))
                 break
             case .rectifiedLinear:
-                lastOutput = lastWeightedSum
-                if (lastWeightedSum < 0) { lastOutput = 0.0 }
+                h = z
+                if (z < 0) { h = 0.0 }
                 break
             case .softSign:
-                lastOutput = lastWeightedSum / (1.0 + abs(lastWeightedSum))
+                h = z / (1.0 + abs(z))
                 break
             case .softMax:
-                lastOutput = exp(lastWeightedSum)
+                h = exp(z)
                 break
         }
         
-        return lastOutput
+        return h
     }
     
-    //  Get the partial derivitive of the error with respect to the weighted sum
-    func getFinalNodeDelta(_ expectedOutput: Double)
+    func reset𝟃E𝟃hs()
     {
-        //  error = (result - expected value)^2  (squared error) - not the case for softmax or cross entropy
-        //  derivitive of error = 2 * (result - expected value) * result'  (chain rule - result is a function of the sum through the non-linearity)
-        //  derivitive of the non-linearity: tanh' -> 1 - result^2, sigmoid -> result - result^2, rectlinear -> 0 if result<0 else 1
-        //  derivitive of error = 2 * (result - expected value) * derivitive from above
-        switch (activation) {
-            case .none:
-                delta = 2.0 * (lastOutput - expectedOutput)
-                break
-            case .hyberbolicTangent:
-                delta = 2.0 * (lastOutput - expectedOutput) * (1 - lastOutput * lastOutput)
-                break
-            case .sigmoid:
-                delta = 2.0 * (lastOutput - expectedOutput) * (lastOutput - lastOutput * lastOutput)
-                break
-            case .sigmoidWithCrossEntropy:
-                delta = (lastOutput - expectedOutput)
-                break
-            case .rectifiedLinear:
-                delta = lastOutput < 0.0 ? 0.0 : 2.0 * (lastOutput - expectedOutput)
-                break
-            case .softSign:
-                delta = (1-abs(lastOutput)) //  Start with derivitive for computation speed's sake
-                delta *= delta
-                delta *= 2.0 * (lastOutput - expectedOutput)
-                break
-            case .softMax:
-                delta = (lastOutput - expectedOutput)
-                break
-        }
+        𝟃E𝟃h = 0.0
     }
     
-    func resetDelta()
+    func addTo𝟃E𝟃hs(_ addition: Double)
     {
-        delta = 0.0
+        𝟃E𝟃h += addition
     }
     
-    func addToDelta(_ addition: Double)
+    func getWeightTimes𝟃E𝟃zs(_ weightIndex: Int) ->Double
     {
-        delta += addition
+        return W[weightIndex] * 𝟃E𝟃z
     }
     
-    func getWeightTimesDelta(_ weightIndex: Int) ->Double
+    func get𝟃E𝟃z()
     {
-        return weights[weightIndex] * delta
-    }
-    
-    func multiplyDeltaByNonLinearityDerivitive()
-    {
+        //  Calculate 𝟃E𝟃z.   𝟃E/𝟃z = 𝟃E/𝟃h ⋅ 𝟃h/𝟃z  =  𝟃E/𝟃h ⋅ derivitive of non-linearity
         //  derivitive of the non-linearity: tanh' -> 1 - result^2, sigmoid -> result - result^2, rectlinear -> 0 if result<0 else 1
         switch (activation) {
             case .none:
                 break
-            case .hyberbolicTangent:
-                delta *= (1 - lastOutput * lastOutput)
+            case .hyperbolicTangent:
+                𝟃E𝟃z = 𝟃E𝟃h * (1 - h * h)
                 break
             case .sigmoidWithCrossEntropy:
                 fallthrough
             case .sigmoid:
-                delta *= (lastOutput - lastOutput * lastOutput)
+                𝟃E𝟃z = 𝟃E𝟃h * (h - h * h)
                 break
             case .rectifiedLinear:
-                delta = lastOutput < 0.0 ? 0.0 : delta
+                𝟃E𝟃z = h <= 0.0 ? 0.0 : 𝟃E𝟃h
                 break
             case .softSign:
-                if (lastOutput < 0) { delta *= -1 }
-                delta /= (1.0 + lastOutput) * (1.0 + lastOutput)
+                //  Reconstitute z from h
+                var z : Double
+                if (h < 0) {        //  Negative z
+                    z = h / (1.0 + h)
+                    𝟃E𝟃z = -𝟃E𝟃h / ((1.0 + z) * (1.0 + z))
+                }
+                else {              //  Positive z
+                    z = h / (1.0 - h)
+                    𝟃E𝟃z = 𝟃E𝟃h / ((1.0 + z) * (1.0 + z))
+                }
                 break
             case .softMax:
                 //  Should not get here - SoftMax is only valid on output layer
@@ -204,61 +216,102 @@ final class SimpleNeuralNode {
         }
     }
     
-    func updateWeights(_ inputs: [Double], trainingRate: Double) -> Double
-    {
-        //  Update each weight
-        var negativeScaleFactor = trainingRate * delta * -1.0  //  Make negative so we can use DSP to vectorize equation
-        vDSP_vsmaD(inputs, 1, &negativeScaleFactor, weights, 1, &weights, 1, vDSP_Length(weights.count))    //  weights = weights + delta * inputs
-
-        return lastOutput
-    }
-    
     func clearWeightChanges()
     {
-        accumulatedWeightChanges = [Double](repeating: 0.0, count: weights.count)
+        𝟃E𝟃W = [Double](repeating: 0.0, count: W.count)
     }
     
-    func appendWeightChanges(_ inputs: [Double]) -> Double
+    func appendWeightChanges(_ x: [Double]) -> Double
     {
         //  Update each weight accumulation
-        vDSP_vsmaD(inputs, 1, &delta, accumulatedWeightChanges!, 1, &accumulatedWeightChanges!, 1, vDSP_Length(weights.count))       //  Calculate the weight change:  total change = total change + delta * inputs
+        //  𝟃E/𝟃W = 𝟃E/𝟃z ⋅ 𝟃z/𝟃W = 𝟃E/𝟃z ⋅ x
+        vDSP_vsmaD(x, 1, &𝟃E𝟃z, 𝟃E𝟃W, 1, &𝟃E𝟃W, 1, vDSP_Length(numWeights))
         
-        return lastOutput
+        return h    //  return output for next layer
     }
     
     func updateWeightsFromAccumulations(_ averageTrainingRate: Double)
     {
         //  Update the weights from the accumulations
-        //  weights -= accumulation * averageTrainingRate  (training rate is passed in negative to allow subtraction with vector math)
-        var x = averageTrainingRate     //  Needed for unsafe pointer conversion
-        vDSP_vsmaD(accumulatedWeightChanges!, 1, &x, weights, 1, &weights, 1, vDSP_Length(weights.count))
+        //  W -= 𝟃E𝟃W, * averageTrainingRate
+        var η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+        vDSP_vsmaD(𝟃E𝟃W, 1, &η, W, 1, &W, 1, vDSP_Length(numWeights))
     }
     
     func decayWeights(_ decayFactor : Double)
     {
-        var x = decayFactor     //  Needed for unsafe pointer conversion
-        vDSP_vsmulD(weights, 1, &x, &weights, 1, vDSP_Length(weights.count-1))
+        var λ = decayFactor     //  Needed for unsafe pointer conversion
+        vDSP_vsmulD(W, 1, &λ, &W, 1, vDSP_Length(numWeights-1))
     }
     
     func resetSequence()
     {
-        lastOutput = 0.0
+        h = 0.0
         outputHistory = [0.0]       //  first 'previous' value is zero
-        delta = 0.0                 //  Backward propogation previous delta (delta from next time step in sequence) is zero
+        𝟃E𝟃z = 0.0                 //  Backward propogation previous 𝟃E𝟃z (𝟃E𝟃z from next time step in sequence) is zero
     }
     
     func storeRecurrentValues()
     {
-        outputHistory.append(lastOutput)
+        outputHistory.append(h)
     }
     
     func getLastRecurrentValue()
     {
-        lastOutput = outputHistory.removeLast()
+        h = outputHistory.removeLast()
+    }
+    
+    func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
+    {
+        var result = true
+        
+        //  Iterate through each parameter
+        for index in 0..<W.count {
+            let oldValue = W[index]
+            
+            //  Get the network loss with a small addition to the parameter
+            W[index] += ε
+            _ = network.feedForward(x)
+            var plusLoss : [Double]
+            do {
+                plusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            
+            //  Get the network loss with a small subtraction from the parameter
+            W[index] = oldValue - ε
+            _ = network.feedForward(x)
+            var minusLoss : [Double]
+            do {
+                minusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            W[index] = oldValue
+            
+            //  Iterate over the results
+            for resultIndex in 0..<plusLoss.count {
+                //  Get the numerical gradient estimate  𝟃E/𝟃W
+                let gradient = (plusLoss[resultIndex] - minusLoss[resultIndex]) / (2.0 * ε)
+                
+                //  Compare with the analytical gradient
+                let difference = abs(gradient - 𝟃E𝟃W[index])
+                //                print("difference = \(difference)")
+                if (difference > Δ) {
+                    result = false
+                }
+            }
+        }
+        
+        return result
     }
 }
 
-final class SimpleNeuralLayer: NeuralLayer {
+///  Class for a feed-forward network with individual nodes (slower, but easier to get into details)
+final class SimpleNeuralLayerWithNodes: NeuralLayer {
     //  Nodes
     var nodes : [SimpleNeuralNode]
     
@@ -303,9 +356,25 @@ final class SimpleNeuralLayer: NeuralLayer {
     {
         var weights: [Double] = []
         for node in nodes {
-            weights += node.weights
+            weights += node.W
         }
         return weights
+    }
+    
+    func setRMSPropDecay(_ decay: Double?)
+    {
+        for node in nodes {
+            node.setRMSPropDecay(decay)
+        }
+    }
+    
+    func getLastOutput() -> [Double]
+    {
+        var h: [Double] = []
+        for node in nodes {
+            h.append(node.h)
+        }
+        return h
     }
     
     func getNodeCount() -> Int
@@ -323,7 +392,7 @@ final class SimpleNeuralLayer: NeuralLayer {
         return nodes[0].activation
     }
     
-    func getLayerOutputs(_ inputs: [Double]) -> [Double]
+    func feedForward(_ x: [Double]) -> [Double]
     {
         var outputs : [Double] = []
         //  Assume input array already has bias constant 1.0 appended
@@ -331,60 +400,55 @@ final class SimpleNeuralLayer: NeuralLayer {
         if (nodes[0].activation == .softMax) {
             var sum = 0.0
             for node in nodes {     //  Sum each output
-                sum += node.getNodeOutput(inputs)
+                sum += node.feedForward(x)
             }
             let scale = 1.0 / sum       //  Do division once for efficiency
             for node in nodes {     //  Get the outputs scaled by the sum to give the probability distribuition for the output
-                node.lastOutput *= scale
-                outputs.append(node.lastOutput)
+                node.h *= scale
+                outputs.append(node.h)
             }
         }
         else {
             for node in nodes {
-                outputs.append(node.getNodeOutput(inputs))
+                outputs.append(node.feedForward(x))
             }
         }
         
         return outputs
     }
     
-    func getFinalLayerDelta(_ expectedOutputs: [Double])
+    func getFinalLayer𝟃E𝟃zs(_ 𝟃E𝟃h: [Double])
     {
         for nodeIndex in 0..<nodes.count {
-            nodes[nodeIndex].getFinalNodeDelta(expectedOutputs[nodeIndex])
+            //  Set 𝟃E/𝟃h from external error
+            nodes[nodeIndex].𝟃E𝟃h = 𝟃E𝟃h[nodeIndex]
+            
+            //  Backpropogate error to the z value level
+            nodes[nodeIndex].get𝟃E𝟃z()
         }
     }
     
-    func getLayerDelta(_ nextLayer: NeuralLayer)
+    func getLayer𝟃E𝟃zs(_ nextLayer: NeuralLayer)
     {
         for nNodeIndex in 0..<nodes.count {
-            nodes[nNodeIndex].resetDelta()
-            //  Add each portion from the nodes in the next forward layer
-            nodes[nNodeIndex].addToDelta(nextLayer.getSumOfWeightsTimesDelta(nNodeIndex))
-            nodes[nNodeIndex].multiplyDeltaByNonLinearityDerivitive()
+            //  Set 𝟃E/𝟃h to 0
+            nodes[nNodeIndex].reset𝟃E𝟃hs()
+            
+            //  Add each portion of 𝟃E/𝟃h from the nodes in the next forward layer
+            nodes[nNodeIndex].addTo𝟃E𝟃hs(nextLayer.get𝟃E𝟃hForNodeInPreviousLayer(nNodeIndex))
+            
+            //  Calculate 𝟃E/𝟃z from 𝟃E/𝟃h
+            nodes[nNodeIndex].get𝟃E𝟃z()
         }
     }
     
-    func getSumOfWeightsTimesDelta(_ weightIndex: Int) ->Double
+    func get𝟃E𝟃hForNodeInPreviousLayer(_ inputIndex: Int) ->Double
     {
         var sum = 0.0
         for node in nodes {
-            sum += node.getWeightTimesDelta(weightIndex)
+            sum += node.getWeightTimes𝟃E𝟃zs(inputIndex)
         }
         return sum
-    }
-    
-    func updateWeights(_ inputs: [Double], trainingRate: Double, weightDecay: Double) -> [Double]
-    {
-        var outputs : [Double] = []
-        //  Assume input array already has bias constant 1.0 appended
-        //  Fully-connected nodes means all nodes get the same input array
-        for node in nodes {
-            if (weightDecay < 1) { node.decayWeights(weightDecay) }
-            outputs.append(node.updateWeights(inputs, trainingRate: trainingRate))
-        }
-        
-        return outputs
     }
     
     func clearWeightChanges()
@@ -394,13 +458,13 @@ final class SimpleNeuralLayer: NeuralLayer {
         }
     }
     
-    func appendWeightChanges(_ inputs: [Double]) -> [Double]
+    func appendWeightChanges(_ x: [Double]) -> [Double]
     {
         var outputs : [Double] = []
         //  Assume input array already has bias constant 1.0 appended
         //  Fully-connected nodes means all nodes get the same input array
         for node in nodes {
-            outputs.append(node.appendWeightChanges(inputs))
+            outputs.append(node.appendWeightChanges(x))
         }
         
         return outputs
@@ -425,7 +489,7 @@ final class SimpleNeuralLayer: NeuralLayer {
     func getSingleNodeClassifyValue() -> Double
     {
         let activation = nodes[0].activation
-        if (activation == .hyberbolicTangent || activation == .rectifiedLinear) { return 0.0 }
+        if (activation == .hyperbolicTangent || activation == .rectifiedLinear) { return 0.0 }
         return 0.5
     }
     
@@ -443,26 +507,346 @@ final class SimpleNeuralLayer: NeuralLayer {
         }
     }
     
-    func retrieveRecurrentValues()
+    func retrieveRecurrentValues(_ sequenceIndex: Int)
     {
         //  Set the last recurrent value in the history array to the last output
         for node in nodes {
             node.getLastRecurrentValue()
         }
     }
+    
+    func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
+    {
+        //  Have each node check it's own gradients
+        var result = true
+        for node in nodes {
+            if (!node.gradientCheck(x: x, ε: ε, Δ: Δ, network: network)) { result = false }
+        }
+        return result
+    }
+}
+
+///  Class for a feed-forward network without individual nodes (faster, but details hidden in matrices)
+final class SimpleNeuralLayer: NeuralLayer {
+    var activation : NeuralActivationFunction
+    var numInputs = 0
+    var numNodes : Int
+    var W : [Double] = []
+    var h : [Double] //  Last result calculated
+    var outputHistory : [[Double]] //  History of output for the sequence
+    var 𝟃E𝟃z : [Double]      //  Gradient in error with respect to weighted sum
+    var 𝟃E𝟃W : [Double] = []  //  Accumulated weight change gradient
+    var rmspropDecay : Double?      //  Decay rate for rms prop weight updates.  If nil, rmsprop is not used
+    
+    ///  Create the neural network layer based on a tuple (number of nodes, activation function)
+    init(numInputs : Int, layerDefinition: (layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?))
+    {
+        activation = layerDefinition.activation
+        self.numInputs = numInputs
+        self.numNodes = layerDefinition.numNodes
+        h = [Double](repeating: 0.0, count: numNodes)
+        outputHistory = []
+        𝟃E𝟃z = [Double](repeating: 0.0, count: numNodes)
+    }
+    
+    //  Initialize the weights
+    func initWeights(_ startWeights: [Double]!)
+    {
+        let numWeights = (numInputs + 1) * numNodes   //  Add bias offset
+        W = []
+        if let startWeights = startWeights {
+            if (startWeights.count >= numWeights) {
+                //  If there are enough weights for all nodes, just initialize
+                for i in 0..<numWeights {
+                    W.append(startWeights[i])
+                }
+            }
+            else {
+                //  If there are not enough weights for all nodes, initialize each (virtual) node with the set given
+                for _ in 0..<numNodes {
+                    for i in 0..<(numInputs+1) {
+                        W.append(startWeights[i])
+                    }
+                }
+            }
+        }
+        else {
+            //  No specified weights - just initialize normally
+            //  Allocate the weight array using 'Xavier' initialization
+            var weightDiviser: Double
+            if (activation == .rectifiedLinear) {
+                weightDiviser = 1 / sqrt(Double(numInputs) * 0.5)
+            }
+            else {
+                weightDiviser = 1 / sqrt(Double(numInputs))
+            }
+            W = []
+            for _ in 0..<numWeights {
+                W.append(Gaussian.gaussianRandom(0.0, standardDeviation : 1.0) * weightDiviser)
+            }
+        }
+    }
+    
+    func getWeights() -> [Double]
+    {
+        return W
+    }
+    
+    func setRMSPropDecay(_ decay: Double?)
+    {
+        rmspropDecay = decay
+    }
+    
+    func getLastOutput() -> [Double]
+    {
+        return h
+    }
+    
+    func getNodeCount() -> Int
+    {
+        return numNodes
+    }
+    
+    func getWeightsPerNode()-> Int
+    {
+        return numInputs + 1    //  include bias
+    }
+    
+    func getActivation()-> NeuralActivationFunction
+    {
+        return activation
+    }
+    
+    func feedForward(_ x: [Double]) -> [Double]
+    {
+        var z = [Double](repeating: 0.0, count: numNodes)
+        //  Assume input array already has bias constant 1.0 appended
+        //  Fully-connected nodes means all nodes get the same input array
+        vDSP_mmulD(W, 1, x, 1, &z, 1, vDSP_Length(numNodes), 1, vDSP_Length(numInputs+1))
+        
+        //  Run through the non-linearity
+        var sum = 0.0
+        for node in 0..<numNodes {
+            switch (activation) {
+            case .none:
+                h[node] = z[node]
+                break
+            case .hyperbolicTangent:
+                h[node] = tanh(z[node])
+                break
+            case .sigmoidWithCrossEntropy:
+                h[node] = 1.0 / (1.0 + exp(-z[node]))
+                sum += h[node]
+                break
+            case .sigmoid:
+                h[node] = 1.0 / (1.0 + exp(-z[node]))
+                break
+            case .rectifiedLinear:
+                h[node] = z[node]
+                if (z[node] < 0) { h[node] = 0.0 }
+                break
+            case .softSign:
+                h[node] = z[node] / (1.0 + abs(z[node]))
+                break
+            case .softMax:
+                h[node] = exp(z[node])
+                break
+            }
+        }
+        
+        if (activation == .softMax) {
+            var scale = 1.0 / sum       //  Do division once for efficiency
+            vDSP_vsmulD(h, 1, &scale, &h, 1, vDSP_Length(numNodes))
+        }
+        
+        return h
+    }
+    
+    func getFinalLayer𝟃E𝟃zs(_ 𝟃E𝟃h: [Double])
+    {
+        //  Calculate 𝟃E/𝟃z from 𝟃E/𝟃h
+        switch (activation) {
+        case .none:
+            𝟃E𝟃z = 𝟃E𝟃h
+            break
+        case .hyperbolicTangent:
+            vDSP_vsqD(h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  h²
+            let ones = [Double](repeating: 1.0, count: numNodes)
+            vDSP_vsubD(𝟃E𝟃z, 1, ones, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  1 - h²
+            vDSP_vmulD(𝟃E𝟃z, 1, 𝟃E𝟃h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  𝟃E𝟃h * (1 - h²)
+            break
+        case .sigmoidWithCrossEntropy:
+            fallthrough
+        case .sigmoid:
+            vDSP_vsqD(h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  h²
+            vDSP_vsubD(𝟃E𝟃z, 1, h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  h - h²
+            vDSP_vmulD(𝟃E𝟃z, 1, 𝟃E𝟃h, 1, &𝟃E𝟃z, 1, vDSP_Length(numNodes))       //  𝟃E𝟃h * (h - h²)
+            break
+        case .rectifiedLinear:
+            for i in 0..<numNodes {
+                𝟃E𝟃z[i] = h[i] <= 0.0 ? 0.0 : 𝟃E𝟃h[i]
+            }
+            break
+        case .softSign:
+            for i in 0..<numNodes {
+                //  Reconstitute z from h
+                var z : Double
+                //!! - this might be able to be sped up with vector operations
+                if (h[i] < 0) {        //  Negative z
+                    z = h[i] / (1.0 + h[i])
+                    𝟃E𝟃z[i] = -𝟃E𝟃h[i] / ((1.0 + z) * (1.0 + z))
+                }
+                else {              //  Positive z
+                    z = h[i] / (1.0 - h[i])
+                    𝟃E𝟃z[i] = 𝟃E𝟃h[i] / ((1.0 + z) * (1.0 + z))
+                }
+            }
+            break
+        case .softMax:
+            //  This should be done outside of the layer
+            break
+        }
+    }
+    
+    func getLayer𝟃E𝟃zs(_ nextLayer: NeuralLayer)
+    {
+        //  Get 𝟃E/𝟃h from the next layer
+        var 𝟃E𝟃h = [Double](repeating: 0.0, count: numNodes)
+        for node in 0..<numNodes {
+            𝟃E𝟃h[node] = nextLayer.get𝟃E𝟃hForNodeInPreviousLayer(node)
+        }
+        
+        //  Calculate 𝟃E/𝟃z from 𝟃E/𝟃h
+        getFinalLayer𝟃E𝟃zs(𝟃E𝟃h)
+    }
+    
+    func get𝟃E𝟃hForNodeInPreviousLayer(_ inputIndex: Int) ->Double
+    {
+        var sum = 0.0
+        var offset = inputIndex
+        for node in 0..<numNodes {
+            sum += 𝟃E𝟃z[node] * W[offset]
+            offset += numInputs+1
+        }
+        return sum
+    }
+    
+    func clearWeightChanges()
+    {
+        𝟃E𝟃W = [Double](repeating: 0.0, count: W.count)
+    }
+    
+    func appendWeightChanges(_ x: [Double]) -> [Double]     //  Assumes x has bias term appended
+    {
+        //  Update each weight accumulation
+        //  𝟃E/𝟃W = 𝟃E/𝟃z ⋅ 𝟃z/𝟃W = 𝟃E/𝟃z ⋅ x
+        var weightChange = [Double](repeating: 0.0, count: W.count)
+        vDSP_mmulD(𝟃E𝟃z, 1, x, 1, &weightChange, 1, vDSP_Length(numNodes), vDSP_Length(numInputs+1), 1)
+        vDSP_vaddD(weightChange, 1, 𝟃E𝟃W, 1, &𝟃E𝟃W, 1, vDSP_Length(W.count))
+        
+        return h    //  return output for next layer
+    }
+    
+    func updateWeightsFromAccumulations(_ averageTrainingRate: Double, weightDecay: Double)
+    {
+        //  Update the weights from the accumulations
+        if (weightDecay < 1) { decayWeights(weightDecay) }
+        var trainRate = -averageTrainingRate
+        vDSP_vsmaD(𝟃E𝟃W, 1, &trainRate, W, 1, &W, 1, vDSP_Length(W.count))
+    }
+    
+    func decayWeights(_ decayFactor : Double)
+    {
+        var decay = decayFactor
+        vDSP_vsmulD(W, 1, &decay, &W, 1, vDSP_Length(W.count))
+    }
+    
+    func getSingleNodeClassifyValue() -> Double
+    {
+        if (activation == .hyperbolicTangent || activation == .rectifiedLinear) { return 0.0 }
+        return 0.5
+    }
+    
+    func resetSequence()
+    {
+        h = [Double](repeating: 0.0, count: numNodes)
+        outputHistory = [[Double](repeating: 0.0, count: numNodes)]       //  first 'previous' value is zero
+        𝟃E𝟃z = [Double](repeating: 0.0, count: numNodes)                 //  Backward propogation previous 𝟃E𝟃z (𝟃E𝟃z from next time step in sequence) is zero
+    }
+    
+    func storeRecurrentValues()
+    {
+        outputHistory.append(h)
+    }
+    
+    func retrieveRecurrentValues(_ sequenceIndex: Int)
+    {
+        //  Set the last recurrent value in the history array to the last output
+        h = outputHistory.removeLast()
+    }
+    
+    func gradientCheck(x: [Double], ε: Double, Δ: Double, network: NeuralNetwork)  -> Bool
+    {
+        var result = true
+        
+        //  Iterate through each parameter
+        for index in 0..<W.count {
+            let oldValue = W[index]
+            
+            //  Get the network loss with a small addition to the parameter
+            W[index] += ε
+            _ = network.feedForward(x)
+            var plusLoss : [Double]
+            do {
+                plusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            
+            //  Get the network loss with a small subtraction from the parameter
+            W[index] = oldValue - ε
+            _ = network.feedForward(x)
+            var minusLoss : [Double]
+            do {
+                minusLoss = try network.getResultLoss()
+            }
+            catch {
+                return false
+            }
+            W[index] = oldValue
+            
+            //  Iterate over the results
+            for resultIndex in 0..<plusLoss.count {
+                //  Get the numerical gradient estimate  𝟃E/𝟃W
+                let gradient = (plusLoss[resultIndex] - minusLoss[resultIndex]) / (2.0 * ε)
+                
+                //  Compare with the analytical gradient
+                let difference = abs(gradient - 𝟃E𝟃W[index])
+//                print("difference = \(difference)")
+                if (difference > Δ) {
+                    result = false
+                }
+            }
+        }
+        
+        return result
+    }
 }
 
 open class NeuralNetwork: Classifier, Regressor {
     //  Layers
     let numInputs : Int
+    let numOutputs : Int
     var layers : [NeuralLayer]
     var trainingRate = 0.3
     var weightDecay = 1.0
-    var initializeFunction : ((_ trainData: DataSet)->[Double])!
+    var initializeFunction : ((_ trainData: MLDataSet)->[Double])!
     var hasRecurrentLayers = false
+    var expectedOutput : [Double]?      //  Expected output for gradient checks
+    
     
     ///  Create the neural network based on an array of tuples, one for each non-input layer (number of nodes, activation function)
-    ///     There must be at least two layers (hidden layer and output layer), but can have more
     ///     The input layer is defined by the number of inputs only.  The network is fully connected, including a bias term
     ///     If being used for classification, have the output (last) layer have the number of nodes equal to the number of classes
     public init(numInputs : Int, layerDefinitions: [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)])
@@ -473,15 +857,25 @@ open class NeuralNetwork: Classifier, Regressor {
         for layerDefinition in layerDefinitions {
             var layer : NeuralLayer
             switch (layerDefinition.layerType) {
+            case .simpleFeedForwardWithNodes:
+                layer = SimpleNeuralLayerWithNodes(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
             case .simpleFeedForward:
                 layer = SimpleNeuralLayer(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
+            case .simpleRecurrentWithNodes:
+                layer = RecurrentNeuralLayerWithNodes(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
             case .simpleRecurrent:
                 layer = RecurrentNeuralLayer(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
+            case .lstm:
+                layer = LSTMNeuralLayer(numInputs: numInputsFromPreviousLayer, layerDefinition: layerDefinition)
             }
             layers.append(layer)
             numInputsFromPreviousLayer = layerDefinition.numNodes
             if (layerDefinition.layerType == .simpleRecurrent) { hasRecurrentLayers = true }
+            if (layerDefinition.layerType == .lstm) { hasRecurrentLayers = true }
         }
+        
+        numOutputs = layers.last!.getNodeCount()
+
     }
     
     open func getInputDimension() -> Int
@@ -490,7 +884,7 @@ open class NeuralNetwork: Classifier, Regressor {
     }
     open func getOutputDimension() -> Int
     {
-        return layers.last!.getNodeCount()
+        return numOutputs
     }
     open func getParameterDimension() -> Int
     {
@@ -506,20 +900,28 @@ open class NeuralNetwork: Classifier, Regressor {
         if (numberOfOutputNodes == 1) { return 2 }
         return numberOfOutputNodes
     }
+    
+    open func setRMSPropDecay(decay: Double?)
+    {
+        for layer in layers {
+            layer.setRMSPropDecay(decay)
+        }
+    }
+    
     ///  FeedForward routine
     open func feedForward(_ inputs: [Double]) -> [Double] {
-        var layerInputs = inputs
+        var x = inputs
         
         //  Go through each layer
         for layer in layers {
             //  Add a bias constant 1.0 to the input array
-            layerInputs.append(1.0)
+            x.append(1.0)
             
             //  Calculate the outputs from the layer
-            layerInputs = layer.getLayerOutputs(layerInputs)
+            x = layer.feedForward(x)
         }
         
-        return layerInputs
+        return x
     }
     
     open func setParameters(_ parameters: [Double]) throws
@@ -546,7 +948,7 @@ open class NeuralNetwork: Classifier, Regressor {
 
     
     ///  Method to set a custom function to initialize the parameters.  If not set, random parameters are used
-    open func setCustomInitializer(_ function: ((_ trainData: DataSet)->[Double])!)
+    open func setCustomInitializer(_ function: ((_ trainData: MLDataSet)->[Double])!)
     {
         initializeFunction = function
     }
@@ -561,7 +963,7 @@ open class NeuralNetwork: Classifier, Regressor {
     }
     
     ///  Method to initialize the weights - call before any training other than 'trainClassifier' or 'trainRegressor', which call this
-    open func initializeWeights(_ trainData: DataSet!)
+    open func initializeWeights(_ trainData: MLDataSet!)
     {
         if let initFunc = initializeFunction, let data = trainData {
             let startWeights = initFunc(data)
@@ -590,7 +992,7 @@ open class NeuralNetwork: Classifier, Regressor {
         }
     }
     
-    open func trainClassifier(_ trainData: DataSet) throws
+    open func trainClassifier(_ trainData: MLClassificationDataSet) throws
     {
         initializeWeights(trainData)
         
@@ -605,7 +1007,7 @@ open class NeuralNetwork: Classifier, Regressor {
         try classificationSGDBatchTrain(trainData, epochSize: epochSize, epochCount : epochCount, trainingRate: trainingRate, weightDecay: weightDecay)
     }
     
-    open func continueTrainingClassifier(_ trainData: DataSet) throws
+    open func continueTrainingClassifier(_ trainData: MLClassificationDataSet) throws
     {
 
         let epochCount = trainData.size * 2
@@ -646,19 +1048,22 @@ open class NeuralNetwork: Classifier, Regressor {
     }
     
     ///  Set the 0 based index of the best neuron output (giving the most probable class for the input), for each point in a data set
-    open func classify(_ testData: DataSet) throws {
+    open func classify(_ testData: MLClassificationDataSet) throws {
         //  Verify the data set is the right type
         if (testData.dataType != .classification) { throw DataTypeError.invalidDataType }
         if (testData.inputDimension != numInputs) { throw DataTypeError.wrongDimensionOnInput }
         
         //  Classify each input
-        testData.classes = []
-        for index in 0..<testData.size {
-            testData.classes!.append(classifyOne(testData.inputs[index]))
+        for point in 0..<testData.size {
+            do {
+                let inputs = try testData.getInput(point)
+                try testData.setClass(point, newClass: classifyOne(inputs))
+            }
+            catch { print("error indexing test data array") }
         }
     }
     
-    open func trainRegressor(_ trainData: DataSet) throws
+    open func trainRegressor(_ trainData: MLRegressionDataSet) throws
     {
         initializeWeights(trainData)
         
@@ -667,7 +1072,7 @@ open class NeuralNetwork: Classifier, Regressor {
         SGDBatchTrain(trainData, epochSize: epochSize, epochCount : epochCount, trainingRate: trainingRate, weightDecay: weightDecay)
     }
     
-    open func continueTrainingRegressor(_ trainData: DataSet) throws
+    open func continueTrainingRegressor(_ trainData: MLRegressionDataSet) throws
     {
         let epochCount = trainData.size * 2
         let epochSize = trainData.size / 10
@@ -679,7 +1084,7 @@ open class NeuralNetwork: Classifier, Regressor {
         return feedForward(inputs)
     }
     
-    open func predict(_ testData: DataSet) throws
+    open func predict(_ testData: MLRegressionDataSet) throws
     {
         //  Verify the data set is the right type
         if (testData.dataType != .regression) { throw DataTypeError.invalidDataType }
@@ -687,15 +1092,18 @@ open class NeuralNetwork: Classifier, Regressor {
         if (testData.outputDimension != layers.last?.getNodeCount()) { throw DataTypeError.wrongDimensionOnOutput }
         
         //  predict on each input
-        testData.outputs = []
-        for index in 0..<testData.size {
-            testData.outputs!.append(predictOne(testData.inputs[index]))
+        for point in 0..<testData.size {
+            do {
+                let inputs = try testData.getInput(point)
+                try testData.setOutput(point, newOutput: predictOne(inputs))
+            }
+            catch { print("error indexing test data array") }
         }
     }
     
     
     ///  Train on a sequence of data.  Be sure to initialize the weights before using the first time
-    open func predictSequence(_ sequence: DataSet) throws
+    open func predictSequence(_ sequence: MLRegressionDataSet) throws
     {
         //  Start the sequence
         for layer in layers {
@@ -710,34 +1118,41 @@ open class NeuralNetwork: Classifier, Regressor {
     open func trainOne(_ inputs: [Double], expectedOutputs: [Double], trainingRate: Double, weightDecay: Double)
     {
         //  Get the results of a feedForward run (each node remembers its own output)
-        _ = feedForward(inputs)
+        let h = feedForward(inputs)
         
-        //  Calculate the delta for the final layer
-        layers.last!.getFinalLayerDelta(expectedOutputs)
+        //  Calculate 𝟃E/𝟃h - the error with respect to the outputs
+        //  For now, we are hard-coding a least squared error  E = 0.5 * (h - expected)²  -->   𝟃E/𝟃h = (h - expected)
+        var 𝟃E𝟃h = [Double](repeating: 0.0, count: numOutputs)
+        vDSP_vsubD(expectedOutputs, 1, h, 1, &𝟃E𝟃h, 1, vDSP_Length(numOutputs))
         
-        //  Get the deltas for the other layers
+        //  Calculate the 𝟃E𝟃zs for the final layer
+        layers.last!.getFinalLayer𝟃E𝟃zs(𝟃E𝟃h)
+        
+        //  Get the 𝟃E𝟃zs for the other layers
         if (layers.count > 1) {
             for nLayerIndex in stride(from: (layers.count - 2), through: 0, by: -1)
             {
-                layers[nLayerIndex].getLayerDelta(layers[nLayerIndex+1])
+                layers[nLayerIndex].getLayer𝟃E𝟃zs(layers[nLayerIndex+1])
             }
         }
         
         //  Set the inputs for calculating the weight changes
-        var layerInputs = inputs
+        var x = inputs
         
-        //  Go through each layer
+        //  Go through each layer, getting the weight changes
         for layer in layers {
             //  Add a bias constant 1.0 to the input array
-            layerInputs.append(1.0)
+            x.append(1.0)
             
             //  Calculate the outputs from the layer
-            layerInputs = layer.updateWeights(layerInputs, trainingRate: trainingRate, weightDecay: weightDecay)
+            layer.clearWeightChanges()
+            x = layer.appendWeightChanges(x)
+            layer.updateWeightsFromAccumulations(trainingRate, weightDecay: weightDecay)
         }
     }
     
     ///  Train on a sequence of data.  Be sure to initialize the weights before using the first time
-    open func trainSequence(_ sequence: DataSet, trainingRate: Double, weightDecay: Double)
+    open func trainSequence(_ sequence: MLRegressionDataSet, trainingRate: Double, weightDecay: Double)
     {
         //  Start the sequence
         //  Clear the weight change accumulations
@@ -751,7 +1166,11 @@ open class NeuralNetwork: Classifier, Regressor {
         //  Iterate through each training datum in the batch, feeding forward, but remembering the recurrent values
         for dataIndex in 0..<sequence.size {
             //  Get the results of a feedForward run (each node remembers its own output)
-            _ = feedForward(sequence.inputs[dataIndex])
+            do {
+                let inputs = try sequence.getInput(dataIndex)
+                _ = feedForward(inputs)
+            }
+            catch { print("error indexing sequence data array") }
             for layer in layers {
                 layer.storeRecurrentValues()
             }
@@ -759,44 +1178,56 @@ open class NeuralNetwork: Classifier, Regressor {
         
         //  Iterate backwards through each training datum in the batch, backpropogating
         for dataIndex in stride(from: (sequence.size - 1), through: 0, by: -1) {
-            //  Back the output value for all layers off the stack
-            for layer in layers {
-                layer.retrieveRecurrentValues()
-            }
+            do {
+                //  Back the output value for all layers off the stack
+                for layer in layers {
+                    layer.retrieveRecurrentValues(dataIndex)
+                }
+                
+                //  Get the last outputs from the last layer
+                let h = layers.last!.getLastOutput()
+                
+                //  Calculate 𝟃E/𝟃h - the error with respect to the outputs
+                //  For now, we are hard-coding a least squared error  E = 0.5 * (h - expected)²  -->   𝟃E/𝟃h = (h - expected)
+                let expectedOutputs = try sequence.getOutput(dataIndex)
+                
+                var 𝟃E𝟃h = [Double](repeating: 0.0, count: numOutputs)
+                vDSP_vsubD(expectedOutputs, 1, h, 1, &𝟃E𝟃h, 1, vDSP_Length(numOutputs))
+                
+                //  Calculate the 𝟃E𝟃z for the final layer
+                layers.last!.getFinalLayer𝟃E𝟃zs(𝟃E𝟃h)
+                
+                //  Get the 𝟃E𝟃zs for the other layers
+                if (layers.count > 1) {
+                    for nLayerIndex in stride(from: (layers.count - 2), through: 0, by: -1)
+                    {
+                        layers[nLayerIndex].getLayer𝟃E𝟃zs(layers[nLayerIndex+1])
+                    }
+                }
             
-            //  Calculate the delta for the final layer
-            layers.last!.getFinalLayerDelta(sequence.outputs![dataIndex])
-            
-            //  Get the deltas for the other layers
-            if (layers.count > 1) {
-                for nLayerIndex in stride(from: (layers.count - 2), through: 0, by: -1)
-                {
-                    layers[nLayerIndex].getLayerDelta(layers[nLayerIndex+1])
+                //  Set the inputs for calculating the weight changes
+                var x = try sequence.getInput(dataIndex)
+                
+                //  Go through each layer
+                for layer in layers {
+                    //  Add a bias constant 1.0 to the input array
+                    x.append(1.0)
+                    
+                    //  Append the weight changes for the layer
+                    x = layer.appendWeightChanges(x)
                 }
             }
-            
-            //  Set the inputs for calculating the weight changes
-            var layerInputs = sequence.inputs[dataIndex]
-            
-            //  Go through each layer
-            for layer in layers {
-                //  Add a bias constant 1.0 to the input array
-                layerInputs.append(1.0)
-                
-                //  Append the weight changes for the layer
-                layerInputs = layer.appendWeightChanges(layerInputs)
-            }
+            catch { print("error indexing sequence data array") }
         }
         
         //  Update the weights based on the weight change accumulations
-        let averageTrainingRate = trainingRate * -1.0 / Double(sequence.size)  //  Make negative so we can use DSP to vectorize equation
         for layer in layers {
-            layer.updateWeightsFromAccumulations(averageTrainingRate, weightDecay: weightDecay)
+            layer.updateWeightsFromAccumulations(trainingRate, weightDecay: weightDecay)
         }
     }
     
     ///  Train on a batch data item.  Be sure to initialize the weights before using the first time
-    open func batchTrain(_ trainData: DataSet, epochIndices : [Int], trainingRate: Double, weightDecay: Double)
+    open func batchTrain(_ trainData: MLRegressionDataSet, epochIndices : [Int], trainingRate: Double, weightDecay: Double)
     {
         //  Clear the weight change accumulations
         for layer in layers {
@@ -806,41 +1237,52 @@ open class NeuralNetwork: Classifier, Regressor {
         //  Iterate through each training datum in the batch
         for dataIndex in 0..<epochIndices.count {
             //  Get the results of a feedForward run (each node remembers its own output)
-            _ = feedForward(trainData.inputs[epochIndices[dataIndex]])
+            do {
+                var x = try trainData.getInput(epochIndices[dataIndex])
+                _ = feedForward(x)
+                
+                //  Get the last outputs from the last layer
+                let h = layers.last!.getLastOutput()
             
-            //  Calculate the delta for the final layer
-            layers.last!.getFinalLayerDelta(trainData.outputs![epochIndices[dataIndex]])
-            
-            //  Get the deltas for the other layers
-            if (layers.count > 1) {
-                for nLayerIndex in stride(from: (layers.count - 2), through: 0, by: -1)
-                {
-                    layers[nLayerIndex].getLayerDelta(layers[nLayerIndex+1])
+                //  Calculate 𝟃E/𝟃h - the error with respect to the outputs
+                //  For now, we are hard-coding a least squared error  E = 0.5 * (h - expected)²  -->   𝟃E/𝟃h = (h - expected)
+                let expectedOutput = try trainData.getOutput(epochIndices[dataIndex])
+                
+                var 𝟃E𝟃h = [Double](repeating: 0.0, count: numOutputs)
+                vDSP_vsubD(expectedOutput, 1, h, 1, &𝟃E𝟃h, 1, vDSP_Length(numOutputs))
+                
+                //  Calculate the 𝟃E𝟃z for the final layer
+                layers.last!.getFinalLayer𝟃E𝟃zs(𝟃E𝟃h)
+                
+                //  Get the 𝟃E𝟃zs for the other layers
+                if (layers.count > 1) {
+                    for nLayerIndex in stride(from: (layers.count - 2), through: 0, by: -1)
+                    {
+                        layers[nLayerIndex].getLayer𝟃E𝟃zs(layers[nLayerIndex+1])
+                    }
+                }
+                
+                //  Go through each layer
+                for layer in layers {
+                    //  Add a bias constant 1.0 to the input array
+                    x.append(1.0)
+                    
+                    //  Append the weight changes for the layer
+                    x = layer.appendWeightChanges(x)
                 }
             }
-            
-            //  Set the inputs for calculating the weight changes
-            var layerInputs = trainData.inputs[epochIndices[dataIndex]]
-            
-            //  Go through each layer
-            for layer in layers {
-                //  Add a bias constant 1.0 to the input array
-                layerInputs.append(1.0)
-                
-                //  Append the weight changes for the layer
-                layerInputs = layer.appendWeightChanges(layerInputs)
-            }
+            catch { print("error indexing sequence data array") }
         }
         
         //  Update the weights based on the weight change accumulations
-        let averageTrainingRate = trainingRate * -1.0 / Double(epochIndices.count)  //  Make negative so we can use DSP to vectorize equation
+        let averageTrainingRate = trainingRate / Double(epochIndices.count)  //  Make negative so we can use DSP to vectorize equation
         for layer in layers {
             layer.updateWeightsFromAccumulations(averageTrainingRate, weightDecay: weightDecay)
         }
     }
 
     ///  Train a network on a set of data.  Be sure to initialize the weights before using the first time
-    open func SGDBatchTrain(_ trainData: DataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double)
+    open func SGDBatchTrain(_ trainData: MLRegressionDataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double)
     {
         //  Create the batch indices array
         var batchIndices = [Int](repeating: 0, count: epochSize)
@@ -862,7 +1304,7 @@ open class NeuralNetwork: Classifier, Regressor {
     {
         //  Get the false level for the output layer
         var falseLevel = 0.0
-        if (layers.last!.getActivation() == .hyberbolicTangent) {falseLevel = -1.0}
+        if (layers.last!.getActivation() == .hyperbolicTangent) {falseLevel = -1.0}
         
         //  Create the expected output array for expected class
         var expectedOutputs : [Double] = []
@@ -875,36 +1317,71 @@ open class NeuralNetwork: Classifier, Regressor {
     }
     
     ///  Train a classification network on a set of data.  Be sure to initialize the weights before using the first time
-    open func classificationSGDBatchTrain(_ trainData: DataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double) throws
+    open func classificationSGDBatchTrain(_ trainData: MLClassificationDataSet, epochSize: Int, epochCount : Int, trainingRate: Double, weightDecay: Double) throws
     {
         //  Verify the data set is the right type
         if (trainData.dataType != .classification) { throw DataTypeError.invalidDataType }
         
         //  Get the false level for the output layer
         var falseLevel = 0.0
-        if (layers.last!.getActivation() == .hyberbolicTangent) {falseLevel = -1.0}
+        if (layers.last!.getActivation() == .hyperbolicTangent) {falseLevel = -1.0}
         
         //  Get the number of nodes in the last layer
         let numOutputNodes = layers.last!.getNodeCount()
         
-        //  Create the expected output array for expected class
-        trainData.outputs = [[]]
-        var sampleIndex = 0
-        for classValue in trainData.classes! {
-            trainData.outputs!.append([])
-            if (numOutputNodes > 1) {
-                for classIndex in 0..<numOutputNodes {
-                    trainData.outputs![sampleIndex].append(classIndex == classValue ? 1.0 : falseLevel)
+        if trainData.dataType == .realAndClass {
+            let combinedData = trainData as! MLCombinedDataSet
+            //  Create the expected output array for expected class
+            do {
+                var sampleIndex = 0
+                for index in 0..<trainData.size {
+                    let classValue = try trainData.getClass(index)
+                    var outputs  : [Double] = []
+                    if (numOutputNodes > 1) {
+                        for classIndex in 0..<numOutputNodes {
+                            outputs.append(classIndex == classValue ? 1.0 : falseLevel)
+                        }
+                    }
+                    else {
+                        outputs.append(classValue == 1 ? 1.0 : falseLevel)
+                    }
+                    try combinedData.setOutput(sampleIndex, newOutput: outputs)
+                    sampleIndex += 1
                 }
             }
-            else {
-                trainData.outputs![sampleIndex].append(classValue == 1 ? 1.0 : falseLevel)
-            }
-            sampleIndex += 1
+            
+            //  Train using the normal routine
+            SGDBatchTrain(combinedData, epochSize : epochSize, epochCount : epochCount, trainingRate : trainingRate, weightDecay: weightDecay)
         }
-        
-        //  Train using the normal routine
-        SGDBatchTrain(trainData, epochSize : epochSize, epochCount : epochCount, trainingRate : trainingRate, weightDecay: weightDecay)
+        else {
+            //  We have a classification data set.  We need to convert it to a regression data set
+            if let regressionData = DataSet(dataType: .regression, withInputsFrom: trainData) {
+                //  Create the expected output array for expected class
+                do {
+                    var sampleIndex = 0
+                    for index in 0..<trainData.size {
+                        let classValue = try trainData.getClass(index)
+                        var outputs  : [Double] = []
+                        if (numOutputNodes > 1) {
+                            for classIndex in 0..<numOutputNodes {
+                                outputs.append(classIndex == classValue ? 1.0 : falseLevel)
+                            }
+                        }
+                        else {
+                            outputs.append(classValue == 1 ? 1.0 : falseLevel)
+                        }
+                        try regressionData.setOutput(sampleIndex, newOutput: outputs)
+                        sampleIndex += 1
+                    }
+                }
+                
+                //  Train using the normal routine
+                SGDBatchTrain(regressionData, epochSize : epochSize, epochCount : epochCount, trainingRate : trainingRate, weightDecay: weightDecay)
+            }
+            else {
+                throw MachineLearningError.dataWrongDimension       //  Only error that can come out of DataSet creation
+            }
+        }
     }
     
     ///  Decay weights for regularization.  All weights are multiplied by the constant supplied as the parameter
@@ -915,5 +1392,77 @@ open class NeuralNetwork: Classifier, Regressor {
         for layer in layers {
             layer.decayWeights(decayFactor)
         }
+    }
+    
+    ///  Function to perform a gradient check on the network
+    public func gradientCheck(inputs: [Double], expectedOutputs: [Double], ε: Double, Δ: Double) -> Bool
+    {
+        //  Feed forward and do a single gradient update
+        //  Get the results of a feedForward run (each node remembers its own output)
+        var h = feedForward(inputs)
+        if (hasRecurrentLayers) {
+            //  Recurrent layers need their outputs saved for the recurrent inputs
+            for layer in layers {
+                layer.storeRecurrentValues()
+            }
+            //  Calculate h using the stored inputs
+            h = feedForward(inputs)
+        }
+        
+        //  Calculate 𝟃E/𝟃h - the error with respect to the outputs
+        //  For now, we are hard-coding a least squared error  E = 0.5 * (h - expected)²  -->   𝟃E/𝟃h = (h - expected)
+        var 𝟃E𝟃h = [Double](repeating: 0.0, count: numOutputs)
+        vDSP_vsubD(expectedOutputs, 1, h, 1, &𝟃E𝟃h, 1, vDSP_Length(numOutputs))
+        
+        //  Calculate the 𝟃E𝟃zs for the final layer
+        layers.last!.getFinalLayer𝟃E𝟃zs(𝟃E𝟃h)
+        
+        //  Get the 𝟃E𝟃zs for the other layers
+        if (layers.count > 1) {
+            for nLayerIndex in stride(from: (layers.count - 2), through: 0, by: -1)
+            {
+                layers[nLayerIndex].getLayer𝟃E𝟃zs(layers[nLayerIndex+1])
+            }
+        }
+        
+        //  Set the inputs for calculating the weight changes
+        var x = inputs
+        
+        //  Go through each layer, getting the weight changes
+        for layer in layers {
+            //  Add a bias constant 1.0 to the input array
+            x.append(1.0)
+            
+            //  Calculate the outputs from the layer
+            layer.clearWeightChanges()
+            x = layer.appendWeightChanges(x)
+        }
+       
+        //  Have each layer check their gradients
+        expectedOutput = expectedOutputs
+        var result = true
+        for layer in layers {
+            if (!layer.gradientCheck(x: inputs, ε: ε, Δ: Δ, network: self)) { result = false }
+        }
+        return result
+    }
+    
+    public func getResultLoss() throws -> [Double]
+    {
+        if (expectedOutput == nil) { throw NeuralNetworkError.expectedOutputNotSet }
+        
+        let finalResults = layers.last!.getLastOutput()
+        var loss = [Double](repeating: 0.0, count: finalResults.count)
+        
+        //  Get the error vector
+        var errorVector = [Double](repeating: 0.0, count: finalResults.count)
+        vDSP_vsubD(expectedOutput!, 1, finalResults, 1, &errorVector, 1, vDSP_Length(finalResults.count))
+        
+        //  Assume squared error loss
+        vDSP_vsqD(errorVector, 1, &loss, 1, vDSP_Length(finalResults.count))
+        var half = 0.5
+        vDSP_vsmulD(loss, 1, &half, &loss, 1, vDSP_Length(finalResults.count))
+        
+        return loss
     }
 }

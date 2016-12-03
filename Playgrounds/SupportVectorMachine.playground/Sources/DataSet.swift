@@ -9,12 +9,6 @@
 import Foundation
 
 
-public enum DataSetType   //  data type
-{
-    case regression
-    case classification
-}
-
 enum DataTypeError: Error {
     case invalidDataType
     case dataWrongForType
@@ -29,14 +23,14 @@ enum DataIndexError: Error {
 }
 
 
-open class DataSet {
-    let dataType : DataSetType
-    let inputDimension: Int
-    let outputDimension: Int
-    var inputs: [[Double]]
-    var outputs: [[Double]]?
-    var classes: [Int]?
-    var optionalData: AnyObject?        //  Optional data that can be temporarily added by methods using the data
+open class DataSet : MLRegressionDataSet, MLClassificationDataSet, MLCombinedDataSet {
+    open let dataType : DataSetType
+    open let inputDimension: Int
+    open let outputDimension: Int
+    fileprivate var inputs: [[Double]]
+    fileprivate var outputs: [[Double]]?
+    fileprivate var classes: [Int]?
+    open var optionalData: AnyObject?        //  Optional data that can be temporarily added by methods using the data set
     
     public init(dataType : DataSetType, inputDimension : Int, outputDimension : Int)
     {
@@ -47,10 +41,13 @@ open class DataSet {
         
         //  Allocate data arrays
         inputs = []
-        if (dataType == .regression) {
+        switch dataType {
+        case .regression:
             outputs = []
-        }
-        else {
+        case .classification:
+            classes = []
+        case .realAndClass:
+            outputs = []
             classes = []
         }
     }
@@ -67,8 +64,105 @@ open class DataSet {
         outputs = fromDataSet.outputs
         classes = fromDataSet.classes
     }
+    
+    public init?(fromRegressionDataSet: MLRegressionDataSet)
+    {
+        //  Remember the data parameters
+        self.dataType = .regression
+        self.inputDimension = fromRegressionDataSet.inputDimension
+        self.outputDimension = fromRegressionDataSet.outputDimension
+        
+        //  Copy data arrays
+        inputs = []
+        outputs = []
+        classes = nil
+        do {
+            for index in 0..<fromRegressionDataSet.size {
+                inputs.append(try fromRegressionDataSet.getInput(index))
+                outputs!.append(try fromRegressionDataSet.getOutput(index))
+            }
+        }
+        catch {
+            return nil
+        }
+    }
+    
+    public init?(fromClassificationDataSet: MLClassificationDataSet)
+    {
+        //  Remember the data parameters
+        self.dataType = .classification
+        self.inputDimension = fromClassificationDataSet.inputDimension
+        self.outputDimension = 1
+        
+        //  Copy data arrays
+        inputs = []
+        outputs = nil
+        classes = []
+        do {
+            for index in 0..<fromClassificationDataSet.size {
+                inputs.append(try fromClassificationDataSet.getInput(index))
+                classes!.append(try fromClassificationDataSet.getClass(index))
+            }
+        }
+        catch {
+            return nil
+        }
+    }
+    
+    public init?(fromCombinedDataSet: MLCombinedDataSet)
+    {
+        //  Remember the data parameters
+        self.dataType = .realAndClass
+        self.inputDimension = fromCombinedDataSet.inputDimension
+        self.outputDimension = fromCombinedDataSet.outputDimension
+        
+        //  Copy data arrays
+        inputs = []
+        outputs = []
+        classes = []
+        do {
+            for index in 0..<fromCombinedDataSet.size {
+                inputs.append(try fromCombinedDataSet.getInput(index))
+                outputs!.append(try fromCombinedDataSet.getOutput(index))
+                classes!.append(try fromCombinedDataSet.getClass(index))
+            }
+        }
+        catch {
+            return nil
+        }
+    }
+    
+    public init?(dataType : DataSetType, withInputsFrom: MLDataSet)
+    {
+        //  Remember the data parameters
+        self.dataType = dataType
+        self.inputDimension = withInputsFrom.inputDimension
+        self.outputDimension = withInputsFrom.outputDimension
+        
+        //  Allocate data arrays
+        inputs = []
+        switch dataType {
+        case .regression:
+            outputs = []
+        case .classification:
+            classes = []
+        case .realAndClass:
+            outputs = []
+            classes = []
+        }
+        
+        //  Copy the inputs
+        for index in 0..<withInputsFrom.size {
+            do {
+                inputs.append(try withInputsFrom.getInput(index))
+            }
+            catch {
+                return nil
+            }
+        }
+    }
    
-    public init?(fromDataSet: DataSet, withEntries: [Int])
+    public init?(fromDataSet: MLDataSet, withEntries: [Int])
     {
         //  Remember the data parameters
         self.dataType = fromDataSet.dataType
@@ -77,10 +171,13 @@ open class DataSet {
         
         //  Allocate data arrays
         inputs = []
-        if (dataType == .regression) {
+        switch dataType {
+        case .regression:
             outputs = []
-        }
-        else {
+        case .classification:
+            classes = []
+        case .realAndClass:
+            outputs = []
             classes = []
         }
         
@@ -93,7 +190,7 @@ open class DataSet {
         }
     }
     
-    public init?(fromDataSet: DataSet, withEntries: ArraySlice<Int>)
+    public init?(fromDataSet: MLDataSet, withEntries: ArraySlice<Int>)
     {
         //  Remember the data parameters
         self.dataType = fromDataSet.dataType
@@ -102,10 +199,13 @@ open class DataSet {
         
         //  Allocate data arrays
         inputs = []
-        if (dataType == .regression) {
+        switch dataType {
+        case .regression:
             outputs = []
-        }
-        else {
+        case .classification:
+            classes = []
+        case .realAndClass:
+            outputs = []
             classes = []
         }
         
@@ -119,57 +219,83 @@ open class DataSet {
     }
     
     ///  Get entries from another matching dataset
-    open func includeEntries(fromDataSet: DataSet, withEntries: [Int]) throws
+    open func includeEntries(fromDataSet: MLDataSet, withEntries: [Int]) throws
     {
         //  Make sure the dataset matches
         if dataType != fromDataSet.dataType { throw DataTypeError.invalidDataType }
         if inputDimension != fromDataSet.inputDimension { throw DataTypeError.wrongDimensionOnInput }
         if outputDimension != fromDataSet.outputDimension { throw DataTypeError.wrongDimensionOnOutput }
         
+        //  Get cast versions of the input based on the type so we can get the output
+        var regressionSet : MLRegressionDataSet?
+        var classifierSet : MLClassificationDataSet?
+        var combinedSet : MLCombinedDataSet?
+        switch dataType {
+        case .regression:
+            regressionSet = fromDataSet as? MLRegressionDataSet
+        case .classification:
+            classifierSet = fromDataSet as? MLClassificationDataSet
+        case .realAndClass:
+            combinedSet = fromDataSet as? MLCombinedDataSet
+        }
+        
         //  Copy the entries
         for index in withEntries {
             if (index  < 0) { throw DataIndexError.negative }
             if (index  >= fromDataSet.size) { throw DataIndexError.indexAboveDataSetSize }
-            inputs.append(fromDataSet.inputs[index])
-            if (dataType == .regression) {
-                outputs!.append(fromDataSet.outputs![index])
-            }
-            else {
-                classes!.append(fromDataSet.classes![index])
-                if outputs != nil {
-                    outputs!.append(fromDataSet.outputs![index])
-                }
+            inputs.append(try fromDataSet.getInput(index))
+            switch dataType {
+            case .regression:
+                outputs!.append(try regressionSet!.getOutput(index))
+            case .classification:
+                classes!.append(try classifierSet!.getClass(index))
+            case .realAndClass:
+                outputs!.append(try combinedSet!.getOutput(index))
+                classes!.append(try combinedSet!.getClass(index))
             }
         }
     }
     
     ///  Get entries from another matching dataset
-    open func includeEntries(fromDataSet: DataSet, withEntries: ArraySlice<Int>) throws
+    open func includeEntries(fromDataSet: MLDataSet, withEntries: ArraySlice<Int>) throws
     {
         //  Make sure the dataset matches
         if dataType != fromDataSet.dataType { throw DataTypeError.invalidDataType }
         if inputDimension != fromDataSet.inputDimension { throw DataTypeError.wrongDimensionOnInput }
         if outputDimension != fromDataSet.outputDimension { throw DataTypeError.wrongDimensionOnOutput }
         
+        //  Get cast versions of the input based on the type so we can get the output
+        var regressionSet : MLRegressionDataSet?
+        var classifierSet : MLClassificationDataSet?
+        var combinedSet : MLCombinedDataSet?
+        switch dataType {
+        case .regression:
+            regressionSet = fromDataSet as? MLRegressionDataSet
+        case .classification:
+            classifierSet = fromDataSet as? MLClassificationDataSet
+        case .realAndClass:
+            combinedSet = fromDataSet as? MLCombinedDataSet
+        }
+        
         //  Copy the entries
         for index in withEntries {
             if (index  < 0) { throw DataIndexError.negative }
             if (index  >= fromDataSet.size) { throw DataIndexError.indexAboveDataSetSize }
-            inputs.append(fromDataSet.inputs[index])
-            if (dataType == .regression) {
-                outputs!.append(fromDataSet.outputs![index])
-            }
-            else {
-                classes!.append(fromDataSet.classes![index])
-                if outputs != nil {
-                    outputs!.append(fromDataSet.outputs![index])
-                }
+            inputs.append(try fromDataSet.getInput(index))
+            switch dataType {
+            case .regression:
+                outputs!.append(try regressionSet!.getOutput(index))
+            case .classification:
+                classes!.append(try classifierSet!.getClass(index))
+            case .realAndClass:
+                outputs!.append(try combinedSet!.getOutput(index))
+                classes!.append(try combinedSet!.getClass(index))
             }
         }
     }
     
-    ///  Get inputs from another matching dataset, initializing outputs to 0
-    open func includeEntryInputs(fromDataSet: DataSet, withEntries: [Int]) throws
+    ///  Get inputs from another matching dataset, setting outputs to 0
+    open func includeEntryInputs(fromDataSet: MLDataSet, withEntries: [Int]) throws
     {
         //  Make sure the dataset inputs match
         if inputDimension != fromDataSet.inputDimension { throw DataTypeError.wrongDimensionOnInput }
@@ -178,18 +304,21 @@ open class DataSet {
         for index in withEntries {
             if (index  < 0) { throw DataIndexError.negative }
             if (index  >= fromDataSet.size) { throw DataIndexError.indexAboveDataSetSize }
-            inputs.append(fromDataSet.inputs[index])
-            if (dataType == .regression) {
+            inputs.append(try fromDataSet.getInput(index))
+            switch dataType {
+            case .regression:
                 outputs!.append([Double](repeating: 0.0, count: outputDimension))
-            }
-            else {
+            case .classification:
+                classes!.append(0)
+            case .realAndClass:
+                outputs!.append([Double](repeating: 0.0, count: outputDimension))
                 classes!.append(0)
             }
         }
     }
     
-    ///  Get inputs from another matching dataset, initializing outputs to 0
-    open func includeEntryInputs(fromDataSet: DataSet, withEntries: ArraySlice<Int>) throws
+    ///  Get inputs from another matching dataset, setting outputs to 0
+    open func includeEntryInputs(fromDataSet: MLDataSet, withEntries: ArraySlice<Int>) throws
     {
         //  Make sure the dataset inputs match
         if inputDimension != fromDataSet.inputDimension { throw DataTypeError.wrongDimensionOnInput }
@@ -198,11 +327,14 @@ open class DataSet {
         for index in withEntries {
             if (index  < 0) { throw DataIndexError.negative }
             if (index  >= fromDataSet.size) { throw DataIndexError.indexAboveDataSetSize }
-            inputs.append(fromDataSet.inputs[index])
-            if (dataType == .regression) {
+            inputs.append(try fromDataSet.getInput(index))
+            switch dataType {
+            case .regression:
                 outputs!.append([Double](repeating: 0.0, count: outputDimension))
-            }
-            else {
+            case .classification:
+                classes!.append(0)
+            case .realAndClass:
+                outputs!.append([Double](repeating: 0.0, count: outputDimension))
                 classes!.append(0)
             }
         }
@@ -231,44 +363,88 @@ open class DataSet {
     open func addDataPoint(input : [Double], output: [Double]) throws
     {
         //  Validate the data
-        if (dataType != .regression) { throw DataTypeError.dataWrongForType }
+        if (dataType == .classification) { throw DataTypeError.dataWrongForType }
         if (input.count != inputDimension) { throw DataTypeError.wrongDimensionOnInput }
         if (output.count != outputDimension) { throw DataTypeError.wrongDimensionOnOutput }
         
         //  Add the new data item
         inputs.append(input)
         outputs!.append(output)
+        if (dataType == .realAndClass) { classes!.append(0) }
     }
     
-    open func addDataPoint(input : [Double], output: Int) throws
+    open func addDataPoint(input : [Double], dataClass: Int) throws
     {
         //  Validate the data
-        if (dataType != .classification) { throw DataTypeError.dataWrongForType }
+        if (dataType == .regression) { throw DataTypeError.dataWrongForType }
         if (input.count != inputDimension) { throw DataTypeError.wrongDimensionOnInput }
         
         //  Add the new data item
         inputs.append(input)
-        classes!.append(output)
+        classes!.append(dataClass)
+        if (dataType == .realAndClass) { outputs!.append([Double](repeating: 0.0, count: outputDimension)) }
+    }
+    
+    open func addDataPoint(input : [Double], output: [Double], dataClass: Int) throws
+    {
+        //  Validate the data
+        if (dataType != .realAndClass) { throw DataTypeError.dataWrongForType }
+        if (input.count != inputDimension) { throw DataTypeError.wrongDimensionOnInput }
+        if (output.count != outputDimension) { throw DataTypeError.wrongDimensionOnOutput }
+        
+        //  Add the new data item
+        inputs.append(input)
+        outputs!.append(output)
+        classes!.append(dataClass)
     }
     
     open func setOutput(_ index: Int, newOutput : [Double]) throws
     {
         //  Validate the data
-        if (dataType != .regression) { throw DataTypeError.dataWrongForType }
+        if (dataType == .classification) { throw DataTypeError.dataWrongForType }
         if (index < 0) { throw  DataIndexError.negative }
-        if (index > inputs.count) { throw  DataIndexError.negative }
+        if (index > inputs.count) { throw  DataIndexError.indexAboveDimension }
         if (newOutput.count != outputDimension) { throw DataTypeError.wrongDimensionOnOutput }
         
-        //  Add the new output item
-        outputs![index] = newOutput
+        //  Make sure we have outputs up until this index (we have the inputs already)
+        if (index >= outputs!.count) {
+            while (index > outputs!.count) {    //  Insert any uncreated data between this index and existing values
+                outputs!.append([Double](repeating: 0.0, count: outputDimension))
+                if (dataType == .realAndClass) { classes!.append(0) }
+            }
+            //  Append the new data
+            outputs!.append(newOutput)
+            if (dataType == .realAndClass) { classes!.append(0) }
+        }
+        
+        else {
+            //  Replace the new output item
+            outputs![index] = newOutput
+        }
     }
     
     open func setClass(_ index: Int, newClass : Int) throws
     {
         //  Validate the data
-        if (dataType != .classification) { throw DataTypeError.dataWrongForType }
+        if (dataType == .regression) { throw DataTypeError.dataWrongForType }
         if (index < 0) { throw  DataIndexError.negative }
         if (index > inputs.count) { throw  DataIndexError.negative }
+        
+        //  Make sure we have class labels up until this index (we have the inputs already)
+        if (index >= classes!.count) {
+            while (index > classes!.count) {    //  Insert any uncreated data between this index and existing values
+                classes!.append(0)
+                if (dataType == .realAndClass) { outputs!.append([Double](repeating: 0.0, count: outputDimension)) }
+            }
+            //  Append the new data
+            classes!.append(newClass)
+            if (dataType == .realAndClass) { outputs!.append([Double](repeating: 0.0, count: outputDimension)) }
+        }
+            
+        else {
+            //  Replace the new output item
+            classes![index] = newClass
+        }
         
         classes![index] = newClass
     }
@@ -302,7 +478,7 @@ open class DataSet {
     open func getOutput(_ index: Int) throws ->[Double]
     {
         //  Validate the data
-        if (dataType != .regression) { throw DataTypeError.dataWrongForType }
+        if (dataType == .classification) { throw DataTypeError.dataWrongForType }
         if (index < 0) { throw  DataIndexError.negative }
         if (index > outputs!.count) { throw  DataIndexError.indexAboveDataSetSize }
         
@@ -312,103 +488,12 @@ open class DataSet {
     open func getClass(_ index: Int) throws ->Int
     {
         //  Validate the data
-        if (dataType != .classification) { throw DataTypeError.dataWrongForType }
+        if (dataType == .regression) { throw DataTypeError.dataWrongForType }
         if (index < 0) { throw  DataIndexError.negative }
         if (index > classes!.count) { throw  DataIndexError.indexAboveDataSetSize }
         
         return classes![index]
     }
-    
-    open func getRandomIndexSet() -> [Int]
-    {
-        //  Get the ordered array of indices
-        var shuffledArray: [Int] = []
-        for i in 0..<inputs.count { shuffledArray.append(i) }
-        
-        // empty and single-element collections don't shuffle
-        if size < 2 { return shuffledArray }
-        
-        //  Shuffle
-        for i in 0..<inputs.count - 1 {
-            let j = Int(arc4random_uniform(UInt32(inputs.count - i))) + i
-            guard i != j else { continue }
-            swap(&shuffledArray[i], &shuffledArray[j])
-        }
-        
-        return shuffledArray
-    }
-    
-    open func getInputRange() -> [(minimum: Double, maximum: Double)]
-    {
-        //  Allocate the array of tuples
-        var results : [(minimum: Double, maximum: Double)] = Array(repeating: (minimum: Double.infinity, maximum: -Double.infinity), count: inputDimension)
-        
-        //  Go through each input
-        for input in inputs {
-            //  Go through each dimension
-            for dimension in 0..<inputDimension {
-                if (input[dimension] < results[dimension].minimum) { results[dimension].minimum = input[dimension] }
-                if (input[dimension] > results[dimension].maximum) { results[dimension].maximum = input[dimension] }
-            }
-        }
-        
-        return results
-    }
-    
-    open func getOutputRange() -> [(minimum: Double, maximum: Double)]
-    {
-        //  Allocate the array of tuples
-        var results : [(minimum: Double, maximum: Double)] = Array(repeating: (minimum: Double.infinity, maximum: -Double.infinity), count: outputDimension)
-        
-        //  If no outputs, return invalid range
-        if (outputs == nil) { return results }
-        
-        //  Go through each output
-        for output in outputs! {
-            //  Go through each dimension
-            for dimension in 0..<outputDimension {
-                if (output[dimension] < results[dimension].minimum) { results[dimension].minimum = output[dimension] }
-                if (output[dimension] > results[dimension].maximum) { results[dimension].maximum = output[dimension] }
-            }
-        }
-        
-        return results
-    }
-    
-    open func groupClasses() throws
-    {
-        if (dataType != .classification)  { throw DataTypeError.invalidDataType }
-        
-        //  If the data already has classification data, skip
-        if (optionalData != nil) {
-            if optionalData is ClassificationData { return }
-        }
-        
-        //  Create a classification data addendum
-        let classificationData = ClassificationData()
-        
-        //  Get the different data labels
-        for index in 0..<size {
-            let thisClass = classes![index]
-            let thisClassIndex = classificationData.foundLabels.index(of: thisClass)
-            if let classIndex = thisClassIndex {
-                //  Class label found, increment count
-                classificationData.classCount[classIndex] += 1
-                //  Add offset of data point
-                classificationData.classOffsets[classIndex].append(index)
-            }
-            else {
-                //  Class label not found, add it
-                classificationData.foundLabels.append(thisClass)
-                classificationData.classCount.append(1)     //  Start count at 1 - this instance
-                classificationData.classOffsets.append([index]) //  First offset is this point
-            }
-        }
-        
-        //  Set the classification data as the optional data for the data set
-        optionalData = classificationData
-    }
-
     
     //  Leave here in case it is used by other methods
     open static func gaussianRandom(_ mean : Double, standardDeviation : Double) -> Double

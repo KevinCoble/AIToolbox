@@ -3,9 +3,9 @@
  
  This playground shows the basics of Feed-Forward Neural Networks, and shows how to use the AIToolbox framework to generate training data, train a neural network, and plot the results
  
- We start with the required import statements.  If this was your own program, rather than a playground, you add an 'import AIToolbox' line instead of the 'import XCPlayground' line.
+ We start with the required import statements.  If this was your own program, rather than a playground, you add an 'import AIToolbox' line instead of the 'import PlaygroundSupport' line.
  */
-import Cocoa
+import UIKit
 import PlaygroundSupport
 
 /*: Examples
@@ -23,7 +23,7 @@ let exampleIndex = 1
  This is a Neural Network, which can be either a regressor or classifier.  We will be doing classification for this example, so our data set will be the 'Classification' type, with an input input vector sized for two variables (the X and Y axis on our plot later).
  */
 let data = DataSet(dataType: .classification, inputDimension: 2, outputDimension: 1)
-/*: 
+/*:
  Add a few data points to the data set.  Note the 'output' category is a single integer.  This is the 'class label' for the point.  All points with the same label are assumed to be in the same class.
  We will start with linearly seperable data for the initial example
  */
@@ -46,7 +46,7 @@ if (exampleIndex > 3) {
 
 /*: Neural Network
  ## Create a Neural Network
-
+ 
  We now create a network.  A network is created as a series of 'layers'.  Each layer is a set of 'nodes'.  The nodes take the data from the previous layer (or the direct inputs if it is the first layer), processes the information based on 'learned' weights, and sends the data to the next layer.  The data from final layer (called the 'output' layer') can be processed to be a value for regression, or a label for classification.
  The number of nodes and the number of layers affect what can be learned.  To start with, we will begin with a single node in a single layer to show these limitations.
  The processing a node does usually needs to be non-linear, else the network can have problems learning complicated functions.  The non-linearity part is called the activation function.  This function is often one that limits the output to a fixed range, even if the input values are very large.  Therefore, the sigmoid function or hyperbolic tangent are usually used.  We will use the sigmoid function for this example.
@@ -57,17 +57,17 @@ if (exampleIndex <= 2) {
     network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 1, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
 }
     
-//  Network creation for later examples
+    //  Network creation for later examples
 else if (exampleIndex == 3 || exampleIndex == 4) {
     //  Two nodes in first layer, one in second layer
     network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 2, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil),
-        (layerType: .simpleFeedForward, numNodes: 1, activation:NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
+                                                             (layerType: .simpleFeedForward, numNodes: 1, activation:NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
 }
 else {
     //  8 nodes in first layer, three in second, and one in last layer
     network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .simpleFeedForward, numNodes: 8, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil),
-        (layerType: .simpleFeedForward, numNodes: 3, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil),
-        (layerType: .simpleFeedForward, numNodes: 1, activation:NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
+                                                             (layerType: .simpleFeedForward, numNodes: 3, activation: NeuralActivationFunction.sigmoid, auxiliaryData: nil),
+                                                             (layerType: .simpleFeedForward, numNodes: 1, activation:NeuralActivationFunction.sigmoid, auxiliaryData: nil)])
 }
 
 /*: Initializing
@@ -92,6 +92,7 @@ network.initializeWeights(nil)
 var numberOfEpochs = 500
 if (exampleIndex >= 2) { numberOfEpochs = 50000 }
 try network.classificationSGDBatchTrain(data, epochSize: data.size, epochCount : numberOfEpochs, trainingRate: 1.0, weightDecay: 1.0)
+
 
 /*: Plotting
  ## Create a Data Plot
@@ -127,7 +128,6 @@ dataView.addPlotItem(legend)
 
 //:  Finally, set the view to be drawn by the playground
 PlaygroundPage.current.liveView = dataView
-//XCPlaygroundPage.currentPage.liveView = dataView
 
 /*: Results
  ## Expected results
@@ -136,7 +136,7 @@ PlaygroundPage.current.liveView = dataView
  
  ### Experiment 1
  The single-node network will likely have no problem finding a simple linear boundary separating the points.  The colored areas on the plot should include only dots of a similar color.
-
+ 
  ### Experiment 2
  The single-node network will not be able to find a line that can separate the now non-linearly-separable points.  A single node can only discriminate using a single hyperplane.
  

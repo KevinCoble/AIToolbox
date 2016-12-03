@@ -8,19 +8,11 @@
 
 import Foundation
 
-///  Subclass AlphaBetaNode to provide move generation and static evaluation routines
-open class AlphaBetaNode {
+///  The AlphaBetaNode protocol is used to provide move generation and static evaluation routines to your node
+public protocol AlphaBetaNode {
     
-    public init() {
-    }
-    
-    open func generateMoves(_ forMaximizer: Bool) -> [AlphaBetaNode] {
-        return []
-    }
-    
-    open func staticEvaluation() -> Double {
-        return 0.0
-    }
+    func generateMoves(_ forMaximizer: Bool) -> [AlphaBetaNode]     //  Get the nodes for each move below this node
+    func staticEvaluation() -> Double                               //  Evaluate the worth of this node
 }
 
 open class AlphaBetaGraph {
