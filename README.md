@@ -13,6 +13,8 @@ Use the XCTest files for examples on how to use the classes
 
 Playgrounds for Linear Regression, SVM, and Neural Networks are available.  Now available in both macOS and iOS versions.
 
+####New iOS playgrounds - including a four-in-row game using alpha-beta search!
+
 ##  Manual
 
 I have started a [manual](Manual/AIToolbox.md) for the framework.  It is a work-in-progress, but adds some useful explanation to pieces of the framework.  All protocols, structures, and enumerations are well defined.  Class descriptions are there, but not class variables and methods.
