@@ -45,49 +45,47 @@ final class RecurrentNeuralNode {
     //  Initialize the weights
     func initWeights(_ startWeights: [Double]!)
     {
-        W = [0.1, 0.2]
-        U = [0.4]
-//        if let startWeights = startWeights {
-//            if (startWeights.count == 1) {
-//                W = [Double](repeating: startWeights[0], count: numInputs)
-//                U = [Double](repeating: startWeights[0], count: numFeedback)
-//            }
-//            else if (startWeights.count == numInputs+numFeedback) {
-//                //  Full weight array, just split into the two weight arrays
-//                W = Array(startWeights[0..<numInputs])
-//                U = Array(startWeights[numInputs..<numInputs+numFeedback])
-//            }
-//            else {
-//                W = []
-//                var index = 0 //  First number (if more than 1) goes into the bias weight, then repeat the initial
-//                for _ in 0..<numInputs-1  {
-//                    if (index >= startWeights.count-1) { index = 0 }      //  Wrap if necessary
-//                    W.append(startWeights[index])
-//                    index += 1
-//                }
-//                W.append(startWeights[startWeights.count-1])     //  Add the bias term
-//                
-//                index = 0
-//                U = []
-//                for _ in 0..<numFeedback  {
-//                    if (index >= startWeights.count-1) { index = 1 }      //  Wrap if necessary
-//                    U.append(startWeights[index])
-//                    index += 1
-//                }
-//            }
-//        }
-//        else {
-//            W = []
-//            for _ in 0..<numInputs-1  {
-//                W.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numInputs-1)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
-//            }
-//            W.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
-//            
-//            U = []
-//            for _ in 0..<numFeedback  {
-//                U.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numFeedback)))    //  feedback weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
-//            }
-//        }
+        if let startWeights = startWeights {
+            if (startWeights.count == 1) {
+                W = [Double](repeating: startWeights[0], count: numInputs)
+                U = [Double](repeating: startWeights[0], count: numFeedback)
+            }
+            else if (startWeights.count == numInputs+numFeedback) {
+                //  Full weight array, just split into the two weight arrays
+                W = Array(startWeights[0..<numInputs])
+                U = Array(startWeights[numInputs..<numInputs+numFeedback])
+            }
+            else {
+                W = []
+                var index = 0 //  First number (if more than 1) goes into the bias weight, then repeat the initial
+                for _ in 0..<numInputs-1  {
+                    if (index >= startWeights.count-1) { index = 0 }      //  Wrap if necessary
+                    W.append(startWeights[index])
+                    index += 1
+                }
+                W.append(startWeights[startWeights.count-1])     //  Add the bias term
+                
+                index = 0
+                U = []
+                for _ in 0..<numFeedback  {
+                    if (index >= startWeights.count-1) { index = 1 }      //  Wrap if necessary
+                    U.append(startWeights[index])
+                    index += 1
+                }
+            }
+        }
+        else {
+            W = []
+            for _ in 0..<numInputs-1  {
+                W.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numInputs-1)))    //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+            }
+            W.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
+            
+            U = []
+            for _ in 0..<numFeedback  {
+                U.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numFeedback)))    //  feedback weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+            }
+        }
     }
     
     func feedForward(_ x: [Double], hPrev: [Double]) -> Double
