@@ -47,6 +47,11 @@ public enum NeuralActivationFunction : Int {
     }
 }
 
+public enum NeuralWeightUpdateMethod : Int {
+    case normal = 0
+    case rmsProp
+}
+
 protocol NeuralLayer {
     func getNodeCount() -> Int
     func getWeightsPerNode()-> Int
@@ -54,7 +59,7 @@ protocol NeuralLayer {
     func feedForward(_ x: [Double]) -> [Double]
     func initWeights(_ startWeights: [Double]!)
     func getWeights() -> [Double]
-    func setRMSPropDecay(_ decay: Double?)
+    func setNeuralWeightUpdateMethod(_ method: NeuralWeightUpdateMethod, _ parameter: Double?)
     func getLastOutput() -> [Double]
     func getFinalLayer𝟃E𝟃zs(_ 𝟃E𝟃h: [Double])
     func getLayer𝟃E𝟃zs(_ nextLayer: NeuralLayer)
@@ -84,7 +89,9 @@ final class SimpleNeuralNode {
     var 𝟃E𝟃h : Double      //  Gradient in error with respect to output of this node
     var 𝟃E𝟃z : Double      //  Gradient in error with respect to weighted sum
     var 𝟃E𝟃W : [Double]   //  Accumulated weight change gradient
-    var rmspropDecay : Double?      //  Decay rate for rms prop weight updates.  If nil, rmsprop is not used
+    var weightUpdateMethod = NeuralWeightUpdateMethod.normal
+    var weightUpdateParameter : Double?      //  Decay rate for rms prop weight updates
+    var weightUpdateData : [Double] = []    //  Array of running average for rmsprop
     
     ///  Create the neural network node with a set activation function
     init(numInputs : Int, activationFunction: NeuralActivationFunction)
@@ -124,11 +131,17 @@ final class SimpleNeuralNode {
             }
             W.append(Gaussian.gaussianRandom(0.0, standardDeviation:1.0))    //  Bias weight - Initialize to a  random number to break initial symmetry of the network
         }
+        
+        //  If rmsprop update, allocate the momentum storage array
+        if (weightUpdateMethod == .rmsProp) {
+            weightUpdateData = [Double](repeating: 0.0, count: numWeights)
+        }
     }
     
-    func setRMSPropDecay(_ decay: Double?)
+    func setNeuralWeightUpdateMethod(_ method: NeuralWeightUpdateMethod, _ parameter: Double?)
     {
-        rmspropDecay = decay
+        weightUpdateMethod = method
+        weightUpdateParameter = parameter
     }
     
     func feedForward(_ x: [Double]) -> Double
@@ -233,9 +246,27 @@ final class SimpleNeuralNode {
     func updateWeightsFromAccumulations(_ averageTrainingRate: Double)
     {
         //  Update the weights from the accumulations
-        //  W -= 𝟃E𝟃W, * averageTrainingRate
-        var η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
-        vDSP_vsmaD(𝟃E𝟃W, 1, &η, W, 1, &W, 1, vDSP_Length(numWeights))
+        switch weightUpdateMethod {
+        case .normal:
+            //  W -= 𝟃E/𝟃W * averageTrainingRate
+            var η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_vsmaD(𝟃E𝟃W, 1, &η, W, 1, &W, 1, vDSP_Length(numWeights))
+        case .rmsProp:
+            //  Update the rmsProp cache --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            var gradSquared = [Double](repeating: 0.0, count: numWeights)
+            vDSP_vsqD(𝟃E𝟃W, 1, &gradSquared, 1, vDSP_Length(numWeights))  //  Get the gradient squared
+            var decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numWeights))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(weightUpdateData, 1, &decay, gradSquared, 1, &weightUpdateData, 1, vDSP_Length(numWeights))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numWeights { gradSquared[i] = sqrt(weightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            var small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numWeights))       //  (sqrt(rmsprop_cache) + 1e-5)
+            var η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numWeights))
+            vDSP_vmaD(𝟃E𝟃W, 1, gradSquared, 1, W, 1, &W, 1, vDSP_Length(numWeights))
+        }
     }
     
     func decayWeights(_ decayFactor : Double)
@@ -361,10 +392,10 @@ final class SimpleNeuralLayerWithNodes: NeuralLayer {
         return weights
     }
     
-    func setRMSPropDecay(_ decay: Double?)
+    func setNeuralWeightUpdateMethod(_ method: NeuralWeightUpdateMethod, _ parameter: Double?)
     {
         for node in nodes {
-            node.setRMSPropDecay(decay)
+            node.setNeuralWeightUpdateMethod(method, parameter)
         }
     }
     
@@ -536,7 +567,9 @@ final class SimpleNeuralLayer: NeuralLayer {
     var outputHistory : [[Double]] //  History of output for the sequence
     var 𝟃E𝟃z : [Double]      //  Gradient in error with respect to weighted sum
     var 𝟃E𝟃W : [Double] = []  //  Accumulated weight change gradient
-    var rmspropDecay : Double?      //  Decay rate for rms prop weight updates.  If nil, rmsprop is not used
+    var weightUpdateMethod = NeuralWeightUpdateMethod.normal
+    var weightUpdateParameter : Double?      //  Decay rate for rms prop weight updates
+    var weightUpdateData : [Double] = []    //  Array of running average for rmsprop
     
     ///  Create the neural network layer based on a tuple (number of nodes, activation function)
     init(numInputs : Int, layerDefinition: (layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?))
@@ -585,6 +618,11 @@ final class SimpleNeuralLayer: NeuralLayer {
                 W.append(Gaussian.gaussianRandom(0.0, standardDeviation : 1.0) * weightDiviser)
             }
         }
+        
+        //  If rmsprop update, allocate the momentum storage array
+        if (weightUpdateMethod == .rmsProp) {
+            weightUpdateData = [Double](repeating: 0.0, count: W.count)
+        }
     }
     
     func getWeights() -> [Double]
@@ -592,9 +630,10 @@ final class SimpleNeuralLayer: NeuralLayer {
         return W
     }
     
-    func setRMSPropDecay(_ decay: Double?)
+    func setNeuralWeightUpdateMethod(_ method: NeuralWeightUpdateMethod, _ parameter: Double?)
     {
-        rmspropDecay = decay
+        weightUpdateMethod = method
+        weightUpdateParameter = parameter
     }
     
     func getLastOutput() -> [Double]
@@ -749,11 +788,33 @@ final class SimpleNeuralLayer: NeuralLayer {
     
     func updateWeightsFromAccumulations(_ averageTrainingRate: Double, weightDecay: Double)
     {
-        //  Update the weights from the accumulations
+        //  Decay the weights if indicated
         if (weightDecay < 1) { decayWeights(weightDecay) }
-        var trainRate = -averageTrainingRate
-        vDSP_vsmaD(𝟃E𝟃W, 1, &trainRate, W, 1, &W, 1, vDSP_Length(W.count))
-    }
+
+        //  Update the weights from the accumulations
+        let numWeights = W.count
+        switch weightUpdateMethod {
+        case .normal:
+            //  W -= 𝟃E/𝟃W * averageTrainingRate
+            var η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_vsmaD(𝟃E𝟃W, 1, &η, W, 1, &W, 1, vDSP_Length(numWeights))
+        case .rmsProp:
+            //  Update the rmsProp cache --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            var gradSquared = [Double](repeating: 0.0, count: numWeights)
+            vDSP_vsqD(𝟃E𝟃W, 1, &gradSquared, 1, vDSP_Length(numWeights))  //  Get the gradient squared
+            var decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numWeights))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(weightUpdateData, 1, &decay, gradSquared, 1, &weightUpdateData, 1, vDSP_Length(numWeights))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numWeights { gradSquared[i] = sqrt(weightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            var small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numWeights))       //  (sqrt(rmsprop_cache) + 1e-5)
+            var η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numWeights))
+            vDSP_vmaD(𝟃E𝟃W, 1, gradSquared, 1, W, 1, &W, 1, vDSP_Length(numWeights))
+        }
+}
     
     func decayWeights(_ decayFactor : Double)
     {
@@ -901,10 +962,10 @@ open class NeuralNetwork: Classifier, Regressor {
         return numberOfOutputNodes
     }
     
-    open func setRMSPropDecay(decay: Double?)
+    open func setNeuralWeightUpdateMethod(_ method: NeuralWeightUpdateMethod, _ parameter: Double?)
     {
         for layer in layers {
-            layer.setRMSPropDecay(decay)
+            layer.setNeuralWeightUpdateMethod(method, parameter)
         }
     }
     

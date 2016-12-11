@@ -2,7 +2,126 @@
 The following public classes are available:
 
 ##AlphaBetaGraph
-The AlphaBetaGraph class is used to the best current 'move' using alpha-beta graph pruning.  It uses nodes that conform to the **AlphaBetaNode** protocol.  The nodes generate the list of 'moves' that follow from the state position represented by that particular node.  This allows the graph to be generated dynamically, so no node representations are kept by the AlphaBetaGraph itself.  The AlphaBetaGraph can find the best current move using alpha-beta pruning linearly, or using concurrent threading for each 'move' below the current evaluation node for speed optimization.  The AlphaBetaGraph class has two public functions:
+The AlphaBetaGraph class is used to the best current 'move' using alpha-beta graph pruning.  It uses nodes that conform to the **AlphaBetaNode** protocol.  The nodes generate the list of 'moves' that follow from the state position represented by that particular node.  This allows the graph to be generated dynamically, so no node representations are kept by the AlphaBetaGraph itself.  The AlphaBetaGraph can find the best current move using alpha-beta pruning linearly, or using concurrent threading for each 'move' below the current evaluation node for speed optimization.
+
+The AlphaBetaGraph class has the an initializer and the following functions:
+###init
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init()</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Initializer for the AlphaBetaGraph class</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None (initializer)</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###startAlphaBetaWithNode
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>startAlphaBetaWithNode(_ startNode: AlphaBetaNode, forDepth: Int, startingAsMaximizer : Bool = true) -> AlphaBetaNode?</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This performs an alpha-beta tree search starting at the node passed in, and going for the specified depth of moves.  Unless explicitly configured otherwise, the first move is considered as the move for the player maximizing the score.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>startNode</td>
+		<td>AlphaBetaNode</td>
+		<td>The node at the start of the search.  Child nodes will be generate dynamically by each node.</td>
+		</tr>
+		<tr>
+		<td>forDepth</td>
+		<td>Int</td>
+		<td>The depth of the search.  The start node will generate children for depth 1.  Those children will generate grandchildren for depth 2, etc.</td>
+		</tr>
+		<tr>
+		<td>startingAsMaximizer </td>
+		<td>Bool</td>
+		<td>Defaults to true.  If set to false, the moves generated from the starting node are assumed to nodes that should minimize the score, rather than maximize it.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>AlphaBetaNode? - The immediate child node that represents the best move found.  If nil, no valid move was found.</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###startAlphaBetaConcurrentWithNode
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>startAlphaBetaConcurrentWithNode(_ startNode: AlphaBetaNode, forDepth: Int, startingAsMaximizer : Bool = true) -> AlphaBetaNode?</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This performs an alpha-beta tree search starting at the node passed in, and going for the specified depth of moves.  Unless explicitly configured otherwise, the first move is considered as the move for the player maximizing the score.  The child score evaluation for each node will be carried out concurrently using Grand Central Dispatch</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>startNode</td>
+		<td>AlphaBetaNode</td>
+		<td>The node at the start of the search.  Child nodes will be generate dynamically by each node.</td>
+		</tr>
+		<tr>
+		<td>forDepth</td>
+		<td>Int</td>
+		<td>The depth of the search.  The start node will generate children for depth 1.  Those children will generate grandchildren for depthe 2, etc.</td>
+		</tr>
+		<tr>
+		<td>startingAsMaximizer </td>
+		<td>Bool</td>
+		<td>Defaults to true.  If set to false, the moves generated from the starting node are assumed to nodes that should minimize the score, rather than maximize it.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>AlphaBetaNode? - The immediate child node that represents the best move found.  If nil, no valid move was found.</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
 
 ##ClassificationData
 The ClassificationData class is a class that has the class labels found in a classification data set, and the number of data points that belong to each class.  A protocol method called groupClasses in the **MLClassificationDataSet** protocol will get this information for a classification data set.  This class is often added as the optional data to a classification data set by model training methods.
@@ -13,8 +132,453 @@ The ConstraintProblem class is used to find solutions to a Constraint Propogatio
 ##ConstraintProblemNode
 The ConstraintProblemNode class represents a node in a Constraint Propogation Problem.  The nodes are 'connected' by a series of constraints that put limitations on the value of a variable.  The ConstraintProblemNode class has a **ConstraintProblemVariable** class to represent the constrained variable, and an array of classes that conform to the  **ConstraintProblemConstraint** protocol to represent the 'connections'.  A set of these nodes is passed to the **ConstraintProblem** class to find variable values for each node that satisfies the constrains, if such a solution exists.
 
+The ConstraintProblemNode class has the following methods:
+
+###init
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init(variableDomainSize: Int)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Initializer for the ConstraintProblemNode class.  The initialier creates a ConstraintProblemVariable for the node</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>variableDomainSize</td>
+		<td>Int</td>
+		<td>The size of the domain for the variable for the node.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None (initializer)</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###resetVariable
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>resetVariable()</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Resets the node's variable to not being assigned and removes all restrictions on the domain to what the variable can be assigned to</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###processSelfConstraints
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>processSelfConstraints(_ graphNodeList: [ConstraintProblemNode]) -> Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method iterates through all of the constraints assigned to the node and has each one that is a constraint on this node enforce itself on the graph that is passed in.  It returns a flag indicating if the node variable still has possible assignments after the constrain enforcement</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>graphNodeList</td>
+		<td>[ConstraintProblemNode]</td>
+		<td>the graph (collection of nodes) that this node is a part of.  Constraint node indexes are indexes into the array.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if the node variable still has possible assignments after the constrain enforcement</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###clearConstraintsLastEnforced
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>clearConstraintsLastEnforced()</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Removes the list of constraints enforced by the last call to processSelfConstraints.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###enforceConstraints
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>enforceConstraints(_ graphNodeList: [ConstraintProblemNode], nodeEnforcingConstraints: ConstraintProblemNode) -> Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method iterates through all of the constraints assigned to the enforcing node and has each one enforce itself on the graph that is passed in.  The enforced constraints are saved in a list (cleared by a clearConstraintsLastEnforced call), so the effects can be undone for search backup.  The method always returns true</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>graphNodeList</td>
+		<td>[ConstraintProblemNode]</td>
+		<td>the graph (collection of nodes) that this node is a part of.  Constraint node indexes are indexes into the array.</td>
+		</tr>
+		<tr>
+		<td>nodeEnforcingConstraints</td>
+		<td>ConstraintProblemNode</td>
+		<td>the node that is the source of the constraints being enforced.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if the node variable still has possible assignments after the constrain enforcement</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###removeConstraintsLastEnforced
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>removeConstraintsLastEnforced()</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Removes the constraints enforced by the last call to processSelfConstraints.  Used for backing-up the graph search</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###resetVariableDomainIndex
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>resetVariableDomainIndex(_ resetIndex: Int)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method resets any constraint on the attached variable associated with a particular domain index.  This will allow the variable to be able to be assigned to that index later.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>resetIndex</td>
+		<td>Int</td>
+		<td>The domain index to have reset (made available) on the internal variable.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###assignSingleton
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>assignSingleton() ->Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method determines if the associated variable is a singleton - having only one remaining possible value.  If not it returns false.  If it is a singleton, the variable is assigned the value that remains as a possibility.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if the associtated variable is a singleton</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
 ##ConstraintProblemVariable
 The ConstraintProblemVariable class is used to represent a constrained variable in a Constraint Propogation Problem.  An example of a constrained variable is the color in the three-color map problem.  The color of a node is constrained by adjacent nodes.  In this problem the variable is the color, and the domain size would be three (three possible colors).  A **ConstraintProblemNode** object gets a constrained variable and a set of constraints (in the above example, the constraints would be 'not the same as node x', where x is an adjacent node).
+
+The ConstraintProblemVariable class has six public variables/properties:
+
+var | Type | Access | Description
+--- | ---- | ------ | -------
+domainSize| Int | get | the number of possible states in the domain for this variable
+hasNoPossibleSettings | Bool | get | flag indicating there are no remaining open states this variable can be assigned to
+isSingleton | Bool | get | flag indicating this variable has only one remaining state it can be assigned to
+assignedValue | Int? | get, set | the current state assignment for this variable.  If nil, the variable is unassigned
+smallestAllowedValue | Int? | get | the lowest numbered state still available for assignment to this variable.  Returns nil if no possible states remain for the variable
+largestAllowedValue | Int? | get | the highest numbered state still available for assignment to this variable.  Returns nil if no possible states remain for the variable
+
+One initializer and five public methods are available
+
+###init
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init(sizeOfDomain: Int)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Initializer for the ConstraintProblemVariable class</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>sizeOfDomain</td>
+		<td>Int</td>
+		<td>The size of the domain of the variable, which is the number of unique states the variable can have assigned to it.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None (initializer)</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###reset
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>reset()</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Resets the variable to not being assigned and removes all restrictions on the domain to what the variable can be assigned to</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###removeValuePossibility
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>removeValuePossibility(_ varValueIndex: Int) -> Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method removes the specified domain instance from the possible assignments for this variable</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<td>varValueIndex</td>
+		<td>Int</td>
+		<td>index of domain value that will no longer be able to be assigned to this variable</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if the domain index was possible to be assigned before the method was invoked</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###allowValuePossibility
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>allowValuePossibility(_ varValueIndex: Int) -> Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method adds the specified domain instance to the possible assignments for this variable</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<td>varValueIndex</td>
+		<td>Int</td>
+		<td>index of domain value that will now be able to be assigned to this variable</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if the domain index was added as a possibility, rather than it already being one</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###assignToNextPossibleValue
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>assignToNextPossibleValue() ->Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method assigns the variable to the first possible value in the domain if the variable is currenly unasigned, else it changes the assignment to the next value possible for the variable in the domain.  If no other possible (higher) value remains for the variable, the method returns false</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if the variable has been assigned a new value</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###assignSingleton
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>assignSingleton() ->Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method determines if the variable is a singleton - having only one remaining possible value.  If not it returns false.  If it is a singleton, the variable is assigned the value that remains as a possibility.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if the variable is a singleton</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
 
 ##Convolution2D : DeepNetworkOperator
 The Convolution2D class is a **DeepNetworkOperator** that convolves the incoming two-dimensional matrix using a convolution matrix that can be either fixed or learned.  The result is a two-dimensional matrix of the same size as the input.
@@ -57,6 +621,87 @@ The IntegerGene is used as an integer gene within a **Genome**.  The integer val
 
 ##InternalConstraint: ConstraintProblemConstraint
 The InternalConstraint class is a concrete class that implements the **ConstraintProblemConstraint** protocol.  The class represents a constriant in a Constraint Propogation Problem.  For most problems that have discrete variables, this constraint class will be all that is needed for the constraints, if the type of the constraint can come from the **StandardConstraintType** enumeration.
+
+Besides the variable and methods that come from the **ConstraintProblemConstraint** protocol, the InternalConstraint class has the following methods:
+
+###init
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init(type: StandardConstraintType, index: Int)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Initializer for the InternalConstraint class</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>type</td>
+		<td>StandardConstraintType</td>
+		<td>The type of the constraint on the nodes' variable.</td>
+		</tr>
+		<tr>
+		<td>index</td>
+		<td>Int</td>
+		<td>If the constraint type is "can't be value", this index is the value the variable cannot be.  For constraints that reference another node (for example, the "can't be same value as other node" type), this index is the node index within the graph for the referenced node.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None (initializer)</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###reciprocalConstraint
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>reciprocalConstraint(_ firstNodeIndex: Int) ->InternalConstraint?</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method returns a InternalConstrain class object, initialized to have the reciprocal constraint from the one indicated by the instance the method was called on.  This allows the setup code to set opposite node with the reverse constraint</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<td>firstNodeIndex</td>
+		<td>Int</td>
+		<td>index of node that the reverse constraint should be created from (usually the index for the node instance that the method is called on).  This will be passed as the target node when creating the new constraint</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>InternalConstraint? - the constraint created, if it was possible to create the reciprocol.  Constraints of the "can't be value" type will always return nil</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
 
 ##KMeans
 The KMeans class is used to take an unlabelled classification data set (from a class that conforms to the **MLClassificationDataSet** protocol) and finds a set of labels for the data, grouping data that is close together in state space by giving them the same label.

@@ -82,6 +82,14 @@ rectifiedLinear | values below zero are clipped to zero, else no change to the v
 softSign | x / (1.0 + abs(x))
 softMax | Only valid on output (last) layer.  The function  used is just exp(x), but each value is normalized by the sum of all the outputs of the nodes in the layer.  This gives the output vector the look of a probability distribution (all values in the range [0,1], with the total equal to 1)
 
+##NeuralWeightUpdateMethod
+The method to use when updating the weights from (possibly accumulated) gradients with respect to the error term.
+
+case |  Description
+--- | ---- 
+    normal | normal update (W -= learning_rate * gradient).  No parameter required.
+    rmsProp	| root-mean-square propogation (rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient², W -= learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5) ).  Requires decay rate as parameter.
+
 ##NonLinearRegressionConvergenceType
 The type of criteria used to determine if a non-linear regression model has converged
 

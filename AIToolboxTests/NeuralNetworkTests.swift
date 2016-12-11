@@ -209,6 +209,33 @@ class NeuralNetworkTests: XCTestCase {
         XCTAssert(result[0] < 0.0, "network trained for boolean and XOR -  input [true,  true ]")
     }
     
+    func testRMSProp() {
+        //  Create a 1 node network
+        let network = NeuralNetwork(numInputs: 2, layerDefinitions: [(layerType: .simpleFeedForwardWithNodes, numNodes: 1, activation: NeuralActivationFunction.hyperbolicTangent, auxiliaryData: nil)])
+        network.setNeuralWeightUpdateMethod(.rmsProp, 0.98)
+        
+        //  Initialize the weights
+        network.initializeWeights(nil)
+        
+        //  Train the network for and function
+        for _ in 0..<1000 {
+            let input1 = (arc4random() > (UInt32.max >> 1)) ? 1.0 : -1.0
+            let input2 = (arc4random() > (UInt32.max >> 1)) ? 1.0 : -1.0
+            let result = (input1 >= 0.5 && input2 >= 0.5) ? 1.0 : -1.0
+            network.trainOne([input1, input2], expectedOutputs: [result], trainingRate: 0.3, weightDecay: 1.0)
+        }
+        
+        //  Test the network with each posibility
+        var result = network.feedForward([-1.0, -1.0])
+        XCTAssert(result[0] < -0.5, "network trained for boolean AND -  input [false. false]")
+        result = network.feedForward([ 1.0, -1.0])
+        XCTAssert(result[0] < -0.5, "network trained for boolean AND -  input [true.  false]")
+        result = network.feedForward([-1.0,  1.0])
+        XCTAssert(result[0] < -0.5, "network trained for boolean AND -  input [false. true ]")
+        result = network.feedForward([ 1.0,  1.0])
+        XCTAssert(result[0] >= 0.5, "network trained for boolean AND -  input [true.  true ]")
+    }
+    
     func testNetworkBatchTraining() {
         //  Create a 2 hidden layer - 2 node network, with one output node, using two inputs
         let layerDefs : [(layerType: NeuronLayerType, numNodes: Int, activation: NeuralActivationFunction, auxiliaryData: AnyObject?)] =

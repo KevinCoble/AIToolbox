@@ -53,6 +53,16 @@ final class LSTMNeuralNode {
     var 𝟃E𝟃Uc : [Double]
     var 𝟃E𝟃Wo : [Double]
     var 𝟃E𝟃Uo : [Double]
+    var weightUpdateMethod = NeuralWeightUpdateMethod.normal
+    var weightUpdateParameter : Double?      //  Decay rate for rms prop weight updates
+    var WiWeightUpdateData : [Double] = []    //  Array of running average for rmsprop
+    var UiWeightUpdateData : [Double] = []    //  Array of running average for rmsprop
+    var WfWeightUpdateData : [Double] = []    //  Array of running average for rmsprop
+    var UfWeightUpdateData : [Double] = []    //  Array of running average for rmsprop
+    var WcWeightUpdateData : [Double] = []    //  Array of running average for rmsprop
+    var UcWeightUpdateData : [Double] = []    //  Array of running average for rmsprop
+    var WoWeightUpdateData : [Double] = []    //  Array of running average for rmsprop
+    var UoWeightUpdateData : [Double] = []    //  Array of running average for rmsprop
 
     ///  Create the LSTM neural network node with a set activation function
     init(numInputs : Int, numFeedbacks : Int,  activationFunction: NeuralActivationFunction)
@@ -271,6 +281,24 @@ final class LSTMNeuralNode {
                 Uo.append(Gaussian.gaussianRandom(0.0, standardDeviation: 1.0 / Double(numFeedback)))    //  feedback weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
             }
         }
+        
+        //  If rmsprop update, allocate the momentum storage array
+        if (weightUpdateMethod == .rmsProp) {
+            WiWeightUpdateData = [Double](repeating: 0.0, count: numInputs)
+            UiWeightUpdateData = [Double](repeating: 0.0, count: numFeedback)
+            WfWeightUpdateData = [Double](repeating: 0.0, count: numInputs)
+            UfWeightUpdateData = [Double](repeating: 0.0, count: numFeedback)
+            WcWeightUpdateData = [Double](repeating: 0.0, count: numInputs)
+            UcWeightUpdateData = [Double](repeating: 0.0, count: numFeedback)
+            WoWeightUpdateData = [Double](repeating: 0.0, count: numInputs)
+            UoWeightUpdateData = [Double](repeating: 0.0, count: numFeedback)
+        }
+    }
+    
+    func setNeuralWeightUpdateMethod(_ method: NeuralWeightUpdateMethod, _ parameter: Double?)
+    {
+        weightUpdateMethod = method
+        weightUpdateParameter = parameter
     }
     
     func feedForward(_ x: [Double], hPrev: [Double]) -> Double
@@ -518,16 +546,139 @@ final class LSTMNeuralNode {
     func updateWeightsFromAccumulations(_ averageTrainingRate: Double)
     {
         //  Update the weights from the accumulations
-        //  weights -= accumulation * averageTrainingRate
-        var η = -averageTrainingRate
-        vDSP_vsmaD(𝟃E𝟃Wi, 1, &η, Wi, 1, &Wi, 1, vDSP_Length(numInputs))
-        vDSP_vsmaD(𝟃E𝟃Ui, 1, &η, Ui, 1, &Ui, 1, vDSP_Length(numFeedback))
-        vDSP_vsmaD(𝟃E𝟃Wf, 1, &η, Wf, 1, &Wf, 1, vDSP_Length(numInputs))
-        vDSP_vsmaD(𝟃E𝟃Uf, 1, &η, Uf, 1, &Uf, 1, vDSP_Length(numFeedback))
-        vDSP_vsmaD(𝟃E𝟃Wc, 1, &η, Wc, 1, &Wc, 1, vDSP_Length(numInputs))
-        vDSP_vsmaD(𝟃E𝟃Uc, 1, &η, Uc, 1, &Uc, 1, vDSP_Length(numFeedback))
-        vDSP_vsmaD(𝟃E𝟃Wo, 1, &η, Wo, 1, &Wo, 1, vDSP_Length(numInputs))
-        vDSP_vsmaD(𝟃E𝟃Uo, 1, &η, Uo, 1, &Uo, 1, vDSP_Length(numFeedback))
+        switch weightUpdateMethod {
+        case .normal:
+            //  weights -= accumulation * averageTrainingRate
+            var η = -averageTrainingRate
+            vDSP_vsmaD(𝟃E𝟃Wi, 1, &η, Wi, 1, &Wi, 1, vDSP_Length(numInputs))
+            vDSP_vsmaD(𝟃E𝟃Ui, 1, &η, Ui, 1, &Ui, 1, vDSP_Length(numFeedback))
+            vDSP_vsmaD(𝟃E𝟃Wf, 1, &η, Wf, 1, &Wf, 1, vDSP_Length(numInputs))
+            vDSP_vsmaD(𝟃E𝟃Uf, 1, &η, Uf, 1, &Uf, 1, vDSP_Length(numFeedback))
+            vDSP_vsmaD(𝟃E𝟃Wc, 1, &η, Wc, 1, &Wc, 1, vDSP_Length(numInputs))
+            vDSP_vsmaD(𝟃E𝟃Uc, 1, &η, Uc, 1, &Uc, 1, vDSP_Length(numFeedback))
+            vDSP_vsmaD(𝟃E𝟃Wo, 1, &η, Wo, 1, &Wo, 1, vDSP_Length(numInputs))
+            vDSP_vsmaD(𝟃E𝟃Uo, 1, &η, Uo, 1, &Uo, 1, vDSP_Length(numFeedback))
+        case .rmsProp:
+            //  Update the rmsProp cache for Wi --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            var gradSquared = [Double](repeating: 0.0, count: numInputs)
+            vDSP_vsqD(𝟃E𝟃Wi, 1, &gradSquared, 1, vDSP_Length(numInputs))  //  Get the gradient squared
+            var decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numInputs))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(WiWeightUpdateData, 1, &decay, gradSquared, 1, &WiWeightUpdateData, 1, vDSP_Length(numInputs))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numInputs { gradSquared[i] = sqrt(WiWeightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            var small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numInputs))       //  (sqrt(rmsprop_cache) + 1e-5)
+            var η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numInputs))
+            vDSP_vmaD(𝟃E𝟃Wi, 1, gradSquared, 1, Wi, 1, &Wi, 1, vDSP_Length(numInputs))
+            
+            //  Update the rmsProp cache for Ui --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            gradSquared = [Double](repeating: 0.0, count: numFeedback)
+            vDSP_vsqD(𝟃E𝟃Ui, 1, &gradSquared, 1, vDSP_Length(numFeedback))  //  Get the gradient squared
+            decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numFeedback))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(UiWeightUpdateData, 1, &decay, gradSquared, 1, &UiWeightUpdateData, 1, vDSP_Length(numFeedback))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numFeedback { gradSquared[i] = sqrt(UiWeightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numFeedback))       //  (sqrt(rmsprop_cache) + 1e-5)
+            η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numFeedback))
+            vDSP_vmaD(𝟃E𝟃Ui, 1, gradSquared, 1, Ui, 1, &Ui, 1, vDSP_Length(numFeedback))
+            
+            //  Update the rmsProp cache for Wf --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            gradSquared = [Double](repeating: 0.0, count: numInputs)
+            vDSP_vsqD(𝟃E𝟃Wf, 1, &gradSquared, 1, vDSP_Length(numInputs))  //  Get the gradient squared
+            decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numInputs))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(WfWeightUpdateData, 1, &decay, gradSquared, 1, &WfWeightUpdateData, 1, vDSP_Length(numInputs))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numInputs { gradSquared[i] = sqrt(WfWeightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numInputs))       //  (sqrt(rmsprop_cache) + 1e-5)
+            η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numInputs))
+            vDSP_vmaD(𝟃E𝟃Wf, 1, gradSquared, 1, Wf, 1, &Wf, 1, vDSP_Length(numInputs))
+            
+            //  Update the rmsProp cache for Uf --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            gradSquared = [Double](repeating: 0.0, count: numFeedback)
+            vDSP_vsqD(𝟃E𝟃Uf, 1, &gradSquared, 1, vDSP_Length(numFeedback))  //  Get the gradient squared
+            decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numFeedback))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(UfWeightUpdateData, 1, &decay, gradSquared, 1, &UfWeightUpdateData, 1, vDSP_Length(numFeedback))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numFeedback { gradSquared[i] = sqrt(UfWeightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numFeedback))       //  (sqrt(rmsprop_cache) + 1e-5)
+            η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numFeedback))
+            vDSP_vmaD(𝟃E𝟃Uf, 1, gradSquared, 1, Uf, 1, &Uf, 1, vDSP_Length(numFeedback))
+            
+            //  Update the rmsProp cache for Wc --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            gradSquared = [Double](repeating: 0.0, count: numInputs)
+            vDSP_vsqD(𝟃E𝟃Wc, 1, &gradSquared, 1, vDSP_Length(numInputs))  //  Get the gradient squared
+            decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numInputs))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(WcWeightUpdateData, 1, &decay, gradSquared, 1, &WcWeightUpdateData, 1, vDSP_Length(numInputs))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numInputs { gradSquared[i] = sqrt(WcWeightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numInputs))       //  (sqrt(rmsprop_cache) + 1e-5)
+            η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numInputs))
+            vDSP_vmaD(𝟃E𝟃Wc, 1, gradSquared, 1, Wc, 1, &Wc, 1, vDSP_Length(numInputs))
+            
+            //  Update the rmsProp cache for Uc --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            gradSquared = [Double](repeating: 0.0, count: numFeedback)
+            vDSP_vsqD(𝟃E𝟃Uc, 1, &gradSquared, 1, vDSP_Length(numFeedback))  //  Get the gradient squared
+            decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numFeedback))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(UcWeightUpdateData, 1, &decay, gradSquared, 1, &UcWeightUpdateData, 1, vDSP_Length(numFeedback))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numFeedback { gradSquared[i] = sqrt(UcWeightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numFeedback))       //  (sqrt(rmsprop_cache) + 1e-5)
+            η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numFeedback))
+            vDSP_vmaD(𝟃E𝟃Uc, 1, gradSquared, 1, Uc, 1, &Uc, 1, vDSP_Length(numFeedback))
+            
+            //  Update the rmsProp cache for Wo --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            gradSquared = [Double](repeating: 0.0, count: numInputs)
+            vDSP_vsqD(𝟃E𝟃Wo, 1, &gradSquared, 1, vDSP_Length(numInputs))  //  Get the gradient squared
+            decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numInputs))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(WoWeightUpdateData, 1, &decay, gradSquared, 1, &WoWeightUpdateData, 1, vDSP_Length(numInputs))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numInputs { gradSquared[i] = sqrt(WoWeightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numInputs))       //  (sqrt(rmsprop_cache) + 1e-5)
+            η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numInputs))
+            vDSP_vmaD(𝟃E𝟃Wo, 1, gradSquared, 1, Wo, 1, &Wo, 1, vDSP_Length(numInputs))
+            
+            //  Update the rmsProp cache for Uo --> rmsprop_cache = decay_rate * rmsprop_cache + (1 - decay_rate) * gradient²
+            gradSquared = [Double](repeating: 0.0, count: numFeedback)
+            vDSP_vsqD(𝟃E𝟃Uo, 1, &gradSquared, 1, vDSP_Length(numFeedback))  //  Get the gradient squared
+            decay = 1.0 - weightUpdateParameter!
+            vDSP_vsmulD(gradSquared, 1, &decay, &gradSquared, 1, vDSP_Length(numFeedback))   //  (1 - decay_rate) * gradient²
+            decay = weightUpdateParameter!
+            vDSP_vsmaD(UoWeightUpdateData, 1, &decay, gradSquared, 1, &UoWeightUpdateData, 1, vDSP_Length(numFeedback))
+            //  Update the weights --> weight += learning_rate * gradient / (sqrt(rmsprop_cache) + 1e-5)
+            for i in 0..<numFeedback { gradSquared[i] = sqrt(UoWeightUpdateData[i]) }      //  Re-use gradSquared for efficiency
+            small = 1.0e-05     //  Small offset to make sure we are not dividing by zero
+            vDSP_vsaddD(gradSquared, 1, &small, &gradSquared, 1, vDSP_Length(numFeedback))       //  (sqrt(rmsprop_cache) + 1e-5)
+            η = -averageTrainingRate     //  Needed for unsafe pointer conversion - negate for multiply-and-add vector operation
+            vDSP_svdivD(&η, gradSquared, 1, &gradSquared, 1, vDSP_Length(numFeedback))
+            vDSP_vmaD(𝟃E𝟃Uo, 1, gradSquared, 1, Uo, 1, &Uo, 1, vDSP_Length(numFeedback))
+        }
     }
     
     func decayWeights(_ decayFactor : Double)
@@ -648,6 +799,13 @@ final class LSTMNeuralLayer: NeuralLayer {
             weights += node.Uo
         }
         return weights
+    }
+    
+    func setNeuralWeightUpdateMethod(_ method: NeuralWeightUpdateMethod, _ parameter: Double?)
+    {
+        for node in nodes {
+            node.setNeuralWeightUpdateMethod(method, parameter)
+        }
     }
     
     func getLastOutput() -> [Double]
