@@ -445,3 +445,63 @@ An MDPEpisode structure has a single public method:
 </tr>
 </table>
 
+
+##PGStep 
+An PGStep structure defines a single step of a policy-gradient reinforcement learning episode.  The step is managed by a **PGEpisode** class.  The structure has two member variables:
+
+var | Type | Access | Description
+--- | ---- | ------ | -------
+	state | [Double] | get, set |  the state the beginning of this step of the episode
+	gradient | [Double] | get, set |  the action gradient for this step of the episode.  This is the difference in the learning mechanism (neural network) output and the idealized action taken
+	reward | Double | get, set | the reward for taking the action that makes up this step.
+
+    
+An PGStep structure has a single initializer:
+
+####init
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init(state: [Double], gradient: [Double], reward: Double)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method creates a PGStep structure with the specified initial state, gradient, and reward</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+			<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>state</td>
+		<td>[Double]</td>
+		<td>the initial state for the step</td>
+		</tr>
+		<tr>
+		<td>gradient</td>
+		<td>[Double]</td>
+		<td>the initial action gradient for the step</td>
+		</tr>
+		<tr>
+		<td>reward</td>
+		<td>Double</td>
+		<td>the reward the step</td>
+		</tr>
+		</table>
+</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>N/A (constructor)</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+

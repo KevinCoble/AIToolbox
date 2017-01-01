@@ -70,6 +70,7 @@
 		0E0E26021CA44EA80087932B /* PCATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E26001CA44EA80087932B /* PCATests.swift */; };
 		0E12025E1D0490AD0072257B /* LSTMTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E12025D1D0490AD0072257B /* LSTMTests.swift */; };
 		0E12025F1D0490AD0072257B /* LSTMTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E12025D1D0490AD0072257B /* LSTMTests.swift */; };
+		0E1C1AA91E0F3B3A0059D1F7 /* PolicyGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1C1AA81E0F3B3A0059D1F7 /* PolicyGradient.swift */; };
 		0E3CB5A01CCD30AE008ABA4E /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3CB59F1CCD30AE008ABA4E /* Validation.swift */; };
 		0E3CB5A11CCD30AE008ABA4E /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3CB59F1CCD30AE008ABA4E /* Validation.swift */; };
 		0E3CB5A31CCD30D3008ABA4E /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3CB5A21CCD30D3008ABA4E /* ValidationTests.swift */; };
@@ -187,6 +188,7 @@
 		0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrincipalComponantAnalysis.swift; sourceTree = "<group>"; };
 		0E0E26001CA44EA80087932B /* PCATests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PCATests.swift; sourceTree = "<group>"; };
 		0E12025D1D0490AD0072257B /* LSTMTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LSTMTests.swift; sourceTree = "<group>"; };
+		0E1C1AA81E0F3B3A0059D1F7 /* PolicyGradient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PolicyGradient.swift; sourceTree = "<group>"; };
 		0E3CB59F1CCD30AE008ABA4E /* Validation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
 		0E3CB5A21CCD30D3008ABA4E /* ValidationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValidationTests.swift; sourceTree = "<group>"; };
 		0E3CB5A71CDC3DEB008ABA4E /* RecurrentNeuralNetwork.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecurrentNeuralNetwork.swift; sourceTree = "<group>"; };
@@ -361,6 +363,7 @@
 				0E9F9BEA1C95FBA60037071D /* KMeans.swift */,
 				0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */,
 				0EAAFD461CA9F37E0062EBD5 /* MarkovDecisionProcess.swift */,
+				0E1C1AA81E0F3B3A0059D1F7 /* PolicyGradient.swift */,
 				0EAAFD691CB33D4F0062EBD5 /* LinearRegression.swift */,
 				0E02FB8C1CBC671000C32F9F /* Gaussian.swift */,
 				0E02FB921CBDD35300C32F9F /* MixtureOfGaussians.swift */,
@@ -703,6 +706,7 @@
 				0EA300FE1DB2951A009CB319 /* MLPersistenceProtocol.swift in Sources */,
 				0E0E25FE1CA119160087932B /* PrincipalComponantAnalysis.swift in Sources */,
 				0EA300FD1DB2951A009CB319 /* DeepNeuralNetwork.swift in Sources */,
+				0E1C1AA91E0F3B3A0059D1F7 /* PolicyGradient.swift in Sources */,
 				0EBA29C81A91355A0012CEC9 /* Graph.swift in Sources */,
 				0EA300FB1DB2951A009CB319 /* DeepNetwork.swift in Sources */,
 				0E3CB5A01CCD30AE008ABA4E /* Validation.swift in Sources */,

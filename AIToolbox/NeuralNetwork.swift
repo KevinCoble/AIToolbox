@@ -905,6 +905,7 @@ open class NeuralNetwork: Classifier, Regressor {
     var initializeFunction : ((_ trainData: MLDataSet)->[Double])!
     var hasRecurrentLayers = false
     var expectedOutput : [Double]?      //  Expected output for gradient checks
+    public var lastClassificationOutput : [Double]?
     
     
     ///  Create the neural network based on an array of tuples, one for each non-input layer (number of nodes, activation function)
@@ -957,9 +958,8 @@ open class NeuralNetwork: Classifier, Regressor {
     }
     open func getNumberOfClasses() -> Int
     {
-        let numberOfOutputNodes = layers.last!.getNodeCount()
-        if (numberOfOutputNodes == 1) { return 2 }
-        return numberOfOutputNodes
+        if (numOutputs == 1) { return 2 }
+        return numOutputs
     }
     
     open func setNeuralWeightUpdateMethod(_ method: NeuralWeightUpdateMethod, _ parameter: Double?)
@@ -1086,26 +1086,29 @@ open class NeuralNetwork: Classifier, Regressor {
     ///  Return a 0 based index of the best neuron output (giving the most probable class for the input)
     open func classifyOne(_ inputs: [Double]) -> Int {
         //  Get the network outputs
-        let outputs = feedForward(inputs)
+        lastClassificationOutput = feedForward(inputs)
         
-        //  If only one output, get the decision value and check
-        if (outputs.count == 1) {
-            let limit = layers.last!.getSingleNodeClassifyValue()
-            if (outputs[0] > limit) { return 1 }
-            return 0
-        }
-        
-        //  Find the largest result
-        var bestResult = -Double.infinity
-        var bestNeuron = 0
-        for index in 0..<outputs.count {
-            if (outputs[index] > bestResult) {
-                bestResult = outputs[index]
-                bestNeuron = index
+        if let outputs = lastClassificationOutput {
+            //  If only one output, get the decision value and check
+            if (outputs.count == 1) {
+                let limit = layers.last!.getSingleNodeClassifyValue()
+                if (outputs[0] > limit) { return 1 }
+                return 0
             }
-        }
+            
+            //  Find the largest result
+            var bestResult = -Double.infinity
+            var bestNeuron = 0
+            for index in 0..<outputs.count {
+                if (outputs[index] > bestResult) {
+                    bestResult = outputs[index]
+                    bestNeuron = index
+                }
+            }
         
-        return bestNeuron
+            return bestNeuron
+        }
+        return 0
     }
     
     ///  Set the 0 based index of the best neuron output (giving the most probable class for the input), for each point in a data set
@@ -1174,11 +1177,38 @@ open class NeuralNetwork: Classifier, Regressor {
         //  Feed each item to the network
         try predict(sequence)
     }
+    
+    ///  Update weight change accumulations with a given gradient (𝟃E/𝟃h)
+    open func trainWithGradient(_ inputs: [Double], gradient 𝟃E𝟃h : [Double])
+    {
+        //  Calculate the 𝟃E𝟃zs for the final layer
+        layers.last!.getFinalLayer𝟃E𝟃zs(𝟃E𝟃h)
+        
+        //  Get the 𝟃E𝟃zs for the other layers
+        if (layers.count > 1) {
+            for nLayerIndex in stride(from: (layers.count - 2), through: 0, by: -1)
+            {
+                layers[nLayerIndex].getLayer𝟃E𝟃zs(layers[nLayerIndex+1])
+            }
+        }
+        
+        //  Set the inputs for calculating the weight changes
+        var x = inputs
+        
+        //  Go through each layer, getting the weight changes
+        for layer in layers {
+            //  Add a bias constant 1.0 to the input array
+            x.append(1.0)
+            
+            //  Update the weight changes
+            x = layer.appendWeightChanges(x)
+        }
+    }
 
     ///  Train on one data item.  Be sure to initialize the weights before using the first time
     open func trainOne(_ inputs: [Double], expectedOutputs: [Double], trainingRate: Double, weightDecay: Double)
     {
-        //  Get the results of a feedForward run (each node remembers its own output)
+        //  Get the results of a feedForward run (each node/layer remembers its own output)
         let h = feedForward(inputs)
         
         //  Calculate 𝟃E/𝟃h - the error with respect to the outputs
@@ -1205,7 +1235,7 @@ open class NeuralNetwork: Classifier, Regressor {
             //  Add a bias constant 1.0 to the input array
             x.append(1.0)
             
-            //  Calculate the outputs from the layer
+            //  Update the weights
             layer.clearWeightChanges()
             x = layer.appendWeightChanges(x)
             layer.updateWeightsFromAccumulations(trainingRate, weightDecay: weightDecay)
@@ -1282,18 +1312,14 @@ open class NeuralNetwork: Classifier, Regressor {
         }
         
         //  Update the weights based on the weight change accumulations
-        for layer in layers {
-            layer.updateWeightsFromAccumulations(trainingRate, weightDecay: weightDecay)
-        }
+        updateWeights(trainingRate: trainingRate, weightDecay: weightDecay)
     }
     
     ///  Train on a batch data item.  Be sure to initialize the weights before using the first time
     open func batchTrain(_ trainData: MLRegressionDataSet, epochIndices : [Int], trainingRate: Double, weightDecay: Double)
     {
         //  Clear the weight change accumulations
-        for layer in layers {
-            layer.clearWeightChanges()
-        }
+        clearWeightChanges()
         
         //  Iterate through each training datum in the batch
         for dataIndex in 0..<epochIndices.count {
@@ -1337,8 +1363,22 @@ open class NeuralNetwork: Classifier, Regressor {
         
         //  Update the weights based on the weight change accumulations
         let averageTrainingRate = trainingRate / Double(epochIndices.count)  //  Make negative so we can use DSP to vectorize equation
+        updateWeights(trainingRate: averageTrainingRate, weightDecay: weightDecay)
+    }
+    
+    ///  Zero out all the weight changes
+    open func clearWeightChanges()
+    {
         for layer in layers {
-            layer.updateWeightsFromAccumulations(averageTrainingRate, weightDecay: weightDecay)
+            layer.clearWeightChanges()
+        }
+    }
+    
+    ///  Update the weights from the accumulated changes
+    open func updateWeights(trainingRate: Double, weightDecay: Double)
+    {
+        for layer in layers {
+            layer.updateWeightsFromAccumulations(trainingRate, weightDecay: weightDecay)
         }
     }
 
@@ -1369,12 +1409,43 @@ open class NeuralNetwork: Classifier, Regressor {
         
         //  Create the expected output array for expected class
         var expectedOutputs : [Double] = []
-        for classIndex in 0..<layers.last!.getNodeCount() {
-            expectedOutputs.append(classIndex == expectedOutput ? 1.0 : falseLevel)
+        if (numOutputs > 1) {
+            for classIndex in 0..<numOutputs {
+                expectedOutputs.append(classIndex == expectedOutput ? 1.0 : falseLevel)
+            }
+        }
+        else {
+            expectedOutputs.append(expectedOutput == 1 ? 1.0 : falseLevel)
         }
         
         //  Do the normal training
         trainOne(inputs, expectedOutputs: expectedOutputs, trainingRate: trainingRate, weightDecay: weightDecay)
+    }
+    
+    ///  Get the gradient from the last classification output and the result taken (used for policy gradient reinforcement learning)
+    open func getLastClassificationGradient(resultUsed : Int) -> [Double]
+    {
+        //  Get the false level for the output layer
+        var falseLevel = 0.0
+        if (layers.last!.getActivation() == .hyperbolicTangent) {falseLevel = -1.0}
+        
+        //  Create the expected output array for the used class
+        var expectedOutputs : [Double] = []
+        if (numOutputs > 1) {
+            for classIndex in 0..<numOutputs {
+                expectedOutputs.append(classIndex == resultUsed ? 1.0 : falseLevel)
+            }
+        }
+        else {
+            expectedOutputs.append(resultUsed == 1 ? 1.0 : falseLevel)
+        }
+        
+        //  Get the gradient
+        var gradient = [Double](repeating: 0.0, count: numOutputs)
+        if (lastClassificationOutput == nil) { return gradient }
+        vDSP_vsubD(expectedOutputs, 1, lastClassificationOutput!, 1, &gradient, 1, vDSP_Length(numOutputs))     // grad = last - expected
+        
+        return gradient
     }
     
     ///  Train a classification network on a set of data.  Be sure to initialize the weights before using the first time
@@ -1387,9 +1458,6 @@ open class NeuralNetwork: Classifier, Regressor {
         var falseLevel = 0.0
         if (layers.last!.getActivation() == .hyperbolicTangent) {falseLevel = -1.0}
         
-        //  Get the number of nodes in the last layer
-        let numOutputNodes = layers.last!.getNodeCount()
-        
         if trainData.dataType == .realAndClass {
             let combinedData = trainData as! MLCombinedDataSet
             //  Create the expected output array for expected class
@@ -1398,8 +1466,8 @@ open class NeuralNetwork: Classifier, Regressor {
                 for index in 0..<trainData.size {
                     let classValue = try trainData.getClass(index)
                     var outputs  : [Double] = []
-                    if (numOutputNodes > 1) {
-                        for classIndex in 0..<numOutputNodes {
+                    if (numOutputs > 1) {
+                        for classIndex in 0..<numOutputs {
                             outputs.append(classIndex == classValue ? 1.0 : falseLevel)
                         }
                     }
@@ -1423,8 +1491,8 @@ open class NeuralNetwork: Classifier, Regressor {
                     for index in 0..<trainData.size {
                         let classValue = try trainData.getClass(index)
                         var outputs  : [Double] = []
-                        if (numOutputNodes > 1) {
-                            for classIndex in 0..<numOutputNodes {
+                        if (numOutputs > 1) {
+                            for classIndex in 0..<numOutputs {
                                 outputs.append(classIndex == classValue ? 1.0 : falseLevel)
                             }
                         }

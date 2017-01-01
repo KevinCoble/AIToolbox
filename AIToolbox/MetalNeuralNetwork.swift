@@ -47,40 +47,10 @@ final class MetalNeuralLayer {
         
         //  Initialize the weights
         for index in 0..<weights.count  {
-            var standardDeviation = 1.0     //  Bias weights to one standard dev
-            if ((index % numWeights) != numInputs) { standardDeviation = 1.0 / Double(numInputs) }
-            weights[index] = MetalNeuralLayer.gaussianRandom(0.0, standardDeviation: standardDeviation)   //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
+            var standardDeviation: Float = 1.0     //  Bias weights to one standard dev
+            if ((index % numWeights) != numInputs) { standardDeviation = 1.0 / Float(numInputs) }
+            weights[index] = Gaussian.gaussianRandomFloat(0.0, standardDeviation: standardDeviation)   //  input weights - Initialize to a random number to break initial symmetry of the network, scaled to the inputs
         }
-    }
-    
-    static var y2 = 0.0
-    static var use_last = false
-    static func gaussianRandom(_ mean : Float, standardDeviation : Double) -> Float
-    {
-        var y1 : Double
-        if (use_last)		        /* use value from previous call */
-        {
-            y1 = y2
-            use_last = false
-        }
-        else
-        {
-            var w = 1.0
-            var x1 = 0.0
-            var x2 = 0.0
-            repeat {
-                x1 = 2.0 * (Double(arc4random()) / Double(UInt32.max)) - 1.0
-                x2 = 2.0 * (Double(arc4random()) / Double(UInt32.max)) - 1.0
-                w = x1 * x1 + x2 * x2
-            } while ( w >= 1.0 )
-            
-            w = sqrt( (-2.0 * log( w ) ) / w )
-            y1 = x1 * w
-            y2 = x2 * w
-            use_last = true
-        }
-        
-        return mean + Float(y1 * standardDeviation)
     }
     
     

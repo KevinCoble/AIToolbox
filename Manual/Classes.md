@@ -128,6 +128,342 @@ The ClassificationData class is a class that has the class labels found in a cla
 
 ##ConstraintProblem
 The ConstraintProblem class is used to find solutions to a Constraint Propogation Problem.  The class should be set up with an array of **ConstraintProblemNode** objects, each with a constrained variable and set of constraints.  The problem can then be solved (if possible) using several different methods provided by the class.
+The ConstraintProblem class has the following methods:
+
+###init
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init()</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Initializer for the ConstraintProblem class.  The initialier creates an empty ConstraintProblem</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None (initializer)</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###setNodeList
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>setNodeList(_ list: [ConstraintProblemNode])</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method sets the nodes for the problem.  Each node will be renumbered based on it's order in the array passed in.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>list</td>
+		<td>[ConstraintProblemNode]</td>
+		<td>The nodes that are to make up the constraint problem graph.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###clearConstraints
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>clearConstraints()</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Initializer clears all the constraints from all of the nodes in the graph</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###addValueConstraintToNode
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>addValueConstraintToNode(_ node: Int, invalidValue: Int)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method adds a value constraint to a specified node.  This constraint will make the node not able to have its variable assigned to the value indicated.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>node</td>
+		<td>Int</td>
+		<td>The index of the node within the graph to get this constraint.</td>
+		</tr>
+		<tr>
+		<td>invalidValue</td>
+		<td>Int</td>
+		<td>The index of the domain value for the variable that will no longer be allowed on the node.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###addConstraintOfType
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>addConstraintOfType(_ type: StandardConstraintType,  betweenNodeIndex firstnode: Int, andNodeIndex secondNode : Int)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method adds a constraint between two nodes.  The constraint is placed on the first node index specified, with the constraint having the type indicated, and referencing the second node.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>type</td>
+		<td>StandardConstraintType</td>
+		<td>The type of constraint being added.</td>
+		</tr>
+		<tr>
+		<td>betweenNodeIndex </td>
+		<td>Int</td>
+		<td>The index of the node within the graph to get this constraint.</td>
+		</tr>
+		<tr>
+		<td>andNodeIndex </td>
+		<td>Int</td>
+		<td>The index of the node that will be referenced by the constraint, if the constraint type requires a referencing node.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###addReciprocalConstraintsOfType
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>addReciprocalConstraintsOfType(_ type: StandardConstraintType,  betweenNodeIndex firstnode: Int, andNodeIndex secondNode : Int)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method adds a set of two constraints between two nodes.  The constraint is placed on the first node index specified, with the constraint having the type indicated, and referencing the second node, while a reciprocal restraint is added to the second node, with the first node being referenced</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>type</td>
+		<td>StandardConstraintType</td>
+		<td>The type of constraint being added.  The inverse type will be added to the second node.</td>
+		</tr>
+		<tr>
+		<td>betweenNodeIndex </td>
+		<td>Int</td>
+		<td>The index of the node within the graph to get the main constraint, while the second node gets the reciprocal.</td>
+		</tr>
+		<tr>
+		<td>andNodeIndex </td>
+		<td>Int</td>
+		<td>The index of the node that will be referenced by the main constraint, and get the reciprocal constraint.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###addCustomConstraint
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>addCustomConstraint(_ constraint: ConstraintProblemConstraint, toNode: Int)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method adds a custom constraint to the node indicated.  The constraint can be an instance of **InternalConstraint**, or any custom class that conforms to the **ConstraintProblemConstraint** protocol</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>constraint</td>
+		<td>ConstraintProblemConstraint</td>
+		<td>The constraint to be added added.  This is an instantiated class object.</td>
+		</tr>
+		<tr>
+		<td>toNode</td>
+		<td>Int</td>
+		<td>The index of the node within the graph to get the custom constraint.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###solveWithForwardPropogation
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>solveWithForwardPropogation() -> Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method resets the variable possibilities for each node, processes self-inflicted constraints, then runs a depth-first-search - processing additional constraints as variables get assigned to nodes.  The method returns a flag indicating if a valid solution was found.  If a solution was found, each node in the graph will have its variable assigned to the value that makes that solution possible.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if a solution was found.</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###solveWithSingletonPropogation
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>solveWithSingletonPropogation() -> Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method resets the variable possibilities for each node, processes self-inflicted constraints, then runs a depth-first-search - processing additional constraints as variables get assigned to nodes.  If a node is left with a single possible value after these constraints are enforced, that value is assigned then (instead of waiting for the depth-first search to assign it) - and all constraint effects stemming from that assignment are enforced.  The method returns a flag indicating if a valid solution was found.  If a solution was found, each node in the graph will have its variable assigned to the value that makes that solution possible.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if a solution was found.</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###solveWithFullPropogation
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>solveWithFullPropogation() -> Bool</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method resets the variable possibilities for each node, processes self-inflicted constraints, then runs a depth-first-search - processing additional constraints as variables get assigned to nodes.  After a constraint is enforced on a node, all constraints on that node are checked to see if the constraint affect propogates, and nodes further down the chain are processed if that is the case.  This takes additional calculation time, so may only be warrented if there are 'greater than' or 'less than' type constraints.  If a solution was found, each node in the graph will have its variable assigned to the value that makes that solution possible.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Bool - flag indicating if a solution was found.</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
 
 ##ConstraintProblemNode
 The ConstraintProblemNode class represents a node in a Constraint Propogation Problem.  The nodes are 'connected' by a series of constraints that put limitations on the value of a variable.  The ConstraintProblemNode class has a **ConstraintProblemVariable** class to represent the constrained variable, and an array of classes that conform to the  **ConstraintProblemConstraint** protocol to represent the 'connections'.  A set of these nodes is passed to the **ConstraintProblem** class to find variable values for each node that satisfies the constrains, if such a solution exists.
@@ -759,6 +1095,9 @@ The NonLinearRegression class is is used to find a non-linear model that best ma
 
 ##PCA
 The PCA class preforms 'Principal Component Analysis', which is used to analyze a data set to find a set of basis vectors that still represent the data well, but have a lower dimension.  This will often make large problem train better in other models like neural networks.  The algorithm finds the eigenvalues and eigenvectors of the data matrix, one for each element of the input vector.  The eigenvalues give the relative 'importance' of that element of the input vector, so the smaller values can be removed.  A method is provided that will map an input vector onto the eigenvector basis from the remaining set, giving the smaller dimension vector that can be used in further data analysis.
+
+##PGEpisode
+The PGEpisode class manages an array of PGStep structures.  The steps represent an episode for a Policy-Gradient Reinforcement Learning problem.  Each episode can be used to train a neural network to optimize the actions taken in future episodes.
 
 ##Population
 The Population class represents a population of objects that have genetic characteristics - in this case an array of **Genome** classes.  The Population class is then used to 'breed' the next generation using sexual or asexual reproduction with a specified mutation rate.  The individuals used to create the new members are selected randomly from the current population, but weighted towards individuals with a higher 'score' value.  The score value is a function of the individual members of the population, and should be set before creating the next generation.
