@@ -918,9 +918,765 @@ One initializer and five public methods are available
 
 ##Convolution2D : DeepNetworkOperator
 The Convolution2D class is a **DeepNetworkOperator** that convolves the incoming two-dimensional matrix using a convolution matrix that can be either fixed or learned.  The result is a two-dimensional matrix of the same size as the input.
+Besides the methods required by the DeepNetworkOperator protocol (and the MLPersistence protocol it requires), the following methods are available for the class:
+
+###init
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init(usingMatrix : Convolution2DMatrix)<\td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This initializer takes a matrix for the convolution and creates a Convolution2D operator object</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<td>usingMatrix </td>
+		<td>Convolution2DMatrix</td>
+		<td>the matrix for the convolution performed by the operator</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None (initializer)</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###setMatrixType
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>setMatrixType(type : Convolution2DMatrix)<\td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Sets the matrix (type and values) from the passed in structure into the class</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<td>type </td>
+		<td>Convolution2DMatrix</td>
+		<td>the matrix for the convolution performed by the operator</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###setMatrixValue
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>setMatrixValue(atIndex: Int, toValue: Float)<\td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Sets the value of the class convolution matrix at a specific index in the matrix</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<td>atIndex</td>
+		<td>Int</td>
+		<td>the index in the matrix to be modified</td>
+		</tr>
+		</tr>
+		<td>toValue</td>
+		<td>Int</td>
+		<td>the new value for the matrix element</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###determineResultRange
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>determineResultRange()<\td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>Sets the internal values of the minimum and maximum expected result values, based on the current convolution matrix</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
 
 ##DataSet : MLRegressionDataSet, MLClassificationDataSet, MLCombinedDataSet
 The DataSet class is a generic data source class that conforms to all of the data protocols used by the AIToolbox framework, **MLRegressionDataSet**, **MLClassificationDataSet**, and **MLCombinedDataSet**.  This allows the class to be the generic workhorse for all data set needs in machine learning.  If you have a custom class that obtains your data, have that class conform to the appropriate protocol.  Otherwise, use the DataSet class to contain the data you get from sources you do not have the ability to easily modify to conform to the necessary protocol(s).
+
+The DataSet class has the member variables required by the **MLDataSet** protocol.  Much  of the functionality of the class comes from methods required by the **MLRegressionDataSet**, **MLClassificationDataSet**, and **MLCombinedDataSet** protocols.  See those protocols for details on these methods.  The following methods are initializers and additional functionality provide by the DataSet class:
+
+### init
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init(dataType : DataSetType, inputDimension : Int, outputDimension : Int)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This initializer creates a DataSet object with specified type, and input and output dimensions</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<td> dataType </td>
+		<td> DataSetType </td>
+		<td>the type of data that will be managed by this data set</td>
+		</tr>
+		<tr>
+		<td> inputDimension </td>
+		<td> Int </td>
+		<td>the size of the input vector that will be in this data set</td>
+		</tr>
+		<tr>
+		<td> outputDimension </td>
+		<td> Int </td>
+		<td>the size of the output vector that will be in this data set.  If the type is ‘.Classification’, this value will be ignored.</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None (initializer)</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init(fromDataSet: DataSet)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This initializer creates a DataSet object that is a copy of the data set passed int</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromDataSet</td>
+		<td>DataSet</td>
+		<td>the DataSet object to copy</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None (initializer)</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init?(fromRegressionDataSet: MLRegressionDataSet)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This initializer creates a DataSet object that is a copy of the regression data set passed int</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromRegressionDataSet</td>
+		<td>MLRegressionDataSet</td>
+		<td>the object that conforms to the MLRegressionDataSet protocol to copy</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>nil if data set passed in is not appropriate for copying</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init?(fromClassificationDataSet: MLClassificationDataSet)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This initializer creates a DataSet object that is a copy of the classification data set passed int</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromClassificationDataSet</td>
+		<td>MLClassificationDataSet</td>
+		<td>the object that conforms to the MLClassificationDataSet protocol to copy</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>nil if data set passed in is not appropriate for copying</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init?(fromCombinedDataSet: MLCombinedDataSet)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This initializer creates a DataSet object that is a copy of the combined data set passed int</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromCombinedDataSet</td>
+		<td>MLCombinedDataSet</td>
+		<td>the object that conforms to the MLCombinedDataSet protocol to copy</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>nil if data set passed in is not appropriate for copying</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init?(dataType : DataSetType, withInputsFrom: MLDataSet)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This initializer creates a DataSet object that is of the specified type, but with the input arrays set from the passed in data set</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>dataType </td>
+		<td>DataSetType</td>
+		<td>the type of data set to create</td>
+		</tr>
+		<tr>
+		<td>withInputsFrom</td>
+		<td>MLDataSet</td>
+		<td>the data set object to copy the input vectors from</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>nil if data set passed in is not appropriate for copying</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init?(fromDataSet: MLDataSet, withEntries: [Int])</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This initializer creates a DataSet object that is a copy of the data set object passed in, but with a subset of the data points</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromDataSet</td>
+		<td>MLDataSet</td>
+		<td>the data set object to configure this data set from and to copy a subset if data out of</td>
+		</tr>
+		<tr>
+		<td>withEntries</td>
+		<td>[Int]</td>
+		<td>an array of indices into the data set to copy into this object</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>nil if data set passed in is not appropriate for copying or any of the indices are out of range</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>init?(fromDataSet: MLDataSet, withEntries: ArraySlice&lt;Int&gt;)</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This initializer creates a DataSet object that is a copy of the data set object passed in, but with a subset of the data points</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromDataSet</td>
+		<td>MLDataSet</td>
+		<td>the data set object to configure this data set from and to copy a subset if data out of</td>
+		</tr>
+		<tr>
+		<td>withEntries</td>
+		<td>ArraySlice&lt;Int&gt;</td>
+		<td>a slice of an array of indices into the data set to copy into this object</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>nil if data set passed in is not appropriate for copying or any of the indices are out of range</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
+
+###includeEntries
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>includeEntries(fromDataSet: MLDataSet, withEntries: [Int]) throws</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method adds the entries from the specified data set that match the array of indices provide to this data set</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromDataSet</td>
+		<td>MLDataSet</td>
+		<td>the data set to get the new entries from</td>
+		</tr>
+		<tr>
+		<td>withEntries</td>
+		<td>[Int]</td>
+		<td>an array of indices for data points to copy into this data set</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>Error</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>DataTypeError.invalidDataType</td>
+		<td>thrown if the data set passed in is not a type that works with the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataTypeError.wrongDimensionOnInput</td>
+		<td>thrown if the input dimension for the data set passed in does not match the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataTypeError.wrongDimensionOnOutput</td>
+		<td>thrown if the output dimension for the data set passed in does not match the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataIndexError.negative</td>
+		<td>thrown if an index in the passed in array is negative</td>
+		</tr>
+		<tr>
+		<td>DataIndexError.indexAboveDataSetSize</td>
+		<td>thrown if an index in the passed in array is above the last data point index of the passed in data set</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>
+
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>includeEntries(fromDataSet: MLDataSet, withEntries: ArraySlice&lt;Int&gt;) throws</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method adds the entries from the specified data set that match the array of indices provide to this data set</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromDataSet</td>
+		<td>MLDataSet</td>
+		<td>the data set to get the new entries from</td>
+		</tr>
+		<tr>
+		<td>withEntries</td>
+		<td>ArraySlice&lt;Int&gt;</td>
+		<td>an array slice of indices for data points to copy into this data set</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>Error</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>DataTypeError.invalidDataType</td>
+		<td>thrown if the data set passed in is not a type that works with the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataTypeError.wrongDimensionOnInput</td>
+		<td>thrown if the input dimension for the data set passed in does not match the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataTypeError.wrongDimensionOnOutput</td>
+		<td>thrown if the output dimension for the data set passed in does not match the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataIndexError.negative</td>
+		<td>thrown if an index in the passed in array slice is negative</td>
+		</tr>
+		<tr>
+		<td>DataIndexError.indexAboveDataSetSize</td>
+		<td>thrown if an index in the passed in array slice is above the last data point index of the passed in data set</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>
+
+###includeEntryInputs
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>includeEntryInputs(fromDataSet: MLDataSet, withEntries: [Int]) throws</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method adds the entry inputs from the specified data set that match the array of indices provide to this data set.  Outputs ar set to zero</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromDataSet</td>
+		<td>MLDataSet</td>
+		<td>the data set to get the new entries from</td>
+		</tr>
+		<tr>
+		<td>withEntries</td>
+		<td>[Int]</td>
+		<td>an array of indices for data point input vectors to copy into this data set</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>Error</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>DataTypeError.invalidDataType</td>
+		<td>thrown if the data set passed in is not a type that works with the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataTypeError.wrongDimensionOnInput</td>
+		<td>thrown if the input dimension for the data set passed in does not match the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataIndexError.negative</td>
+		<td>thrown if an index in the passed in array slice is negative</td>
+		</tr>
+		<tr>
+		<td>DataIndexError.indexAboveDataSetSize</td>
+		<td>thrown if an index in the passed in array slice is above the last data point index of the passed in data set</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>
+
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>includeEntryInputs(fromDataSet: MLDataSet, withEntries: ArraySlice&lt;Int&gt;) throws</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method adds the entry inputs from the specified data set that match the array slice of indices provide to this data set.  Outputs ar set to zero</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>fromDataSet</td>
+		<td>MLDataSet</td>
+		<td>the data set to get the new entries from</td>
+		</tr>
+		<tr>
+		<td>withEntries</td>
+		<td>ArraySlice&lt;Int&gt;</td>
+		<td>an array slice of indices for data point input vectors to copy into this data set</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>None</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>Error</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>DataTypeError.invalidDataType</td>
+		<td>thrown if the data set passed in is not a type that works with the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataTypeError.wrongDimensionOnInput</td>
+		<td>thrown if the input dimension for the data set passed in does not match the data set the method is called on</td>
+		</tr>
+		<tr>
+		<td>DataIndexError.negative</td>
+		<td>thrown if an index in the passed in array slice is negative</td>
+		</tr>
+		<tr>
+		<td>DataIndexError.indexAboveDataSetSize</td>
+		<td>thrown if an index in the passed in array slice is above the last data point index of the passed in data set</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</table>
+
+###singleOutput
+<table border="1">
+<tr>
+	<td>Template</td>
+	<td>singleOutput(_ index: Int) -> Double?</td>
+</tr>
+<tr>
+	<td>Description</td>
+	<td>This method returns the single output value for the specified point index.  If the index is out of range, a nil is returned.  If the data type is '.Classification', the value returned is the class label converted to a double.  If more than one output value on a regression data set, only the first value is returned.</td>
+</tr>
+<tr>
+	<td>Inputs</td>
+	<td>
+		<table border="1">
+		<tr>
+		<th>name</th>
+		<th>Type</th>
+		<th>Description</th>
+		</tr>
+		<tr>
+		<td>index</td>
+		<td>Int</td>
+		<td>the index to get the output value for</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+<tr>
+	<td>Output</td>
+	<td>Double? - the output value for the specified index</td>
+</tr>
+<tr>
+	<td>Throws</td>
+	<td>No</td>
+</tr>
+</table>
 
 ##DeepChannel : MLPersistence
 The DeepChannel class represents a 'channel' within a layer, which is itself part of a deep-network.  Each layer has one or more channels to process data from the previous layer, or from the network inputs if in the first layer.  The channels are independent, and can be processed concurrently.  The channel contains a series of operators (**DeepNetworkOperator** conforming classes) that process the specified labeled data from the previous layer into output data.  The channel then labels the output data for reference by the succeeding layers' channels.

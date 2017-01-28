@@ -44,11 +44,25 @@ There is a lot to the AIToolbox framework, so this manual (when completed) will 
 ## <a name="UsingAIToolbox"></a>Using AIToolbox
 ### <a name="Installation"></a>Installation
 The framework comes as source code from GitHub (https://github.com/KevinCoble/AIToolbox) and must be built on your system.  It is possible to take just the source files you need for the algorithms you are going to use and add them to your project, but installing the complete framework into a system Framework directory will allow you to use all of the algorithms without including source code and determining which related files are needed for the classes you are going to use.
-To build the code, open the project and type Command-B (If you are able to use this framework, you know how to build projects in XCode!).
-To get a copy of the framework (after building), go to the Project Navigator pane and open the 'Products' drop down list.  While holding the Option key down (to make a copy, not an alias), drag the AIToolbox.framework file to its destination. 
+To build the code open the project, select the scheme to be built (AIToolbox or AIToolboxIOS) from the Project->Scheme menu, and type Command-B (If you are able to use this framework, you probably know how to build projects in XCode!).
+If using this for macOS project you will want to install the framework into the system frameworks directory.  To get a copy of the framework (after building), go to the Project Navigator pane and open the 'Products' drop down list.  While holding the Option key down (to make a copy, not an alias), drag the AIToolbox.framework file (the top listing is for macOS) to its destination. 
 Copy the framework into the /Library/Frameworks directory on your system.  You will need authentication to do this.
 ### <a name="Reference"></a>Adding AIToolbox to Your Project
+####MacOS
 To add AIToolbox to your project, go to the Project Settings and find the 'Linked Frameworks and Libraries' section.  Click on the '+' button to add the reference.  The framework selection dialog will appear.  Click on the 'Add Other' button to browse to the framework in the directory you installed it into (suggested to be /Library/Frameworks), and click the 'Open' button.  The framework can now be referenced by your application.
+####iOS
+This process puts the AIToolbox framework as an embedded binary in your application.
+
+Have both the AIToolbox and your application projects open in XCode.  Make sure the AIToolbox scheme for iOS has been successfully built.
+
+Right-click on the root application node in the project navigator. Click Add Files to “yourapplication”. In the file chooser, navigate to and select AIToolbox.xcodeproj. This will add AIToolbox.xcodeproj as a sub-project.
+
+Expand the AIToolbox project to see the Products folder, and then look for for AIToolbox.framework beneath it. This file is the output of the framework project that packages up the binary code, headers, resources and metadata.  There are three outputs.  The iOS framework is the middle one.
+
+In your application project, select the top level application node to open the project editor. Click the application target, and then go to the General tab.  Scroll down to the Embedded Binaries section.
+
+Drag AIToolbox.framework (the middle one!) from the Products folder of AIToolbox.xcodeproj onto this section.  It will ask about grouping and references.  Select “copy items if needed” and click “Finish”.
+####Referencing the framework
 In each file that uses AIToolbox objects, you will need to import the framework.  Add the following line near the top of the file:
 ```
 import AIToolbox
