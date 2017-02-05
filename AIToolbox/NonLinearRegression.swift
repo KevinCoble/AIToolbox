@@ -513,19 +513,19 @@ open class NonLinearRegression : Regressor
                 //  Solve J'Jp = J'r for p - the parameter change, using LAPACK's dgels function
                 let jobTChar = "N" as NSString
                 var jobT : Int8 = Int8(jobTChar.character(at: 0))          //  not transposed
-                var m : Int32 = Int32(batchSize)
-                var n : Int32 = Int32(parametersPerOutput)
-                var nrhs = Int32(1)
+                var m : __CLPK_integer = __CLPK_integer(batchSize)
+                var n : __CLPK_integer = __CLPK_integer(parametersPerOutput)
+                var nrhs = __CLPK_integer(1)
                 var work : [Double] = [0.0]
-                var lwork : Int32 = -1        //  Ask for the best size of the work array
-                var info : Int32 = 0
+                var lwork : __CLPK_integer = -1        //  Ask for the best size of the work array
+                var info : __CLPK_integer = 0
                 let jacobianOffset = batchSize * outputIndex * parametersPerOutput      //  Offset to start of Jacobian for this output
                 let residualOffset = batchSize * outputIndex      //  Offset to start of residual vector for this output
                 dgels_(&jobT, &m, &n, &nrhs, &J[jacobianOffset], &m, &r[residualOffset], &m, &work, &lwork, &info)
                 if (info != 0 || work[0] < 1) {
                     throw NonLinearRegressionError.matrixSolutionError
                 }
-                lwork = Int32(work[0])
+                lwork = __CLPK_integer(work[0])
                 work = [Double](repeating: 0.0, count: Int(work[0]))
                 dgels_(&jobT, &m, &n, &nrhs, &J[jacobianOffset], &m, &r[residualOffset], &m, &work, &lwork, &info)
                 if (info != 0 || work[0] < 1) {

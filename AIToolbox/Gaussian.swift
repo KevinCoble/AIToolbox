@@ -193,8 +193,8 @@ open class MultivariateGaussian {
             let uploChar = "U" as NSString
             var uplo : Int8 = Int8(uploChar.character(at: 0))          //  use upper triangle
             var A = Σ       //  Make a copy so it isn't mangled
-            var n : Int32 = Int32(dimension)
-            var info : Int32 = 0
+            var n : __CLPK_integer = __CLPK_integer(dimension)
+            var info : __CLPK_integer = 0
             dpotrf_(&uplo, &n, &A, &n, &info)
             if (info != 0) { throw GaussianError.inverseError }
             //  Extract sqrtDeterminant from U by multiplying the diagonal  (U is multiplied by Utranspose after factorization)
@@ -325,13 +325,13 @@ open class MultivariateGaussian {
             //  Get the SVD decomposition of the Σ matrix
             let jobZChar = "S" as NSString
             var jobZ : Int8 = Int8(jobZChar.character(at: 0))          //  return min(m,n) rows of Σ
-            var n : Int32 = Int32(dimension)
+            var n : __CLPK_integer = __CLPK_integer(dimension)
             var u = [Double](repeating: 0.0, count: dimension * dimension)
             var work : [Double] = [0.0]
-            var lwork : Int32 = -1        //  Ask for the best size of the work array
+            var lwork : __CLPK_integer = -1        //  Ask for the best size of the work array
             let iworkSize = 8 * dimension
-            var iwork = [Int32](repeating: 0, count: iworkSize)
-            var info : Int32 = 0
+            var iwork = [__CLPK_integer](repeating: 0, count: iworkSize)
+            var info : __CLPK_integer = 0
             var A = Σ       //  Leave Σ intact
             var eigenValues = [Double](repeating: 0.0, count: dimension)
             var eigenVectors = [Double](repeating: 0.0, count: dimension*dimension)
@@ -339,7 +339,7 @@ open class MultivariateGaussian {
             if (info != 0 || work[0] < 1) {
                 throw GaussianError.errorInSVDParameters
             }
-            lwork = Int32(work[0])
+            lwork = __CLPK_integer(work[0])
             work = [Double](repeating: 0.0, count: Int(work[0]))
             dgesdd_(&jobZ, &n, &n, &A, &n, &eigenValues, &u, &n, &eigenVectors, &n, &work, &lwork, &iwork, &info)
             if (info < 0) {
