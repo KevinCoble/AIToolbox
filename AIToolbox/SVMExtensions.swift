@@ -47,10 +47,10 @@ extension SVMModel : Classifier {
     public func trainClassifier(_ trainData: MLClassificationDataSet) throws
     {
         //  Verify the SVMModel is the right type
-        if type != .c_SVM_Classification || type != .ν_SVM_Classification { throw SVMError.invalidModelType }
+        if type != .c_SVM_Classification && type != .ν_SVM_Classification { throw SVMError.invalidModelType }
         
         //  Verify the data set is the right type
-        if (trainData.dataType != .classification) { throw DataTypeError.invalidDataType }
+        if (trainData.dataType == .regression) { throw DataTypeError.invalidDataType }
         
         //  Train on the data (ignore initialization, as SVM's do single-batch training)
         if (trainData is DataSet) {
