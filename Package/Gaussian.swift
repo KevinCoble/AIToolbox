@@ -7,7 +7,11 @@
 //
 
 import Foundation
+#if os(Linux)
+import Glibc
+#else
 import Accelerate
+#endif
 
 
 public enum GaussianError: Error {
@@ -32,7 +36,7 @@ open class Gaussian {
         if (variance < 0.0) { throw GaussianError.badVarianceValue }
         self.mean = mean
         σsquared = variance
-        multiplier = 1.0 / sqrt(σsquared * 2.0 * M_PI)
+        multiplier = 1.0 / sqrt(σsquared * 2.0 * Double.pi)
     }
     
     open func setMean(_ mean: Double)
@@ -43,7 +47,7 @@ open class Gaussian {
     open func setVariance(_ variance: Double)
     {
         σsquared = variance
-        multiplier = 1.0 / sqrt(σsquared * 2.0 * M_PI)
+        multiplier = 1.0 / sqrt(σsquared * 2.0 * Double.pi)
     }
     
     open func setParameters(_ parameters: [Double]) throws
@@ -72,7 +76,7 @@ open class Gaussian {
     }
     
     ///  Function to get a random value
-    open func random() -> Double {
+    open func gaussRandom() -> Double {
         return Gaussian.gaussianRandom(mean, standardDeviation: sqrt(σsquared))
     }
     
@@ -93,8 +97,13 @@ open class Gaussian {
             var x1 = 0.0
             var x2 = 0.0
             repeat {
+#if os(Linux)
+                x1 = 2.0 * (Double(random()) / Double(RAND_MAX)) - 1.0
+                x2 = 2.0 * (Double(random()) / Double(RAND_MAX)) - 1.0
+#else
                 x1 = 2.0 * (Double(arc4random()) / Double(UInt32.max)) - 1.0
                 x2 = 2.0 * (Double(arc4random()) / Double(UInt32.max)) - 1.0
+#endif
                 w = x1 * x1 + x2 * x2
             } while ( w >= 1.0 )
             
@@ -124,8 +133,13 @@ open class Gaussian {
             var x1 : Float = 0.0
             var x2 : Float = 0.0
             repeat {
+#if os(Linux)
+                x1 = 2.0 * (Float(random()) / Float(RAND_MAX)) - 1.0
+                x2 = 2.0 * (Float(random()) / Float(RAND_MAX)) - 1.0
+#else
                 x1 = 2.0 * (Float(arc4random()) / Float(UInt32.max)) - 1.0
                 x2 = 2.0 * (Float(arc4random()) / Float(UInt32.max)) - 1.0
+#endif
                 w = x1 * x1 + x2 * x2
             } while ( w >= 1.0 )
             
@@ -139,6 +153,8 @@ open class Gaussian {
     }
 }
 
+#if os(Linux)
+#else
 open class MultivariateGaussian {
     
     //  Parameters
@@ -178,7 +194,7 @@ open class MultivariateGaussian {
     }
     
     fileprivate func getComputeValues() throws {
-        var denominator = pow(2.0 * M_PI, Double(dimension) * 0.5)
+        var denominator = pow(2.0 * Double.pi, Double(dimension) * 0.5)
         
         //  Get the determinant and inverse of the covariance matrix
         var sqrtDeterminant = 1.0
@@ -385,3 +401,4 @@ open class MultivariateGaussian {
         return results
     }
 }
+#endif

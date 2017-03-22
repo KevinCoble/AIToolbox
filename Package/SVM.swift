@@ -69,7 +69,9 @@ open class SVMModel
         weightModifiers = copyFrom.weightModifiers
         probability = copyFrom.probability
     }
-    
+
+#if os(Linux)
+#else
     public init?(loadFromFile path: String)
     {
         //  Initialize all the stored properties (Swift requires this, even when returning nil [supposedly fixed in Swift 2.2)
@@ -132,6 +134,7 @@ open class SVMModel
         if probBArray == nil { return nil }
         probabilityB = probBArray! as! [Double]
     }
+#endif
     
     open func isνFeasableForData(_ data: MLClassificationDataSet) -> Bool
     {
@@ -456,7 +459,11 @@ open class SVMModel
                 var shuffledIndices = classificationData.classOffsets
                 for c in 0..<classificationData.numClasses {
                     for i in 0..<classificationData.classCount[c] {
+#if os(Linux)
+                        let j =  i + random() % (classificationData.classCount[c] - i)
+#else
                         let j =  i + Int(arc4random()) % (classificationData.classCount[c] - i)
+#endif
                         swap(&shuffledIndices[c][i], &shuffledIndices[c][j])
                     }
                 }
@@ -1008,6 +1015,8 @@ open class SVMModel
         return p
     }
     
+#if os(Linux)
+#else
     ///  Routine to write the model result parameters to a property list path at the provided path
     public enum SVMWriteErrors: Error { case failedWriting }
     open func saveToFile(_ path: String) throws
@@ -1029,6 +1038,7 @@ open class SVMModel
         let pList = NSDictionary(dictionary: modelDictionary)
         if !pList.write(toFile: path, atomically: false) { throw SVMWriteErrors.failedWriting }
     }
+#endif
 }
 
 //  Alpha state for QP solver

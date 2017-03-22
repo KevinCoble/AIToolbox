@@ -1,7 +1,7 @@
 # AIToolbox
 A toolbox of AI modules written in Swift:  Graphs/Trees, Linear Regression, Support Vector Machines, Neural Networks, PCA, KMeans, Genetic Algorithms, MDP, Mixture of Gaussians, Logistic Regression
 
-This framework uses the Accelerate library to speed up computations.
+This framework uses the Accelerate library to speed up computations, except the Linux package versions.
 Written for Swift 3.0.  Earlier versions are Swift 2.2 compatible
 
 SVM ported from the public domain LIBSVM repository
@@ -13,7 +13,10 @@ Use the XCTest files for examples on how to use the classes
 
 Playgrounds for Linear Regression, SVM, and Neural Networks are available.  Now available in both macOS and iOS versions.
 
-####New iOS playgrounds - including a four-in-row game using alpha-beta search!
+###New Swift Package - Mac and Linux compatible!
+The package is a sub-set of the full framework.  Classes that require GCD or LAPACK have not been ported.  I am investigating LAPACK on Linux alternatives, and may someday figure out how to get libdispatch to compile on Ubuntu...
+Use [this subdirectory](Package) to reference the package from your code.
+
 
 ##  Manual
 

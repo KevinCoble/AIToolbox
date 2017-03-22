@@ -7,7 +7,10 @@
 //
 
 import Foundation
+#if os(Linux)
+#else
 import Accelerate
+#endif
 
 
 final class LSTMNeuralNode {

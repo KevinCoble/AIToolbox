@@ -7,7 +7,10 @@
 //
 
 import Foundation
+#if os(Linux)
+#else
 import Accelerate
+#endif
 
 public enum NeuronLayerType {
     case simpleFeedForwardWithNodes
@@ -1392,7 +1395,11 @@ open class NeuralNetwork: Classifier, Regressor {
         for _ in 0..<epochCount {
             //  Get training set indices for this epoch
             for index in 0..<epochSize {
-                batchIndices[index] = Int(arc4random_uniform(UInt32(trainData.size)))
+#if os(Linux)
+                    batchIndices[index] = Int(random() % trainData.size)
+#else
+                    batchIndices[index] = Int(arc4random_uniform(UInt32(trainData.size)))
+#endif
             }
             
             //  Learn on this epoch

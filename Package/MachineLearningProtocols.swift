@@ -106,7 +106,11 @@ extension MLDataSet {
         
         //  Shuffle
         for i in 0..<size - 1 {
+#if os(Linux)
+            let j = Int(random() % (size - i)) + i
+#else
             let j = Int(arc4random_uniform(UInt32(size - i))) + i
+#endif
             guard i != j else { continue }
             swap(&shuffledArray[i], &shuffledArray[j])
         }

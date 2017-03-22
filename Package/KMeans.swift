@@ -7,7 +7,10 @@
 //
 
 import Foundation
+#if os(Linux)
+#else
 import Accelerate
+#endif
 
 enum KMeansError: Error {
     case twoFewPointsForClasses
@@ -45,7 +48,11 @@ open class KMeans {
         if (initWithKPlusPlus) {
             //  1. Choose one center uniformly at random from among the data points.
             centroids = []
+#if os(Linux)
+            var pointIndex = random() % data.size
+#else
             var pointIndex = Int(arc4random_uniform(UInt32(data.size)))
+#endif
             let inputs = try data.getInput(pointIndex)
             centroids.append(inputs)
             try data.setClass(pointIndex, newClass: 0)
@@ -79,7 +86,11 @@ open class KMeans {
                 //  3. Choose one new data point at random as a new center, using a weighted probability distribution where a point x is chosen with probability proportional to D(x)2.
                 distanceArray.sort(by: {$0.distanceSquared > $1.distanceSquared})
                 totalDistance = sqrt(totalDistance)
+#if os(Linux)
+                var selectionDistance = Double(random()) * totalDistance / Double(RAND_MAX)
+#else
                 var selectionDistance = Double(arc4random()) * totalDistance / Double(UInt32.max)
+#endif
                 selectionDistance *= selectionDistance      //  Square to compare against the list
                 var totalDistanceToIndex = 0.0
                 for distance in distanceArray {
@@ -102,7 +113,11 @@ open class KMeans {
             for _ in 0..<numClasses {
                 var pointIndex: Int
                 repeat {
+#if os(Linux)
+                    pointIndex = random() % data.size
+#else
                     pointIndex = Int(arc4random_uniform(UInt32(data.size)))
+#endif
                 } while (initialSet.contains(pointIndex))
                 initialSet.append(pointIndex)
             }

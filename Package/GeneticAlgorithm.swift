@@ -8,6 +8,10 @@
 
 import Foundation
 
+#if os(Linux)
+    import Glibc
+#endif
+
 ///  Use this class to do genetic evolution of a population
 open class Population
 {
@@ -54,7 +58,11 @@ open class Population
         var newPopulation = [Genome]()
         for _ in population {
             //  Pick the father
+#if os(Linux)
+            let fatherScore = Double(random()) * totalScore / Double(RAND_MAX)
+#else
             let fatherScore = Double(arc4random()) * totalScore / Double(UInt32.max)
+#endif
             var fatherIndex = 0
             var totalScoreToIndex = 0.0
             for member in population {
@@ -69,7 +77,11 @@ open class Population
                 var motherIndex = fatherIndex;
                 while (motherIndex == fatherIndex) {        //  Make sure it is not the father
                     motherIndex = 0
+#if os(Linux)
+                    let motherScore = Double(random()) * totalScore / Double(RAND_MAX)
+#else
                     let motherScore = Double(arc4random()) * totalScore / Double(UInt32.max)
+#endif
                     totalScoreToIndex = 0.0
                     for member in population {
                         totalScoreToIndex += member.score
@@ -234,7 +246,11 @@ open class IntegerGene
     
     init(randomOfLength : Int) {
         for _ in 0..<randomOfLength {
+#if os(Linux)
+            let allele = UInt32(random())
+#else
             let allele = arc4random()
+#endif
             sequence.append(allele)
         }
     }
@@ -250,11 +266,20 @@ open class IntegerGene
         let numBits = sequence.count * 32
         
         //  Get the integer comparison number for the random number generator that matches the mutate probability
+#if os(Linux)
+        let mutateThreshold = Int(probability * Double(RAND_MAX))
+#else
         let mutateThreshold = UInt32(probability * Double(UInt32.max))
+#endif
         
         //  Iterate through each bit, mutate if random chance says so
         for bit in 0..<numBits {
-            if (arc4random() < mutateThreshold) {
+#if os(Linux)
+            let randNum = random()
+#else
+            let randNum = arc4random()
+#endif
+            if (randNum < mutateThreshold) {
                 //  Get the allele index and bit mask
                 let allele = bit >> 5
                 let mask = UInt32(1 << (bit & 0x0000001F))
@@ -272,15 +297,27 @@ open class IntegerGene
         var length = sequence.count
         if (sequence.count > mate.sequence.count) {
             let difference = sequence.count - mate.sequence.count
+#if os(Linux)
+            length = mate.sequence.count + Int(random() % (difference+1))
+#else
             length = mate.sequence.count + Int(arc4random_uniform(UInt32(difference+1)))
+#endif
         }
         else if (sequence.count < mate.sequence.count) {
             let difference = mate.sequence.count - sequence.count
+#if os(Linux)
+            length = sequence.count + Int(random() % (difference+1))
+#else
             length = sequence.count + Int(arc4random_uniform(UInt32(difference+1)))
+#endif
         }
         
         //  Process each allele
+#if os(Linux)
+        let compareThreshold = Int(0.5 * Double(RAND_MAX))
+#else
         let compareThreshold = UInt32(0.5 * Double(UInt32.max))
+#endif
         for i in 0..<length {
             var allele : UInt32
             if (i > sequence.count) {
@@ -290,7 +327,12 @@ open class IntegerGene
                 allele = sequence[i]
             }
             else {
-                if (arc4random() < compareThreshold) {
+#if os(Linux)
+                let randNum = random()
+#else
+                let randNum = arc4random()
+#endif
+                if (randNum < compareThreshold) {
                     allele = mate.sequence[i]
                 }
                 else {
@@ -318,9 +360,17 @@ open class DoubleGene
     
     init(randomOfLength : Int, withRange : (min : Double, max : Double)) {
         self.range = withRange
-        let multiplier = (range.max - range.min) / Double(UInt32.max)
+#if os(Linux)
+    let multiplier = (range.max - range.min) / Double(RAND_MAX)
+#else
+    let multiplier = (range.max - range.min) / Double(UInt32.max)
+#endif
         for _ in 0..<randomOfLength {
+#if os(Linux)
+            let allele = Double(random()) * multiplier + range.min
+#else
             let allele = Double(arc4random()) * multiplier + range.min
+#endif
             sequence.append(allele)
         }
     }
@@ -334,15 +384,28 @@ open class DoubleGene
     
     func mutateWithProbability(_ probability: Double)->Void {
         //  Get the integer comparison number for the random number generator that matches the mutate probability
+#if os(Linux)
+        let mutateThreshold = Int(probability * Double(RAND_MAX))
+#else
         let mutateThreshold = UInt32(probability * Double(UInt32.max))
+#endif
         
         //  Iterate through each allele, mutate if random chance says so
         var allele = 0
         while (allele < sequence.count) {
-            if (arc4random() < mutateThreshold) {
-                let random = arc4random()
-                var modifier = Double(random & 0x0000001F) * (range.max - range.min) / 128.0
-                if ((random & 0x00000100) != 0) {modifier *= -1.0}
+#if os(Linux)
+            let randomThreshold = random()
+#else
+            let randomThreshold = arc4random()
+#endif
+            if (randomThreshold < mutateThreshold) {
+#if os(Linux)
+                let randomNum = random()
+#else
+                let randomNum = arc4random()
+#endif
+                var modifier = Double(randomNum & 0x0000001F) * (range.max - range.min) / 128.0
+                if ((randomNum & 0x00000100) != 0) {modifier *= -1.0}
                 sequence[allele] += modifier
                 if (sequence[allele] < range.min) {sequence[allele] = range.min}
                 if (sequence[allele] > range.max) {sequence[allele] = range.max}
@@ -358,15 +421,27 @@ open class DoubleGene
         var length = sequence.count
         if (sequence.count > mate.sequence.count) {
             let difference = sequence.count - mate.sequence.count
+#if os(Linux)
+            length = mate.sequence.count + Int(random() % (difference+1))
+#else
             length = mate.sequence.count + Int(arc4random_uniform(UInt32(difference+1)))
+#endif
         }
         else if (sequence.count < mate.sequence.count) {
             let difference = mate.sequence.count - sequence.count
+#if os(Linux)
+            length = sequence.count + Int(random() % (difference+1))
+#else
             length = sequence.count + Int(arc4random_uniform(UInt32(difference+1)))
+#endif
         }
         
         //  Process each allele
+#if os(Linux)
+        let compareThreshold = Int(0.5 * Double(RAND_MAX))
+#else
         let compareThreshold = UInt32(0.5 * Double(UInt32.max))
+#endif
         for i in 0..<length {
             var allele : Double
             if (i > sequence.count) {
@@ -376,7 +451,12 @@ open class DoubleGene
                 allele = sequence[i]
             }
             else {
-                if (arc4random() < compareThreshold) {
+#if os(Linux)
+                let randNum = random()
+#else
+                let randNum = arc4random()
+#endif
+                if (randNum < compareThreshold) {
                     allele = mate.sequence[i]
                 }
                 else {

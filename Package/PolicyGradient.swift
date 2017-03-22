@@ -7,7 +7,10 @@
 //
 
 import Foundation
+#if os(Linux)
+#else
 import Accelerate
+#endif
 
 public struct PGStep {
     public var state : [Double]        //  The starting state of the step
