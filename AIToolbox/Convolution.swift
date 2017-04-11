@@ -221,18 +221,22 @@ final public class Convolution2D : DeepNetworkOperator
         let numColumns = resultSize.dimensions[0]
         for row in 0..<numRows {
             for convRow in 0..<convolutionSize {
-                let sourceRow = row + convRow - offset
-                if (sourceRow < 0 || sourceRow >= numRows) { continue }
+                var sourceRow = row + convRow + offset
+                //        if (sourceRow < 0 || sourceRow >= numRows) { continue }   //  If kv​Image​Truncate​Kernel used in convolution
+                if (sourceRow < 0) { sourceRow = 0 }                        //  If kvImageEdgeExtend used in convolution
+                if (sourceRow >= numRows) { sourceRow = numRows - 1 }       //  If kvImageEdgeExtend used in convolution
                 let sourceIndex = sourceRow * numColumns
                 var destIndex = row * numColumns
                 let convolutionIndex = convRow * convolutionSize
                 for column in 0..<numColumns {
                     for convColumn in 0..<convolutionSize {
-                        let sourceColumn = column + convColumn - offset
-                        if (sourceColumn < 0 || sourceColumn >= numColumns) { continue }
+                        var sourceColumn = column + convColumn + offset
+                        //                if (sourceColumn < 0 || sourceColumn >= numColumns) { continue }  //  If kv​Image​Truncate​Kernel used in convolution
+                        if (sourceColumn < 0) { sourceColumn = 0 }                          //  If kvImageEdgeExtend used in convolution
+                        if (sourceColumn >= numColumns) { sourceColumn = numColumns - 1 }   //  If kvImageEdgeExtend used in convolution
                         let sourceLocation = sourceIndex + sourceColumn
-                        weightAccumulations[convolutionIndex+convColumn] += upStreamGradient[sourceLocation] * lastInputs[sourceLocation]
-                        downStreamGradient[destIndex] += upStreamGradient[sourceLocation] * matrix[convolutionIndex+convColumn]
+                        weightAccumulations[convolutionIndex+convColumn] += upStreamGradient[destIndex] * lastInputs[sourceLocation]
+                        downStreamGradient[sourceLocation] += upStreamGradient[destIndex] * matrix[convolutionIndex+convColumn]
                     }
                     destIndex += 1
                 }

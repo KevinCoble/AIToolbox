@@ -13,7 +13,7 @@ Use the XCTest files for examples on how to use the classes
 
 Playgrounds for Linear Regression, SVM, and Neural Networks are available.  Now available in both macOS and iOS versions.
 
-###New Swift Package - Mac and Linux compatible!
+### New Swift Package - Mac and Linux compatible!
 The package is a sub-set of the full framework.  Classes that require GCD or LAPACK have not been ported.  I am investigating LAPACK on Linux alternatives, and may someday figure out how to get libdispatch to compile on Ubuntu...
 Use [this subdirectory](Package) to reference the package from your code.
 
@@ -22,7 +22,7 @@ Use [this subdirectory](Package) to reference the package from your code.
 
 I have started a [manual](Manual/AIToolbox.md) for the framework.  It is a work-in-progress, but adds some useful explanation to pieces of the framework.  All protocols, structures, and enumerations are well defined.  Class descriptions are there, but not class variables and methods.
 
-##Classes/Algorithms supported:
+## Classes/Algorithms supported:
 
     Graphs/Trees
         Depth-first search
