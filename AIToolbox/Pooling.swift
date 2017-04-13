@@ -263,46 +263,42 @@ final public class Pooling : DeepNetworkOperator
         let spreadZ = destSize[2] / sourceSize[2]
         let spreadY = destSize[1] / sourceSize[1]
         let spreadX = destSize[0] / sourceSize[0]
-        let multiplier = 1.0 / Float(spreadW + spreadZ + spreadY + spreadX)
+        let multiplier = 1.0 / Float(spreadW * spreadZ * spreadY * spreadX)
         
         //  Determine the stride for each dimension
         var sourceStride = [Int](repeating: 1, count: 4)
         var destStride = [Int](repeating: 1, count: 4)
-        for index in 0..<4 {
-            if (index > 0) {
-                for i in 0..<index { sourceStride[index] *= sourceSize[i] }
-                for i in 0..<index { destStride[index] *= destSize[i] }
-            }
+        for index in 1..<4 {
+            for i in 0..<index { sourceStride[index] *= sourceSize[i] }
+            for i in 0..<index { destStride[index] *= destSize[i] }
         }
         
         //  Spread each dimension
-        for w in 0..<sourceSize[3] {
-            let wSourceStart = w * sourceStride[3]
-            let wDestStart = w * destStride[3]
-            for wGroup in 0..<spreadW {
-                let wDestGroupStart = wDestStart + (wGroup * destStride[3])
-                for z in 0..<sourceSize[2] {
-                    let zSourceStart = wSourceStart + (z * sourceStride[2])
-                    let zDestStart = wDestGroupStart + (z * destStride[2])
-                    for zGroup in 0..<spreadZ {
-                        let zDestGroupStart = zDestStart + (zGroup * destStride[2])
-                        for y in 0..<sourceSize[1] {
-                            let ySourceStart = zSourceStart + (y * sourceStride[1])
-                            let yDestStart = zDestGroupStart + (y * destStride[1])
-                            for yGroup in 0..<spreadY {
-                                let yDestGroupStart = yDestStart + (yGroup * destStride[1])
-                                for x in 0..<sourceSize[0] {
+        var destIndex = 0
+        var wSourceStart = 0
+        for _ in 0..<sourceSize[3] {                            //  Each source W
+            for _ in 0..<spreadW {                              //  Spread to each destination W
+                var zSourceStart = wSourceStart
+                for _ in 0..<sourceSize[2] {                    //  Each source Z
+                    for _ in 0..<spreadZ {                      //  Spread to each destination Z
+                        var ySourceStart = zSourceStart
+                        for _ in 0..<sourceSize[1] {            //  Each source Y
+                            for _ in 0..<spreadY {              //  Spread to each destination Y
+                                for x in 0..<sourceSize[0] {    //  Each source X
                                     let sourceIndex = ySourceStart + x
-                                    let xDestStart = yDestGroupStart + (x * spreadX)
-                                    for xGroup in 0..<spreadX {
-                                        downstreamGradient[xDestStart + xGroup] = upStreamGradient[sourceIndex] * multiplier
+                                    for _ in 0..<spreadX {      //  Spread to each destination X
+                                        downstreamGradient[destIndex] = upStreamGradient[sourceIndex] * multiplier
+                                        destIndex += 1
                                     }
                                 }
                             }
+                            ySourceStart += sourceStride[1]
                         }
                     }
+                    zSourceStart += sourceStride[2]
                 }
             }
+            wSourceStart += sourceStride[3]
         }
         
         return downstreamGradient
