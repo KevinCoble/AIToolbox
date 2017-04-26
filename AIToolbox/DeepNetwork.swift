@@ -9,8 +9,8 @@
 import Foundation
 
 protocol DeepNetworkInputSource {
-    func getInputDataSize(_ inputID : String) -> DeepChannelSize?
-    func getValuesForID(_ inputID : String) -> [Float]
+    func getInputDataSize(_ inputIDs : [String]) -> DeepChannelSize?
+    func getValuesForIDs(_ inputIDs : [String]) -> [Float]
     func getAllValues() -> [Float]
 }
 
@@ -161,13 +161,54 @@ final public class DeepNetwork : DeepNetworkInputSource, DeepNetworkOutputDestin
     }
     
     ///  Function to get the size of an input set
-    public func getInputDataSize(_ inputID : String) -> DeepChannelSize?
+    public func getInputDataSize(_ inputIDs : [String]) -> DeepChannelSize?
     {
-        //  Get the index
-        if let index = getInputIndex(inputID) {
-            return inputs[index].size
+        var currentSize : DeepChannelSize?
+        
+        //  Get the size of each input
+        for sourceID in inputIDs {
+            if let inputIndex = getInputIndex(sourceID) {
+                if (currentSize == nil) {
+                    //  First input - start with this size
+                    currentSize = inputs[inputIndex].size
+                }
+                else {
+                    //  Not first input, add sizes together
+                    let extendedCurrentSize = currentSize!.dimensions + [1, 1, 1]
+                    let extendedInputSize = inputs[inputIndex].size.dimensions + [1, 1, 1]
+                    for index in 0..<4 {
+                        if (index <= currentSize!.numDimensions && index <= inputs[index].size.numDimensions) {
+                            if (extendedCurrentSize[index] != extendedInputSize[index]) { return nil }
+                            continue
+                        }
+                        if (index == currentSize!.numDimensions && index == inputs[inputIndex].size.numDimensions) {
+                            var newDimensions = currentSize!.dimensions
+                            newDimensions.append(extendedCurrentSize[index] + extendedInputSize[index])
+                            currentSize = DeepChannelSize(dimensionCount : index + 1, dimensionValues : newDimensions)
+                            break
+                        }
+                        else if (index < currentSize!.numDimensions) {
+                            var newDimensions = currentSize!.dimensions
+                            newDimensions[index] = (extendedCurrentSize[index] + extendedInputSize[index])
+                            currentSize = DeepChannelSize(dimensionCount : index + 1, dimensionValues : newDimensions)
+                            break
+                        }
+                        else {
+                            var newDimensions = inputs[inputIndex].size.dimensions
+                            newDimensions[index] = (extendedCurrentSize[index] + extendedInputSize[index])
+                            currentSize = DeepChannelSize(dimensionCount : index + 1, dimensionValues : newDimensions)
+                            break
+                        }
+                    }
+                }
+            }
+            else {
+                //  The input source wasn't found
+                return nil
+            }
         }
-        return nil
+        
+        return currentSize
     }
 
     
@@ -537,13 +578,21 @@ final public class DeepNetwork : DeepNetworkInputSource, DeepNetworkOutputDestin
         return loss
     }
     
-    public func getValuesForID(_ inputID : String) -> [Float]
+    public func getValuesForIDs(_ inputIDs : [String]) -> [Float]
     {
+        var combinedInputs : [Float] = []
+        
         //  Get the index
-        if let index = getInputIndex(inputID) {
-            return inputs[index].values
+        for sourceID in inputIDs {
+            if let index = getInputIndex(sourceID) {
+                combinedInputs += inputs[index].values
+            }
+            else {
+                return []
+            }
         }
-        return []
+        
+        return combinedInputs
     }
     
     public func getAllValues() -> [Float]

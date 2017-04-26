@@ -41,6 +41,22 @@ public struct DeepChannelSize {
         
         return result
     }
+    
+    ///  Function to determine if another input of a specified size can be added to an input of this size
+    public func canAddInput(ofSize: DeepChannelSize) -> Bool
+    {
+        //  All but the last dimension must match
+        if (abs(numDimensions - ofSize.numDimensions) > 1) { return false }
+        var numMatchingDimensions = numDimensions
+        if (numDimensions < ofSize.numDimensions) { numMatchingDimensions = ofSize.numDimensions }
+        if (numDimensions != ofSize.numDimensions) { numMatchingDimensions -= 1 }
+        let ourDimensionsExtended = dimensions + [1, 1, 1]
+        let theirDimensionsExtended = ofSize.dimensions + [1, 1, 1]
+        for index in 0..<numMatchingDimensions {
+            if ourDimensionsExtended[index] != theirDimensionsExtended[index] { return false }
+        }
+        return true
+    }
 }
 
 ///  Class for a single channel of a deep layer
@@ -49,16 +65,16 @@ public struct DeepChannelSize {
 final public class DeepChannel : MLPersistence
 {
     public let idString : String           //  The string ID for the channel.  i.e. "red component"
-    public private(set) var sourceChannelID : String    //  ID of the channel that is the source for this channel from the previous layer
+    public private(set) var sourceChannelIDs : [String]    //  ID's of the channels that are the source for this channel from the previous layer
     public private(set) var resultSize : DeepChannelSize    //  Size of the result of this channel
     
     var networkOperators : [DeepNetworkOperator] = []
     
     fileprivate var inputErrorGradient : [Float] = []
     
-    public init(identifier: String, sourceChannel: String) {
+    public init(identifier: String, sourceChannels: [String]) {
         idString = identifier
-        sourceChannelID = sourceChannel
+        sourceChannelIDs = sourceChannels
         resultSize = DeepChannelSize(dimensionCount: 1, dimensionValues: [0])
     }
     
@@ -72,10 +88,15 @@ final public class DeepChannel : MLPersistence
         if id == nil { return nil }
         idString = id! as String
         
-        //  Get the source ID
-        let source = fromDictionary["sourceChannelID"] as? NSString
-        if source == nil { return nil }
-        sourceChannelID = source! as String
+        //  Get the array of source IDs
+        sourceChannelIDs = []
+        let sourceIDArray = fromDictionary["sourceChannelIDs"] as? NSArray
+        if (sourceIDArray == nil)  { return nil }
+        for item in sourceIDArray! {
+            let source = item as? NSString
+            if source == nil { return nil }
+            sourceChannelIDs.append(source! as String)
+        }
         
         //  Get the array of network operators
         let networkOpArray = fromDictionary["networkOperators"] as? NSArray
@@ -87,6 +108,14 @@ final public class DeepChannel : MLPersistence
             if (netOperator == nil)  { return nil }
             networkOperators.append(netOperator!)
         }
+    }
+    
+    ///  Function that indicates if a given input ID is used by this channel
+    public func usesInputID(_ id : String) -> Bool {
+        for usedID in sourceChannelIDs {
+            if usedID == id { return true }
+        }
+        return false
     }
     
     ///  Function to add a network operator to the channel
@@ -129,6 +158,46 @@ final public class DeepChannel : MLPersistence
         }
     }
     
+    //  Method to validate inputs exist and match requirements
+    func validateAgainstPreviousLayer(_ prevLayer: DeepNetworkInputSource, layerIndex: Int) ->[String]
+    {
+        var errors : [String] = []
+        var firstInputSize : DeepChannelSize?
+        
+        //  Check each source ID to see if it exists and matches
+        for sourceID in sourceChannelIDs {
+            //  Get the input sizing from the previous layer that has our source
+            if let inputSize = prevLayer.getInputDataSize([sourceID]) {
+                //  It exists, see if it matches any previous size
+                if let firstSize = firstInputSize {
+                    if (!firstSize.canAddInput(ofSize: inputSize)) {
+                        errors.append("Layer \(layerIndex), channel \(idString) uses input \(sourceID), which does not match size of other inputs")
+                    }
+                }
+                else {
+                    //  First input
+                    firstInputSize = inputSize
+                }
+            }
+            else {
+                //  Source channel not found
+                errors.append("Layer \(layerIndex), channel \(idString) uses input \(sourceID), which does not exist")
+            }
+        }
+        
+        //  If all the sources exist and are of appropriate size, update the output sizes
+        if let inputSize = prevLayer.getInputDataSize(sourceChannelIDs) {
+            //  We have the input, update the output size of the channel
+            updateOutputSize(inputSize)
+        }
+        else {
+            //  Source channel not found
+            errors.append("Combining sources of for Layer \(layerIndex), channel \(idString) fails")
+        }
+        
+        return errors
+    }
+    
     //  Method to determine the output size based on the input size and the operation layers
     func updateOutputSize(_ inputSize : DeepChannelSize)
     {
@@ -161,8 +230,8 @@ final public class DeepChannel : MLPersistence
     func feedForward(_ inputSource: DeepNetworkInputSource)
     {
         //  Get the inputs from the previous layer
-        var inputs = inputSource.getValuesForID(sourceChannelID)
-        var inputSize = inputSource.getInputDataSize(sourceChannelID)
+        var inputs = inputSource.getValuesForIDs(sourceChannelIDs)
+        var inputSize = inputSource.getInputDataSize(sourceChannelIDs)
         if (inputSize == nil) { return }
         
         //  Process each operator
@@ -239,8 +308,8 @@ final public class DeepChannel : MLPersistence
         //  Set the id string type
         resultDictionary["idString"] = idString as AnyObject?
         
-        //  Set the source ID
-        resultDictionary["sourceChannelID"] = sourceChannelID as AnyObject?
+        //  Set the array of source IDs
+        resultDictionary["sourceChannelIDs"] = sourceChannelIDs as AnyObject?
         
         //  Set the array of network operators
         var operationsArray : [[String: AnyObject]] = []

@@ -63,14 +63,55 @@ final public class DeepLayer : DeepNetworkInputSource, DeepNetworkOutputDestinat
         }
     }
     
-    ///  Function to get the size of an channel output (as input for next layer
-    public func getInputDataSize(_ inputID : String) -> DeepChannelSize?
+    ///  Function to get the size of a channel output (as input for next layer)
+    public func getInputDataSize(_ inputIDs : [String]) -> DeepChannelSize?
     {
-        //  Get the index
-        if let index = getChannelIndex(inputID) {
-            return channels[index].resultSize
+        var currentSize : DeepChannelSize?
+        
+        //  Get the size of each input
+        for sourceID in inputIDs {
+            if let channelIndex = getChannelIndex(sourceID) {
+                if (currentSize == nil) {
+                    //  First input - start with this size
+                    currentSize = channels[channelIndex].resultSize
+                }
+                else {
+                    //  Not first input, add sizes together
+                    let extendedCurrentSize = currentSize!.dimensions + [1, 1, 1]
+                    let extendedInputSize = channels[channelIndex].resultSize.dimensions + [1, 1, 1]
+                    for index in 0..<4 {
+                        if (index <= currentSize!.numDimensions && index <= channels[channelIndex].resultSize.numDimensions) {
+                            if (extendedCurrentSize[index] != extendedInputSize[index]) { return nil }
+                            continue
+                        }
+                        if (index == currentSize!.numDimensions && index == channels[channelIndex].resultSize.numDimensions) {
+                            var newDimensions = currentSize!.dimensions
+                            newDimensions.append(extendedCurrentSize[index] + extendedInputSize[index])
+                            currentSize = DeepChannelSize(dimensionCount : index + 1, dimensionValues : newDimensions)
+                            break
+                        }
+                        else if (index < currentSize!.numDimensions) {
+                            var newDimensions = currentSize!.dimensions
+                            newDimensions[index] = (extendedCurrentSize[index] + extendedInputSize[index])
+                            currentSize = DeepChannelSize(dimensionCount : index + 1, dimensionValues : newDimensions)
+                            break
+                        }
+                        else {
+                            var newDimensions = channels[channelIndex].resultSize.dimensions
+                            newDimensions[index] = (extendedCurrentSize[index] + extendedInputSize[index])
+                            currentSize = DeepChannelSize(dimensionCount : index + 1, dimensionValues : newDimensions)
+                            break
+                        }
+                    }
+                }
+            }
+            else {
+                //  The input source wasn't found
+                return nil
+            }
         }
-        return nil
+        
+        return currentSize
     }
     
     ///  Function to add a network operator to a channel in the layer
@@ -122,16 +163,7 @@ final public class DeepLayer : DeepNetworkInputSource, DeepNetworkOutputDestinat
         
         //  Check each channel
         for channel in channels {
-            //  Get the channel from the previous layer that has our source
-            if let inputSize = prevLayer.getInputDataSize(channel.sourceChannelID) {
-                //  We have the input, update the output size of the channel
-                channel.updateOutputSize(inputSize)
-            }
-            else {
-                //  Source channel not found
-                errors.append("Layer \(layerIndex), channel \(channel.idString) uses input \(channel.sourceChannelID), which does not exist")
-            }
-            
+            errors += channel.validateAgainstPreviousLayer(prevLayer, layerIndex: layerIndex)
         }
         
         return errors
@@ -240,13 +272,21 @@ final public class DeepLayer : DeepNetworkInputSource, DeepNetworkOutputDestinat
         return result
     }
     
-    public func getValuesForID(_ inputID : String) -> [Float]
+    public func getValuesForIDs(_ inputIDs : [String]) -> [Float]
     {
+        var combinedInputs : [Float] = []
+        
         //  Get the index
-        if let index = getChannelIndex(inputID) {
-            return channels[index].getFinalResult()
+        for sourceID in inputIDs {
+            if let index = getChannelIndex(sourceID) {
+                combinedInputs += channels[index].getFinalResult()
+            }
+            else {
+                return []
+            }
         }
-        return []
+        
+        return combinedInputs
     }
     
     public func getAllValues() -> [Float]
@@ -263,7 +303,8 @@ final public class DeepLayer : DeepNetworkInputSource, DeepNetworkOutputDestinat
         //  Sum the gradient from each channel that uses the source
         var result : [Float] = []
         for channel in channels {
-            if (channel.sourceChannelID == sourceID) {
+            if (channel.usesInputID(sourceID)) {
+//!!ktc - getGradient need to indicate sourceID?
                 let channelGradient = channel.getGradient()
                 if (result.count == 0) {
                     result = channelGradient

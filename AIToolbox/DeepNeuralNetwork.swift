@@ -248,10 +248,14 @@ final public class DeepNeuralNetwork : DeepNetworkOperator
 
         
         //  Get 𝟃E/𝟃x.  𝟃E/𝟃x = 𝟃E/𝟃z ⋅ 𝟃z/𝟃x = 𝟃E𝟃z ⋅ weights
-        var downStreamGradient = [Float](repeating: 0.0, count: numInputs)
-        for index in 0..<numInputs {
-            vDSP_dotpr(&weights[index], vDSP_Stride(numInputs+1), 𝟃E𝟃z, 1, &downStreamGradient[index], vDSP_Length(numNodes))
-        }
+//        var downStreamGradient = [Float](repeating: 0.0, count: numInputs)
+//        for index in 0..<numInputs {
+//            vDSP_dotpr(&weights[index], vDSP_Stride(numInputs+1), 𝟃E𝟃z, 1, &downStreamGradient[index], vDSP_Length(numNodes))
+//        }
+        
+        var downStreamGradient = [Float](repeating: 0.0, count: numInputs+1)        //  an extra for the bias term in the weights
+        vDSP_mmul(𝟃E𝟃z, 1, weights, 1, &downStreamGradient, 1, 1, vDSP_Length(numInputs+1), vDSP_Length(numNodes))
+        downStreamGradient = Array(downStreamGradient[0..<numNodes])        //  Size for the inputs without the bias
         
         return downStreamGradient
     }

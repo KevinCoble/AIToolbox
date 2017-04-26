@@ -14,6 +14,7 @@ public enum DeepNetworkOperatorType : Int
     case convolution2DOperation = 0
     case poolingOperation
     case feedForwardNetOperation
+    case nonLinearityOperation
     
     public func getString() ->String
     {
@@ -24,6 +25,8 @@ public enum DeepNetworkOperatorType : Int
             return "Pooling"
         case .feedForwardNetOperation:
             return "FeedForward NN"
+        case .nonLinearityOperation:
+            return "NonLinearity"
         }
     }
     
@@ -50,6 +53,8 @@ public enum DeepNetworkOperatorType : Int
                         return Pooling(fromDictionary: opDefinition)
                     case .feedForwardNetOperation:
                         return DeepNeuralNetwork(fromDictionary: opDefinition)
+                    case .nonLinearityOperation:
+                        return DeepNonLinearity(fromDictionary: opDefinition)
                     }
                 }
             }

@@ -13,6 +13,9 @@ Use the XCTest files for examples on how to use the classes
 
 Playgrounds for Linear Regression, SVM, and Neural Networks are available.  Now available in both macOS and iOS versions.
 
+###New - Convolution Program
+For the Deep Network classes, please look at the [Convolution](https://github.com/KevinCoble/Convolution) project that uses the AIToolbox library to do image recognition.
+
 ### New Swift Package - Mac and Linux compatible!
 The package is a sub-set of the full framework.  Classes that require GCD or LAPACK have not been ported.  I am investigating LAPACK on Linux alternatives, and may someday figure out how to get libdispatch to compile on Ubuntu...
 Use [this subdirectory](Package) to reference the package from your code.
