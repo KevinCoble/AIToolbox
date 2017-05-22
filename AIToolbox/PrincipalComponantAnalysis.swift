@@ -137,7 +137,7 @@ open class PCA {
         basisVectors = [Double](repeating: 0.0, count: reducedDimension * initialDimension)
         for vector in 0..<reducedDimension {
             for column in 0..<initialDimension {
-                basisVectors[(vector * reducedDimension) + column] = vTranspose[vector + (column * initialDimension)]
+                basisVectors[(vector * initialDimension) + column] = vTranspose[vector + (column * initialDimension)]
             }
         }
     }
@@ -160,7 +160,7 @@ open class PCA {
         for point in 0..<data.size {
             //  Move relative to the mean of the training data
             let inputs = try data.getInput(point)
-            vDSP_vsubD(inputs, 1, μ, 1, &centered, 1, vDSP_Length(initialDimension))
+            vDSP_vsubD(μ, 1, inputs, 1, &centered, 1, vDSP_Length(initialDimension))
             
             //  Convert to the new basis vector
             vDSP_mmulD(basisVectors, 1, centered, 1, &transformed, 1, vDSP_Length(reducedDimension), vDSP_Length(1), vDSP_Length(initialDimension))

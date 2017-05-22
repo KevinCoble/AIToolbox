@@ -65,11 +65,25 @@ class PCATests: XCTestCase {
         difference = ratio * initBasis[2] - pca.basisVectors[2]
         XCTAssert(fabs(difference) < 0.02, "PCA Z axis")
         
-        //  Transorm the data set
+        //  Create a transform test data set that is a known distance along the new basis vector
+        let testData = DataSet(dataType: .regression, inputDimension: 3, outputDimension: 1)
         do {
-            let transformedData = try pca.transformDataSet(data)
+            vector[0] = pca.basisVectors[0] * 5.0 + pca.μ[0]
+            vector[1] = pca.basisVectors[1] * 5.0 + pca.μ[1]
+            vector[2] = pca.basisVectors[2] * 5.0 + pca.μ[2]
+            try testData.addUnlabeledDataPoint(input: vector)
+        }
+        catch {
+            print("Invalid data set created")
+        }
+        
+        //  Transform the data set
+        do {
+            let transformedData = try pca.transformDataSet(testData)
             let range = (transformedData as MLRegressionDataSet).getInputRange()
-            XCTAssert(range.count == 1, "PCA transformed data")
+            XCTAssert(range.count == 1, "PCA transformed data size")
+            let transformedVector = try transformedData.getInput(0)
+            XCTAssert(fabs(transformedVector[0] - 5) < 0.1, "PCA transformed data")     //  input vector five times basis vector, result should be a 5
         }
         catch {
             print("Error transforming data set")
@@ -90,6 +104,82 @@ class PCATests: XCTestCase {
 //                    XCTAssert(pca.eigenValues[0] == readPCA.eigenValues[0], "PCA persistance data")
 //                    XCTAssert(pca.basisVectors[0] == readPCA.basisVectors[0], "PCA persistance data")
 //                }
+    }
+    
+    func testExample2() {
+        //  Create a dataset that is on the X and Z vectors, with a small amount of noise
+        let data = DataSet(dataType: .regression, inputDimension: 3, outputDimension: 1)
+        var vector = [0.0, 0.0, 0.0]
+        do {
+            for _ in 0..<20 {
+                let scale = Double(arc4random()) * 200.0  / Double(UInt32.max) - 100.0
+                if (arc4random() % 2 == 0) {
+                    //  Along the X axis
+                    vector[0] = scale + Gaussian.gaussianRandom(0.0, standardDeviation: 0.01)
+                    vector[2] = Gaussian.gaussianRandom(0.0, standardDeviation: 0.01)
+                }
+                else {
+                    //  Along the Z axis
+                    vector[2] = scale + Gaussian.gaussianRandom(0.0, standardDeviation: 0.01)
+                    vector[0] = Gaussian.gaussianRandom(0.0, standardDeviation: 0.01)
+                }
+                try data.addUnlabeledDataPoint(input: vector)
+            }
+        }
+        catch {
+            print("Invalid data set created")
+        }
+        
+        //  Create a PCA class and do the PCA reduction of the basis vectors
+        let pca = PCA(initialSize: 3, reduceSize: 2)
+        do {
+            try pca.getReducedBasisVectorSet(data)
+        }
+        catch {
+            print("Error getting reduced basis vector set")
+        }
+        
+        //  Verify the Y dimension is no longer relevant
+        XCTAssert(fabs(pca.basisVectors[1]) < 0.02, "PCA Y axis irrelevant")
+        XCTAssert(fabs(pca.basisVectors[4]) < 0.02, "PCA Y axis irrelevant")
+        
+        //  Create a transform test data set that is a known distance along the X axis, and has a Y component
+        let testData = DataSet(dataType: .regression, inputDimension: 3, outputDimension: 1)
+        do {
+            vector[0] = pca.basisVectors[0] * 10.0 + pca.μ[0]
+            vector[1] = 1.0 + pca.μ[1]
+            vector[2] = pca.μ[2]
+            try testData.addUnlabeledDataPoint(input: vector)
+        }
+        catch {
+            print("Invalid data set created")
+        }
+        
+        //  Transform the data set
+        do {
+            let transformedData = try pca.transformDataSet(testData)
+            let transformedVector = try transformedData.getInput(0)
+            XCTAssert(transformedVector.count == 2, "PCA transformed data size")
+        }
+        catch {
+            print("Error transforming data set")
+        }
+        //  Test persistence routines
+        //                let path = "SomeValidWritablePath"
+        //                do {
+        //                    try pca.saveToFile(path)
+        //                }
+        //                catch {
+        //                    print("Error in writing file")
+        //                }
+        //                let readPCA = PCA(loadFromFile: path)
+        //                if let readPCA = readPCA {
+        //                    XCTAssert(pca.initialDimension == readPCA.initialDimension, "PCA persistance data")
+        //                    XCTAssert(pca.reducedDimension == readPCA.reducedDimension, "PCA persistance data")
+        //                    XCTAssert(pca.μ[0] == readPCA.μ[0], "PCA persistance data")
+        //                    XCTAssert(pca.eigenValues[0] == readPCA.eigenValues[0], "PCA persistance data")
+        //                    XCTAssert(pca.basisVectors[0] == readPCA.basisVectors[0], "PCA persistance data")
+        //                }
     }
 
     func testPerformanceExample() {
