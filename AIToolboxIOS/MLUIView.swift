@@ -1483,7 +1483,7 @@ open class MLView: UIView {
                 //  Get the normalized limit
                 Y = upper / pow(10.0, Z)
                 //  Make sure we don't round down due to value storage limitations
-                let NY = Y + DBL_EPSILON * 100.0
+                let NY = Y + Double.ulpOfOne * 100.0
                 if (Int(log10(Y)) != Int(log10(NY))) {
                     Y = NY * 0.1
                     Z += 1.0
@@ -1520,7 +1520,7 @@ open class MLView: UIView {
                 //  Get the normalized limit
                 Y = lower / pow(10.0, Z)
                 //  Make sure we don't round down due to value storage limitations
-                let NY = Y + DBL_EPSILON * 100.0
+                let NY = Y + Double.ulpOfOne * 100.0
                 if (Int(log10(Y)) != Int(log10(NY))) {
                     Y = NY * 0.1
                     Z += 1.0
