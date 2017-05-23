@@ -143,6 +143,9 @@
 		0EDA12231C48BF5200F03FDE /* MetalNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12121C3F7DAF00F03FDE /* MetalNeuralNetwork.swift */; };
 		0EDA12251C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */; };
 		0EDA12261C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */; };
+		113C07471ED379D900C31415 /* DeepNonLinearity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113C07461ED379D900C31415 /* DeepNonLinearity.swift */; };
+		113C07481ED379D900C31415 /* DeepNonLinearity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113C07461ED379D900C31415 /* DeepNonLinearity.swift */; };
+		113C07491ED379D900C31415 /* DeepNonLinearity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113C07461ED379D900C31415 /* DeepNonLinearity.swift */; };
 		FB0D5A0B1CAF09230097590B /* PrincipalComponantAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */; };
 		FB0D5A0D1CAF09230097590B /* AlphaBeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECD88651A9C3F6300049F28 /* AlphaBeta.swift */; };
 		FB0D5A111CAF09230097590B /* MetalNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12121C3F7DAF00F03FDE /* MetalNeuralNetwork.swift */; };
@@ -235,6 +238,7 @@
 		0EDA12141C3F813600F03FDE /* MetalNeuralNetworkShaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = MetalNeuralNetworkShaders.metal; sourceTree = "<group>"; };
 		0EDA12161C435FF700F03FDE /* MetalNeuralNetworkTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalNeuralNetworkTests.swift; sourceTree = "<group>"; };
 		0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalNeuralNetworkShaders.swift; sourceTree = "<group>"; };
+		113C07461ED379D900C31415 /* DeepNonLinearity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeepNonLinearity.swift; sourceTree = "<group>"; };
 		FB0D5A231CAF09230097590B /* AIToolbox copy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "AIToolbox copy.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB0D5A241CAF09230097590B /* AIToolbox copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "AIToolbox copy-Info.plist"; path = "/Users/robertoprevidi/Developer/AIToolbox/AIToolbox copy-Info.plist"; sourceTree = "<absolute>"; };
 		FB0D5A2E1CB010090097590B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -386,6 +390,7 @@
 				0EA300F31DB2951A009CB319 /* DeepNetwork.swift */,
 				0EA300F41DB2951A009CB319 /* DeepNetworkOperator.swift */,
 				0EA300F51DB2951A009CB319 /* DeepNeuralNetwork.swift */,
+				113C07461ED379D900C31415 /* DeepNonLinearity.swift */,
 				0EA300F61DB2951A009CB319 /* MLPersistenceProtocol.swift */,
 				0EA300F71DB2951A009CB319 /* Pooling.swift */,
 				0EB34A3A1CF9408C006F5CE5 /* MLView.swift */,
@@ -655,6 +660,7 @@
 				0E04D01D1DEE6F1D008A5BF7 /* DeepNetwork.swift in Sources */,
 				0E0E25FF1CA119160087932B /* PrincipalComponantAnalysis.swift in Sources */,
 				0E04D0211DEE6F25008A5BF7 /* DeepNeuralNetwork.swift in Sources */,
+				113C07481ED379D900C31415 /* DeepNonLinearity.swift in Sources */,
 				0E04D01F1DEE6F21008A5BF7 /* DeepNetworkOperator.swift in Sources */,
 				0E04D0231DEE6F2B008A5BF7 /* MLPersistenceProtocol.swift in Sources */,
 				0E3CB5AC1CE6C9FB008ABA4E /* LogisticRegression.swift in Sources */,
@@ -733,6 +739,7 @@
 				0E3CB5AB1CE6C9FB008ABA4E /* LogisticRegression.swift in Sources */,
 				0EA300FC1DB2951A009CB319 /* DeepNetworkOperator.swift in Sources */,
 				0EB34A3B1CF9408C006F5CE5 /* MLView.swift in Sources */,
+				113C07471ED379D900C31415 /* DeepNonLinearity.swift in Sources */,
 				0EDA12251C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */,
 				0EB9FF2D1E80C10A00AA058E /* Graph.swift in Sources */,
 				0EB9FF2A1E80C10A00AA058E /* DataSet.swift in Sources */,
@@ -788,6 +795,7 @@
 				0E04D01E1DEE6F1E008A5BF7 /* DeepNetwork.swift in Sources */,
 				FB0D5A0B1CAF09230097590B /* PrincipalComponantAnalysis.swift in Sources */,
 				0E04D0221DEE6F27008A5BF7 /* DeepNeuralNetwork.swift in Sources */,
+				113C07491ED379D900C31415 /* DeepNonLinearity.swift in Sources */,
 				0E04D0141DEE6F07008A5BF7 /* NonLinearRegression.swift in Sources */,
 				0E04D0201DEE6F22008A5BF7 /* DeepNetworkOperator.swift in Sources */,
 				0E04D0241DEE6F2C008A5BF7 /* MLPersistenceProtocol.swift in Sources */,
