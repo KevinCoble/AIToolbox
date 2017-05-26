@@ -869,22 +869,65 @@ open class SVMModel
         for index in 0..<numClasses-1 {
             coeffStart.append(coeffStart[index] + supportVectorCount[index])
         }
-        //  Get the kernel value for each support vector at the input value
-        var kernelValue: [Double] = []
-        for sv in 0..<totalSupportVectors {
-            kernelValue.append(Kernel.calcKernelValue(kernelParams, x: inputs, y: supportVector[sv]))
-        }
         
-        var sum = 0.0
-        for k in 0..<supportVectorCount[0] {
-            sum += coefficients[0][coeffStart[0]+k] * kernelValue[coeffStart[0]+k]
+        switch (type) {
+        //  Predict for one-class classification or regression
+        case .oneClassSVM, .ϵSVMRegression, .νSVMRegression:
+            var sum = 0.0
+            for i in 0..<totalSupportVectors {
+                let kernelValue = Kernel.calcKernelValue(kernelParams, x: inputs, y: supportVector[i])
+                sum += coefficients[0][i] * kernelValue
+            }
+            sum -= ρ[0]
+            if (type == .oneClassSVM) {
+                return (sum>0) ? 1.0: -1.0
+            }
+            return sum
+            
+        //  Predict for classification
+        case .c_SVM_Classification, .ν_SVM_Classification:
+            //  Get the kernel value for each support vector at the input value
+            var kernelValue: [Double] = []
+            for sv in 0..<totalSupportVectors {
+                kernelValue.append(Kernel.calcKernelValue(kernelParams, x: inputs, y: supportVector[sv]))
+            }
+            
+            //  Allocate vote space for the classification
+            var vote = [Int](repeating: 0, count: numClasses)
+            
+            //  Initialize the decision value storage in the data set
+            var decisionValues: [Double] = []
+            
+            //  Get the seperation info between each class pair
+            var permutation = 0
+            for i in 0..<numClasses {
+                for j in i+1..<numClasses {
+                    var sum = 0.0
+                    for k in 0..<supportVectorCount[i] {
+                        sum += coefficients[j-1][coeffStart[i]+k] * kernelValue[coeffStart[i]+k]
+                    }
+                    for k in 0..<supportVectorCount[j] {
+                        sum += coefficients[i][coeffStart[j]+k] * kernelValue[coeffStart[j]+k]
+                    }
+                    sum -= ρ[permutation]
+                    decisionValues.append(sum)
+                    permutation += 1
+                    if (sum > 0) {
+                        vote[i] += 1
+                    }
+                    else {
+                        vote[j] += 1
+                    }
+                }
+            }
+            
+            //  Get the most likely class, and return it
+            var maxIndex = 0
+            for index in 1..<numClasses {
+                if (vote[index] > vote[maxIndex]) { maxIndex = index }
+            }
+            return Double(labels[maxIndex])
         }
-        for k in 0..<supportVectorCount[1] {
-            sum += coefficients[0][coeffStart[1]+k] * kernelValue[coeffStart[1]+k]
-        }
-        sum -= ρ[0]
-        
-        return sum
     }
     
     open func predictOneFromBinaryClass(_ inputs: [Double]) -> Int
