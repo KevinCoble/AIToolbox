@@ -124,7 +124,7 @@ extension SVMModel : Classifier {
     public func classify(_ testData: MLClassificationDataSet) throws
     {
         //  Verify the SVMModel is the right type
-        if type != .c_SVM_Classification || type != .ν_SVM_Classification { throw SVMError.invalidModelType }
+        if type != .c_SVM_Classification && type != .ν_SVM_Classification { throw SVMError.invalidModelType }
         
         //  Verify the data set is the right type
         if (testData.dataType != .classification) { throw DataTypeError.invalidDataType }
