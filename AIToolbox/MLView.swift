@@ -61,15 +61,15 @@ open class MLPlotSymbol {
             cPath.fill()
         case .rectangle:
             let rect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.5), symbolSize, symbolSize)
-            NSRectFill(rect)
+            rect.fill()
         case .plus:
             let hrect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.1), symbolSize, symbolSize * 0.2)
-            NSRectFill(hrect)
+            hrect.fill()
             let vrect = NSMakeRect(point.x - (symbolSize * 0.1), point.y - (symbolSize * 0.5), symbolSize * 0.2, symbolSize)
-            NSRectFill(vrect)
+            vrect.fill()
         case .minus:
             let rect = NSMakeRect(point.x - (symbolSize * 0.5), point.y - (symbolSize * 0.1), symbolSize, symbolSize * 0.2)
-            NSRectFill(rect)
+            rect.fill()
         }
         
     }
@@ -560,7 +560,7 @@ open class MLViewRegressionLine: MLViewItem {
         NSGraphicsContext.saveGraphicsState()
         
         //  Set a clip region - the lines aren't usually with the bounds
-        NSRectClip(bounds)
+        bounds.clip()
         
         //  Get the scaling factors
         let scaleFactorX = CGFloat(1.0 / (maxX - minX))
@@ -757,7 +757,7 @@ open class MLViewClassificationArea: MLViewItem {
     open func draw(_ bounds: CGRect) {
         //  draw the 'other' color
         unknownColor.setFill()
-        NSRectFill(bounds)
+        bounds.fill()
         
         //  Get the scaling factors
         let scaleFactorX = CGFloat(1.0 / (maxX - minX))
@@ -932,9 +932,9 @@ open class MLViewAxisLabel: MLViewItem {
             labelParaStyle.lineSpacing = 0.0
             labelParaStyle.alignment = NSTextAlignment.center
             let labelAttributes = [
-                NSForegroundColorAttributeName: XAxisColor,
-                NSParagraphStyleAttributeName: labelParaStyle,
-                NSFontAttributeName: labelFont!
+                convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor): XAxisColor,
+                convertFromNSAttributedStringKey(NSAttributedString.Key.paragraphStyle): labelParaStyle,
+                convertFromNSAttributedStringKey(NSAttributedString.Key.font): labelFont!
             ] as [String : Any]
             
             let format = String(format: "%%.%df", XAxisLabelDecimalDigits)
@@ -952,9 +952,9 @@ open class MLViewAxisLabel: MLViewItem {
                 path.stroke()
                 let value = (maxX - minX) * Double(i) / Double(MajorTickDivisions) + minX
                 let label = String(format: format, value)
-                let labelSize = label.size(withAttributes: labelAttributes)
+                let labelSize = label.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary(labelAttributes))
                 let labelRect = CGRect(x: xpos - labelSize.width * 0.5, y: yPos - 2.0 - labelSize.height, width: labelSize.width, height: labelSize.height)
-                label.draw(in: labelRect, withAttributes: labelAttributes)
+                label.draw(in: labelRect, withAttributes: convertToOptionalNSAttributedStringKeyDictionary(labelAttributes))
                 if (MinorTicksDivisionsPerMajorTick > 1) {
                     for j in 1..<MinorTicksDivisionsPerMajorTick {
                         let minorXpos = bounds.width * CGFloat(j) / CGFloat(MajorTickDivisions * MinorTicksDivisionsPerMajorTick)  + xpos
@@ -973,9 +973,9 @@ open class MLViewAxisLabel: MLViewItem {
             labelParaStyle.lineSpacing = 0.0
             labelParaStyle.alignment = NSTextAlignment.right
             let labelAttributes = [
-                NSForegroundColorAttributeName: YAxisColor,
-                NSParagraphStyleAttributeName: labelParaStyle,
-                NSFontAttributeName: labelFont!
+                convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor): YAxisColor,
+                convertFromNSAttributedStringKey(NSAttributedString.Key.paragraphStyle): labelParaStyle,
+                convertFromNSAttributedStringKey(NSAttributedString.Key.font): labelFont!
             ] as [String : Any]
             
             let format = String(format: "%%.%df", YAxisLabelDecimalDigits)
@@ -993,9 +993,9 @@ open class MLViewAxisLabel: MLViewItem {
                 path.stroke()
                 let value = (maxY - minY) * Double(i) / Double(MajorTickDivisions) + minY
                 let label = String(format: format, value)
-                let labelSize = label.size(withAttributes: labelAttributes)
+                let labelSize = label.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary(labelAttributes))
                 let labelRect = CGRect(x: xOffset, y: ypos - (labelSize.height * 0.5), width: yMaxLabelWidth, height: labelSize.height)
-                label.draw(in: labelRect, withAttributes: labelAttributes)
+                label.draw(in: labelRect, withAttributes: convertToOptionalNSAttributedStringKeyDictionary(labelAttributes))
                 if (MinorTicksDivisionsPerMajorTick > 1) {
                     for j in 1..<MinorTicksDivisionsPerMajorTick {
                         let minorYpos = bounds.height * CGFloat(j) / CGFloat(MajorTickDivisions * MinorTicksDivisionsPerMajorTick)  + ypos
@@ -1022,12 +1022,12 @@ open class MLViewAxisLabel: MLViewItem {
         labelParaStyle.lineSpacing = 0.0
         labelParaStyle.alignment = NSTextAlignment.center
         let labelAttributes = [
-            NSForegroundColorAttributeName: XAxisColor,
-            NSParagraphStyleAttributeName: labelParaStyle,
+            convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor): XAxisColor,
+            convertFromNSAttributedStringKey(NSAttributedString.Key.paragraphStyle): labelParaStyle,
             //NSTextAlignment: textalign,
-            NSFontAttributeName: labelFont!
+            convertFromNSAttributedStringKey(NSAttributedString.Key.font): labelFont!
         ] as [String : Any]
-        let labelSize = "123.4".size(withAttributes: labelAttributes)
+        let labelSize = "123.4".size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary(labelAttributes))
         
         xAxisHeight = XAxisMajorTickHeight + 2.0     //  Tick plus marging
         xAxisHeight += labelSize.height
@@ -1044,10 +1044,10 @@ open class MLViewAxisLabel: MLViewItem {
         labelParaStyle.lineSpacing = 0.0
         labelParaStyle.alignment = NSTextAlignment.center
         let labelAttributes = [
-            NSForegroundColorAttributeName: XAxisColor,
-            NSParagraphStyleAttributeName: labelParaStyle,
+            convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor): XAxisColor,
+            convertFromNSAttributedStringKey(NSAttributedString.Key.paragraphStyle): labelParaStyle,
             //NSTextAlignment: textalign,
-            NSFontAttributeName: labelFont!
+            convertFromNSAttributedStringKey(NSAttributedString.Key.font): labelFont!
         ] as [String : Any]
         
         //  Check the width of each label
@@ -1056,7 +1056,7 @@ open class MLViewAxisLabel: MLViewItem {
         for i in 0...MajorTickDivisions {
             let value = (maxY - minY) * Double(i) / Double(MajorTickDivisions) + minY
             let label = String(format: format, value)
-            let labelSize = label.size(withAttributes: labelAttributes)
+            let labelSize = label.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary(labelAttributes))
             if (labelSize.width > yMaxLabelWidth) { yMaxLabelWidth = labelSize.width }
         }
         
@@ -1177,26 +1177,26 @@ open class MLViewLegend: MLViewItem {
         paraStyle.lineSpacing = 6.0
         paraStyle.alignment = NSTextAlignment.center
         let titleAttributes = [
-            NSForegroundColorAttributeName: fontColor,
-            NSParagraphStyleAttributeName: paraStyle,
+            convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor): fontColor,
+            convertFromNSAttributedStringKey(NSAttributedString.Key.paragraphStyle): paraStyle,
             //NSTextAlignment: textalign,
-            NSFontAttributeName: titleFont!
+            convertFromNSAttributedStringKey(NSAttributedString.Key.font): titleFont!
         ] as [String : Any]
         let labelParaStyle = NSMutableParagraphStyle()
         labelParaStyle.lineSpacing = 6.0
         labelParaStyle.alignment = NSTextAlignment.right
         let labelAttributes = [
-            NSForegroundColorAttributeName: fontColor,
-            NSParagraphStyleAttributeName: labelParaStyle,
+            convertFromNSAttributedStringKey(NSAttributedString.Key.foregroundColor): fontColor,
+            convertFromNSAttributedStringKey(NSAttributedString.Key.paragraphStyle): labelParaStyle,
             //NSTextAlignment: textalign,
-            NSFontAttributeName: itemFont!
+            convertFromNSAttributedStringKey(NSAttributedString.Key.font): itemFont!
         ] as [String : Any]
         
         //  Get the required size of the legend title
         var titleSize = CGSize.zero
         var legendSize = CGSize.zero
         if (!title.isEmpty) {
-            titleSize = title.size(withAttributes: titleAttributes)
+            titleSize = title.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary(titleAttributes))
             legendSize = titleSize
         }
         
@@ -1204,7 +1204,7 @@ open class MLViewLegend: MLViewItem {
         var maxLabelSize : CGFloat = 0.0
         var maxSymbolSize : CGFloat = 0.0
         for item in items {
-            let labelSize = item.label.size(withAttributes: titleAttributes)
+            let labelSize = item.label.size(withAttributes: convertToOptionalNSAttributedStringKeyDictionary(titleAttributes))
             var itemHeight = labelSize.height
             if (labelSize.width > maxLabelSize) { maxLabelSize = labelSize.width }
             if let symbol = item.symbol {
@@ -1243,7 +1243,7 @@ open class MLViewLegend: MLViewItem {
         //  If specified, draw the title
         if (!title.isEmpty) {
             let rect = CGRect(x: xPosition, y: yPosition - titleSize.height, width: legendSize.width, height: titleSize.height)
-            title.draw(in: rect, withAttributes: titleAttributes)
+            title.draw(in: rect, withAttributes: convertToOptionalNSAttributedStringKeyDictionary(titleAttributes))
         }
         
         //  Draw each item
@@ -1259,7 +1259,7 @@ open class MLViewLegend: MLViewItem {
             symbolRect.size.height = item.itemHeight + 2.0
             
             //  Draw the label
-            item.label.draw(in: labelRect, withAttributes: labelAttributes)
+            item.label.draw(in: labelRect, withAttributes: convertToOptionalNSAttributedStringKeyDictionary(labelAttributes))
             
             //  Draw the symbol
             if let symbol = item.symbol {
@@ -1329,7 +1329,7 @@ open class MLView: NSView {
     override open func draw(_ rect: CGRect) {
         //  draw the background
         NSColor.white.setFill()
-        NSRectFill(bounds)
+        bounds.fill()
         
         //  Start the initial scaling at 0-100
         var currentScaling = (minX: 0.0, maxX: 100.0, minY: 0.0, maxY: 100.0)
@@ -1549,4 +1549,15 @@ open class MLView: NSView {
         
         return (min: lower, max: upper)
     }
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertFromNSAttributedStringKey(_ input: NSAttributedString.Key) -> String {
+	return input.rawValue
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertToOptionalNSAttributedStringKeyDictionary(_ input: [String: Any]?) -> [NSAttributedString.Key: Any]? {
+	guard let input = input else { return nil }
+	return Dictionary(uniqueKeysWithValues: input.map { key, value in (NSAttributedString.Key(rawValue: key), value)})
 }

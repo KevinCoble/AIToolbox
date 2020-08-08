@@ -33,7 +33,7 @@ class MetalNeuralNetworkTests: XCTestCase {
             
             //  Verify the result
             var result = network.feedForward([Float(arc4random()) / Float(UInt32.max)])
-            XCTAssert(fabs(result[0] - 0.5) < 0.02, "network trained to constant")
+            XCTAssert(abs(result[0] - 0.5) < 0.02, "network trained to constant")
         }
         
             //  Create a 1 node network
@@ -48,7 +48,7 @@ class MetalNeuralNetworkTests: XCTestCase {
             //  Verify the result
             let randomValue = Float(arc4random()) / Float(UInt32.max) * 0.6 + 0.2
             var result = network.feedForward([randomValue])
-            XCTAssert(fabs(result[0] - (0.5 * randomValue)) < 0.08, "network trained to constant slope \(result), expecting \(0.5 * randomValue)")
+            XCTAssert(abs(result[0] - (0.5 * randomValue)) < 0.08, "network trained to constant slope \(result), expecting \(0.5 * randomValue)")
         }
     }
 }

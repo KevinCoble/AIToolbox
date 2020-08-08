@@ -60,7 +60,9 @@ final class MetalNeuralLayer {
         //  Fully-connected nodes means all nodes get the same input array
         
         //  Create a buffer for storing encoded commands that are sent to GPU
-        let commandBuffer = commandQueue.makeCommandBuffer()
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            fatalError("Cannot create command buffer.")
+        }
         
         //  Create an encoder for GPU commands
         let computeCommandEncoder = commandBuffer.makeComputeCommandEncoder()
@@ -93,7 +95,7 @@ final class MetalNeuralLayer {
         catch {
             print("Error creating pipeline filter")
         }
-        computeCommandEncoder.setComputePipelineState(computePipelineFilter!)
+        computeCommandEncoder?.setComputePipelineState(computePipelineFilter!)
         
         //  Create a MTLBuffer for the weight matrix
         let matrixByteLength = weights.count * MemoryLayout.size(ofValue: weights[0])
@@ -101,36 +103,40 @@ final class MetalNeuralLayer {
         
         //  Set the input vector for the activation function, e.g. inputs
         //    atIndex: 0 here corresponds to buffer(0) in the activation function
-        computeCommandEncoder.setBuffer(inputs, offset: 0, at: 0)
+        computeCommandEncoder?.setBuffer(inputs, offset: 0, index: 0)
         
         //  Set the matrix vector for the activation function, e.g. matrix
         //    atIndex: 1 here corresponds to buffer(1) in the activation function
-        computeCommandEncoder.setBuffer(matrixBuffer, offset: 0, at: 1)
+        computeCommandEncoder?.setBuffer(matrixBuffer, offset: 0, index: 1)
         
         //  Create the output vector for the summation function, e.g. zBuffer
         //    atIndex: 2 here corresponds to buffer(2) in the activation function
         let sumResultByteLength = z.count * MemoryLayout<Float>.size
-        let zBuffer = device.makeBuffer(length: sumResultByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(zBuffer, offset: 0, at: 2)
+        guard let zBuffer = device.makeBuffer(length: sumResultByteLength, options: MTLResourceOptions(rawValue: 0)) else {
+            fatalError("zBuffer: could not make buffer")
+        }
+        computeCommandEncoder?.setBuffer(zBuffer, offset: 0, index: 2)
         
         //  Create the output vector for the activation function, e.g. σBuffer
         //    atIndex: 3 here corresponds to buffer(3) in the activation function
         let nextLayerInputByteLength = (σ.count + 1) * MemoryLayout<Float>.size       //  Add one for the bias term
-        let σBuffer = device.makeBuffer(length: nextLayerInputByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(σBuffer, offset: 0, at: 3)
+        guard let σBuffer = device.makeBuffer(length: nextLayerInputByteLength, options: MTLResourceOptions(rawValue: 0)) else {
+            fatalError("oBuffer: could not make buffer")
+        }
+        computeCommandEncoder?.setBuffer(σBuffer, offset: 0, index: 3)
         
         //  Create the sizing array
         let sizeArray : [Int32] = [Int32(numNodes), Int32(numWeights)]
         let sizeArrayByteLength = sizeArray.count * MemoryLayout<Int32>.size
         let sizeBuffer = device.makeBuffer(bytes: sizeArray, length: sizeArrayByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(sizeBuffer, offset: 0, at: 4)
+        computeCommandEncoder?.setBuffer(sizeBuffer, offset: 0, index: 4)
         
         //  Hardcoded to 32 for now (recommendation: read about threadExecutionWidth)
         let threadsPerGroup = MTLSize(width:32,height:1,depth:1)
         let numThreadgroups = MTLSize(width:((numNodes+1)+31)/32, height:1, depth:1)        //  Add one to guarantee the bias offset addition thread is performed
-        computeCommandEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerGroup)
+        computeCommandEncoder?.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerGroup)
         
-        computeCommandEncoder.endEncoding()
+        computeCommandEncoder?.endEncoding()
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
         
@@ -174,7 +180,9 @@ final class MetalNeuralLayer {
         //  derivitive of error = 2 * (result - expected value) * derivitive from above
 
         //  Create a buffer for storing encoded commands that are sent to GPU
-        let commandBuffer = commandQueue.makeCommandBuffer()
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            fatalError("Cannot make command buffer.")
+        }
         
         //  Create an encoder for GPU commands
         let computeCommandEncoder = commandBuffer.makeComputeCommandEncoder()
@@ -207,7 +215,7 @@ final class MetalNeuralLayer {
         catch {
             print("Error creating pipeline filter")
         }
-        computeCommandEncoder.setComputePipelineState(computePipelineFilter!)
+        computeCommandEncoder?.setComputePipelineState(computePipelineFilter!)
         
         //  Create a MTLBuffer for the σ vector
         let resultsByteLength = σ.count * MemoryLayout<Float>.size
@@ -215,26 +223,28 @@ final class MetalNeuralLayer {
         
         //  Set the result vector for the final delta function, e.g. σBuffer
         //    atIndex: 0 here corresponds to buffer(0) in the activation function
-        computeCommandEncoder.setBuffer(σBuffer, offset: 0, at: 0)
+        computeCommandEncoder?.setBuffer(σBuffer, offset: 0, index: 0)
         
         //  Create a MTLBuffer for the expected results vector
         let expectedBuffer = device.makeBuffer(bytes: expectedOutputs, length: resultsByteLength, options: MTLResourceOptions(rawValue: 0))
         
         //  Set the result vector for the sigma value, e.g. expectedBuffer
         //    atIndex: 0 here corresponds to buffer(0) in the activation function
-        computeCommandEncoder.setBuffer(expectedBuffer, offset: 0, at: 1)
+        computeCommandEncoder?.setBuffer(expectedBuffer, offset: 0, index: 1)
         
         //  Create the output vector for the final delta value, e.g. deltaBuffer
         //    atIndex: 3 here corresponds to buffer(3) in the activation function
-        let deltaBuffer = device.makeBuffer(length: resultsByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(deltaBuffer, offset: 0, at: 2)
+        guard let deltaBuffer = device.makeBuffer(length: resultsByteLength, options: MTLResourceOptions(rawValue: 0)) else {
+            fatalError("deltaBuffer: make buffer failed.")
+        }
+        computeCommandEncoder?.setBuffer(deltaBuffer, offset: 0, index: 2)
         
         //  Hardcoded to 32 for now (recommendation: read about threadExecutionWidth)
         let threadsPerGroup = MTLSize(width:32,height:1,depth:1)
         let numThreadgroups = MTLSize(width:((numNodes+1)+31)/32, height:1, depth:1)        //  Add one to guarantee the bias offset addition thread is performed
-        computeCommandEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerGroup)
+        computeCommandEncoder?.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerGroup)
         
-        computeCommandEncoder.endEncoding()
+        computeCommandEncoder?.endEncoding()
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
         
@@ -247,8 +257,10 @@ final class MetalNeuralLayer {
     func getLayerDelta(_ nextLayer: MetalNeuralLayer, device: MTLDevice, commandQueue: MTLCommandQueue, metalLibrary: MTLLibrary)
     {
         //  Create a buffer for storing encoded commands that are sent to GPU
-        let commandBuffer = commandQueue.makeCommandBuffer()
-        
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {
+            fatalError("Cannot make command buffer.")
+        }
+
         //  Create an encoder for GPU commands
         let computeCommandEncoder = commandBuffer.makeComputeCommandEncoder()
         
@@ -281,40 +293,42 @@ final class MetalNeuralLayer {
         catch {
             print("Error creating pipeline filter")
         }
-        computeCommandEncoder.setComputePipelineState(computePipelineFilter!)
+        computeCommandEncoder?.setComputePipelineState(computePipelineFilter!)
         
         //  Create a MTLBuffer for the weight matrix from the next layer and assign to buffer 0
         let weightsByteLength = nextLayer.weights.count * MemoryLayout<Float>.size
         let weightBuffer = device.makeBuffer(bytes: &nextLayer.weights, length: weightsByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(weightBuffer, offset: 0, at: 0)
+        computeCommandEncoder?.setBuffer(weightBuffer, offset: 0, index: 0)
         
         //  Create a MTLBuffer for the delta vector from the next layer and assign to buffer 1
         let deltaByteLength = nextLayer.delta.count * MemoryLayout<Float>.size
-        let deltaBuffer = device.makeBuffer(bytes: &nextLayer.delta, length: deltaByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(deltaBuffer, offset: 0, at: 1)
+        guard let deltaBuffer = device.makeBuffer(bytes: &nextLayer.delta, length: deltaByteLength, options: MTLResourceOptions(rawValue: 0)) else {
+            fatalError("deltaBuffer: make buffer failed.")
+        }
+        computeCommandEncoder?.setBuffer(deltaBuffer, offset: 0, index: 1)
         
         //  Create a MTLBuffer for the sizing array from the next layer and assign to buffer 2
         let sizeArray : [Int32] = [Int32(nextLayer.numNodes), Int32(numNodes)]
         let sizeArrayByteLength = sizeArray.count * MemoryLayout<Int32>.size
         let sizeBuffer = device.makeBuffer(bytes: sizeArray, length: sizeArrayByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(sizeBuffer, offset: 0, at: 2)
+        computeCommandEncoder?.setBuffer(sizeBuffer, offset: 0, index: 2)
         
         //  Create a MTLBuffer for the σ vector and assign to buffer 3
         let resultsByteLength = delta.count * MemoryLayout<Float>.size
         let σBuffer = device.makeBuffer(bytes: &σ, length: resultsByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(σBuffer, offset: 0, at: 3)
+        computeCommandEncoder?.setBuffer(σBuffer, offset: 0, index: 3)
         
         //  Create the output vector for the final delta function, e.g. resultBuffer and assignt to buffer 4
         //    atIndex: 3 here corresponds to buffer(3) in the activation function
         let resultBuffer = device.makeBuffer(length: resultsByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(resultBuffer, offset: 0, at: 4)
+        computeCommandEncoder?.setBuffer(resultBuffer, offset: 0, index: 4)
         
         //  Hardcoded to 32 for now (recommendation: read about threadExecutionWidth)
         let threadsPerGroup = MTLSize(width:32,height:1,depth:1)
         let numThreadgroups = MTLSize(width:((numNodes+1)+31)/32, height:1, depth:1)        //  Add one to guarantee the bias offset addition thread is performed
-        computeCommandEncoder.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerGroup)
+        computeCommandEncoder?.dispatchThreadgroups(numThreadgroups, threadsPerThreadgroup: threadsPerGroup)
         
-        computeCommandEncoder.endEncoding()
+        computeCommandEncoder?.endEncoding()
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
         
@@ -328,10 +342,11 @@ final class MetalNeuralLayer {
         //  Assume input array already has bias constant 1.0 appended
         //  Fully-connected nodes means all nodes get the same input array
         //  Create a buffer for storing encoded commands that are sent to GPU
-        let commandBuffer = commandQueue.makeCommandBuffer()
-        
         //  Create an encoder for GPU commands
-        let computeCommandEncoder = commandBuffer.makeComputeCommandEncoder()
+        guard let commandBuffer = commandQueue.makeCommandBuffer(),
+            let computeCommandEncoder = commandBuffer.makeComputeCommandEncoder() else {
+            fatalError("Cannot make command buffer.")
+        }
         
         //  Get the name of the metal shader for the layer's weight update
         let programName = "updateWeights"
@@ -348,29 +363,31 @@ final class MetalNeuralLayer {
         computeCommandEncoder.setComputePipelineState(computePipelineFilter!)
         
         //  Set the input vector as the first buffer
-        computeCommandEncoder.setBuffer(inputs, offset: 0, at: 0)
+        computeCommandEncoder.setBuffer(inputs, offset: 0, index: 0)
         
         //  Create a MTLBuffer for the delta vector and assign to buffer 1
         let deltaByteLength = delta.count * MemoryLayout<Float>.size
         let deltaBuffer = device.makeBuffer(bytes: &delta, length: deltaByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(deltaBuffer, offset: 0, at: 1)
+        computeCommandEncoder.setBuffer(deltaBuffer, offset: 0, index: 1)
         
         //  Create the parameter array
         let paramArray : [Float] = [trainingRate, weightDecay]
         let paramArrayByteLength = paramArray.count * MemoryLayout<Float>.size
         let paramBuffer = device.makeBuffer(bytes: paramArray, length: paramArrayByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(paramBuffer, offset: 0, at: 2)
+        computeCommandEncoder.setBuffer(paramBuffer, offset: 0, index: 2)
         
         //  Create the sizing array
         let sizeArray : [Int32] = [Int32(numNodes), Int32(numWeights)]
         let sizeArrayByteLength = sizeArray.count * MemoryLayout<Int32>.size
         let sizeBuffer = device.makeBuffer(bytes: sizeArray, length: sizeArrayByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(sizeBuffer, offset: 0, at: 3)
+        computeCommandEncoder.setBuffer(sizeBuffer, offset: 0, index: 3)
         
         //  Create a MTLBuffer for the weight matrix
         let matrixByteLength = weights.count * MemoryLayout.size(ofValue: weights[0])
-        let matrixBuffer = device.makeBuffer(bytes: &weights, length: matrixByteLength, options: MTLResourceOptions(rawValue: 0))
-        computeCommandEncoder.setBuffer(matrixBuffer, offset: 0, at: 4)
+        guard let matrixBuffer = device.makeBuffer(bytes: &weights, length: matrixByteLength, options: MTLResourceOptions(rawValue: 0)) else {
+            fatalError("matrixBuffer: make buffer failed.")
+        }
+        computeCommandEncoder.setBuffer(matrixBuffer, offset: 0, index: 4)
         
         //  Hardcoded to 32 for now (recommendation: read about threadExecutionWidth)
         let threadsPerGroup = MTLSize(width:32,height:1,depth:1)
@@ -432,12 +449,14 @@ open class MetalNeuralNetwork {
         
         //  Create a MTLBuffer for the input vector
         let inputsByteLength = layerInputs.count * MemoryLayout<Float>.size
-        var inputBuffer = device!.makeBuffer(bytes: &layerInputs, length: inputsByteLength, options: MTLResourceOptions(rawValue: 0))
+        guard let device = device, var inputBuffer = device.makeBuffer(bytes: &layerInputs, length: inputsByteLength, options: MTLResourceOptions(rawValue: 0)) else {
+            fatalError("inputBuffer: make buffer failed.∫")
+        }
         
         //  Go through each layer
         for layer in layers {
             //  Calculate the outputs from the layer
-            inputBuffer = layer.getLayerOutputs(inputBuffer, device: device!, commandQueue: commandQueue!, metalLibrary: metalNNLibrary!)
+            inputBuffer = layer.getLayerOutputs(inputBuffer, device: device, commandQueue: commandQueue!, metalLibrary: metalNNLibrary!)
         }
         
         return layers.last!.σ
@@ -468,19 +487,25 @@ open class MetalNeuralNetwork {
         
         //  Create a MTLBuffer for the input vector
         var inputsByteLength = layerInputs.count * MemoryLayout<Float>.size
-        var inputBuffer = device!.makeBuffer(bytes: &layerInputs, length: inputsByteLength, options: MTLResourceOptions(rawValue: 0))
+        
+        guard let device = device, var inputBuffer = device.makeBuffer(bytes: &layerInputs, length: inputsByteLength, options: MTLResourceOptions(rawValue: 0)) else {
+            fatalError("inputBuffer: make buffer failed.∫")
+        }
         
         //  Go through each layer
         for nLayerIndex in 0..<layers.count {
             //  Update the weights in the layer
-            layers[nLayerIndex].updateWeights(inputBuffer, trainingRate: trainingRate, weightDecay: weightDecay, device: device!, commandQueue: commandQueue!, metalLibrary: metalNNLibrary!)
+            layers[nLayerIndex].updateWeights(inputBuffer, trainingRate: trainingRate, weightDecay: weightDecay, device: device, commandQueue: commandQueue!, metalLibrary: metalNNLibrary!)
             
             if (nLayerIndex < layers.count - 1) {
                 layerInputs = layers[nLayerIndex].σ
                 layerInputs.append(1.0)
                 
                 inputsByteLength = layerInputs.count * MemoryLayout<Float>.size
-                inputBuffer = device!.makeBuffer(bytes: &layerInputs, length: inputsByteLength, options: MTLResourceOptions(rawValue: 0))
+                guard let newBuffer = device.makeBuffer(bytes: &layerInputs, length: inputsByteLength, options: MTLResourceOptions(rawValue: 0)) else {
+                    fatalError("inputBuffer - newBuffer: make buffer failed.")
+                }
+                inputBuffer = newBuffer
             }
         }
     }
