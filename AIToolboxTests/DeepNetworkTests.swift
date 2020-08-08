@@ -24,7 +24,7 @@ class DeepNetworkTests: XCTestCase {
     func testSingleNNNode() {
         let deep = DeepNetwork()
         let layer = DeepLayer()
-        let channel = DeepChannel(identifier: "X", sourceChannel: "X")
+        let channel = DeepChannel(identifier: "X", sourceChannels: ["X"])
         let op = DeepNeuralNetwork(activation: .rectifiedLinear, size: DeepChannelSize(dimensionCount: 1, dimensionValues: [1]))
         let input = DeepNetworkInput(inputID: "X", size: DeepChannelSize(dimensionCount: 1, dimensionValues: [1]), values: [0.0])
         channel.addNetworkOperator(op)
@@ -76,7 +76,7 @@ class DeepNetworkTests: XCTestCase {
     func testThreeOperatorNN_XOR() {
         let deep = DeepNetwork()
         let layer = DeepLayer()
-        let channel = DeepChannel(identifier: "X", sourceChannel: "X")
+        let channel = DeepChannel(identifier: "X", sourceChannels: ["X"])
         let op1 = DeepNeuralNetwork(activation: .hyperbolicTangent, size: DeepChannelSize(dimensionCount: 1, dimensionValues: [2]))
         let op2 = DeepNeuralNetwork(activation: .hyperbolicTangent, size: DeepChannelSize(dimensionCount: 1, dimensionValues: [2]))
         let op3 = DeepNeuralNetwork(activation: .hyperbolicTangent, size: DeepChannelSize(dimensionCount: 1, dimensionValues: [1]))
@@ -111,7 +111,7 @@ class DeepNetworkTests: XCTestCase {
     func testSinglePoolN() {
         let deep = DeepNetwork()
         let layer = DeepLayer()
-        let channel = DeepChannel(identifier: "X", sourceChannel: "X")
+        let channel = DeepChannel(identifier: "X", sourceChannels: ["X"])
         let op = Pooling(type: .maximum, reduction: [2, 2])
         let input = DeepNetworkInput(inputID: "X", size: DeepChannelSize(dimensionCount: 2, dimensionValues: [4, 4]), values:
                     [1.0, 2.0, 1.0, 2.0,
@@ -153,7 +153,7 @@ class DeepNetworkTests: XCTestCase {
     func testSingleConvolutionN() {
         let deep = DeepNetwork()
         let layer = DeepLayer()
-        let channel = DeepChannel(identifier: "X", sourceChannel: "X")
+        let channel = DeepChannel(identifier: "X", sourceChannels: ["X"])
         let op = Convolution2D(usingMatrix: Convolution2DMatrix.verticalEdge3)      // matrix [-1, 0, 1, -2, 0, 2, -1, 0 , 1]
         let input = DeepNetworkInput(inputID: "X", size: DeepChannelSize(dimensionCount: 2, dimensionValues: [4, 4]), values:
             [1.0, 0.0, 1.0, 0.0,
