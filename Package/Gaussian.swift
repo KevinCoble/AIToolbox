@@ -83,7 +83,7 @@ open class Gaussian {
     static var y2 = 0.0
     static var use_last = false
     ///  static Function to get a random value for a given distribution
-    open static func gaussianRandom(_ mean : Double, standardDeviation : Double) -> Double
+    public static func gaussianRandom(_ mean : Double, standardDeviation : Double) -> Double
     {
         var y1 : Double
         if (use_last)		        /* use value from previous call */
@@ -119,7 +119,7 @@ open class Gaussian {
     static var y2Float: Float = 0.0
     static var use_lastFloat = false
     ///  static Function to get a random value for a given distribution
-    open static func gaussianRandomFloat(_ mean : Float, standardDeviation : Float) -> Float
+    public static func gaussianRandomFloat(_ mean : Float, standardDeviation : Float) -> Float
     {
         var y1 : Float
         if (use_last)		        /* use value from previous call */
@@ -210,8 +210,9 @@ open class MultivariateGaussian {
             var uplo : Int8 = Int8(uploChar.character(at: 0))          //  use upper triangle
             var A = Σ       //  Make a copy so it isn't mangled
             var n : __CLPK_integer = __CLPK_integer(dimension)
+            var lda : __CLPK_integer = n
             var info : __CLPK_integer = 0
-            dpotrf_(&uplo, &n, &A, &n, &info)
+            dpotrf_(&uplo, &n, &A, &lda, &info)
             if (info != 0) { throw GaussianError.inverseError }
             //  Extract sqrtDeterminant from U by multiplying the diagonal  (U is multiplied by Utranspose after factorization)
             for index in 0..<dimension {
@@ -219,7 +220,7 @@ open class MultivariateGaussian {
             }
             
             //  Get the inverse
-            dpotri_(&uplo, &n, &A, &n, &info)
+            dpotri_(&uplo, &n, &A, &lda, &info)
             if (info != 0) { throw GaussianError.inverseError }
             
             //  Convert inverse U into symmetric full matrix for matrix multiply routines
@@ -341,7 +342,11 @@ open class MultivariateGaussian {
             //  Get the SVD decomposition of the Σ matrix
             let jobZChar = "S" as NSString
             var jobZ : Int8 = Int8(jobZChar.character(at: 0))          //  return min(m,n) rows of Σ
-            var n : __CLPK_integer = __CLPK_integer(dimension)
+            var m : __CLPK_integer = __CLPK_integer(dimension)
+            var n : __CLPK_integer = m
+            var lda : __CLPK_integer = m
+            var ldu : __CLPK_integer = m
+            var ldvt : __CLPK_integer = __CLPK_integer(dimension)
             var u = [Double](repeating: 0.0, count: dimension * dimension)
             var work : [Double] = [0.0]
             var lwork : __CLPK_integer = -1        //  Ask for the best size of the work array
@@ -351,13 +356,13 @@ open class MultivariateGaussian {
             var A = Σ       //  Leave Σ intact
             var eigenValues = [Double](repeating: 0.0, count: dimension)
             var eigenVectors = [Double](repeating: 0.0, count: dimension*dimension)
-            dgesdd_(&jobZ, &n, &n, &A, &n, &eigenValues, &u, &n, &eigenVectors, &n, &work, &lwork, &iwork, &info)
+            dgesdd_(&jobZ, &m, &n, &A, &lda, &eigenValues, &u, &ldu, &eigenVectors, &ldvt, &work, &lwork, &iwork, &info)
             if (info != 0 || work[0] < 1) {
                 throw GaussianError.errorInSVDParameters
             }
             lwork = __CLPK_integer(work[0])
             work = [Double](repeating: 0.0, count: Int(work[0]))
-            dgesdd_(&jobZ, &n, &n, &A, &n, &eigenValues, &u, &n, &eigenVectors, &n, &work, &lwork, &iwork, &info)
+            dgesdd_(&jobZ, &m, &n, &A, &lda, &eigenValues, &u, &ldu, &eigenVectors, &ldvt, &work, &lwork, &iwork, &info)
             if (info < 0) {
                 throw GaussianError.errorInSVDParameters
             }

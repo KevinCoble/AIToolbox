@@ -112,7 +112,9 @@ extension MLDataSet {
             let j = Int(arc4random_uniform(UInt32(size - i))) + i
 #endif
             guard i != j else { continue }
-            swap(&shuffledArray[i], &shuffledArray[j])
+            let t = shuffledArray[i]
+            shuffledArray[i] = shuffledArray[j]
+            shuffledArray[j] = t
         }
         
         return shuffledArray

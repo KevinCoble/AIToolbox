@@ -110,7 +110,10 @@ open class PCA {
         let jobZChar = "S" as NSString
         var jobZ : Int8 = Int8(jobZChar.character(at: 0))          //  return min(m,n) rows of Vt        var q : __CLPK_integer
         var m : __CLPK_integer = __CLPK_integer(data.size)
+        var lda = m
+        var ldu = m
         var n : __CLPK_integer = __CLPK_integer(initialDimension)
+        var ldvt = n
         eigenValues = [Double](repeating: 0.0, count: initialDimension)
         var u = [Double](repeating: 0.0, count: data.size * data.size)
         var vTranspose = [Double](repeating: 0.0, count: initialDimension * initialDimension)
@@ -119,13 +122,13 @@ open class PCA {
         let iworkSize = 8 * __CLPK_integer(min(m,n))
         var iwork = [__CLPK_integer](repeating: 0, count: Int(iworkSize))
         var info : __CLPK_integer = 0
-        dgesdd_(&jobZ, &m, &n, &X, &m, &eigenValues, &u, &m, &vTranspose, &n, &work, &lwork, &iwork, &info)
+        dgesdd_(&jobZ, &m, &n, &X, &lda, &eigenValues, &u, &ldu, &vTranspose, &ldvt, &work, &lwork, &iwork, &info)
         if (info != 0 || work[0] < 1) {
             throw PCAError.errorInSVDParameters
         }
         lwork = __CLPK_integer(work[0])
         work = [Double](repeating: 0.0, count: Int(work[0]))
-        dgesdd_(&jobZ, &m, &n, &X, &m, &eigenValues, &u, &m, &vTranspose, &n, &work, &lwork, &iwork, &info)
+        dgesdd_(&jobZ, &m, &n, &X, &lda, &eigenValues, &u, &ldu, &vTranspose, &ldvt, &work, &lwork, &iwork, &info)
         if (info < 0) {
             throw PCAError.errorInSVDParameters
         }

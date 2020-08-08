@@ -164,10 +164,12 @@ open class MDP {
                 }
             }
             var dimA = __CLPK_integer(numStates)
+            var lda = dimA
+            var ldb = dimA
             var colB = __CLPK_integer(1)
             var ipiv = [__CLPK_integer](repeating: 0, count: numStates)
             var info: __CLPK_integer = 0
-            dgesv_(&dimA, &colB, &matrix, &dimA, &ipiv, &constants, &dimA, &info)
+            dgesv_(&dimA, &colB, &matrix, &lda, &ipiv, &constants, &ldb, &info)
             if (info == 0) {
                 V = constants
             }

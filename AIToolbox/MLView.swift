@@ -1113,7 +1113,7 @@ open class MLLegendItem {
         self.label = label
     }
     
-    open static func createClassLegendArray(_ labelStart: String, classificationDataSet: MLViewClassificationDataSet) -> [MLLegendItem] {
+    public static func createClassLegendArray(_ labelStart: String, classificationDataSet: MLViewClassificationDataSet) -> [MLLegendItem] {
         var array : [MLLegendItem] = []
         
         //  Iterate through each class label
@@ -1400,7 +1400,7 @@ open class MLView: NSView {
     }
     
     ///  Routine to round/extend a scale to more 'human-readable' values.
-    open static func roundScale(_ min: Double, max: Double, logScale: Bool = false) -> (min: Double, max: Double) {
+    public static func roundScale(_ min: Double, max: Double, logScale: Bool = false) -> (min: Double, max: Double) {
 
         var Y : Double
         var Z : Double

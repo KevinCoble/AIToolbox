@@ -13,7 +13,7 @@ import Foundation
 
 open class ConstraintProblemVariable {
     
-    open let domainSize: Int
+    public let domainSize: Int
     var possibleSettings : [Bool]
     var remainingPossibilityCount: Int
     var assignedValueIndex: Int?

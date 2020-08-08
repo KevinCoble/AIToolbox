@@ -464,7 +464,9 @@ open class SVMModel
 #else
                         let j =  i + Int(arc4random()) % (classificationData.classCount[c] - i)
 #endif
-                        swap(&shuffledIndices[c][i], &shuffledIndices[c][j])
+                        let t = shuffledIndices[c][i]
+                        shuffledIndices[c][i] = shuffledIndices[c][j]
+                        shuffledIndices[c][j] = t
                     }
                 }
                 

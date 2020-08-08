@@ -212,8 +212,9 @@ open class MixtureOfGaussians : Regressor
                         var uplo : Int8 = Int8(uploChar.character(at: 0))          //  use upper triangle
                         var A = covariance[term]       //  Make a copy so it isn't mangled
                         var n : __CLPK_integer = __CLPK_integer(inputDimension)
+                        var lda = n
                         var info : __CLPK_integer = 0
-                        dpotrf_(&uplo, &n, &A, &n, &info)
+                        dpotrf_(&uplo, &n, &A, &lda, &info)
                         if (info != 0) {
                             nonSPD = true
                             break

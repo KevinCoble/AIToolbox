@@ -24,9 +24,9 @@ enum DataIndexError: Error {
 
 
 open class DataSet : MLRegressionDataSet, MLClassificationDataSet, MLCombinedDataSet {
-    open let dataType : DataSetType
-    open let inputDimension: Int
-    open let outputDimension: Int
+    public let dataType : DataSetType
+    public let inputDimension: Int
+    public let outputDimension: Int
     fileprivate var inputs: [[Double]]
     fileprivate var outputs: [[Double]]?
     fileprivate var classes: [Int]?
@@ -496,7 +496,7 @@ open class DataSet : MLRegressionDataSet, MLClassificationDataSet, MLCombinedDat
     }
     
     //  Leave here in case it is used by other methods
-    open static func gaussianRandom(_ mean : Double, standardDeviation : Double) -> Double
+    public static func gaussianRandom(_ mean : Double, standardDeviation : Double) -> Double
     {
         return Gaussian.gaussianRandom(mean, standardDeviation: standardDeviation)
     }

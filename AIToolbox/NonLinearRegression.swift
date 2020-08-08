@@ -514,6 +514,8 @@ open class NonLinearRegression : Regressor
                 let jobTChar = "N" as NSString
                 var jobT : Int8 = Int8(jobTChar.character(at: 0))          //  not transposed
                 var m : __CLPK_integer = __CLPK_integer(batchSize)
+                var lda : __CLPK_integer = m
+                var ldb : __CLPK_integer = m
                 var n : __CLPK_integer = __CLPK_integer(parametersPerOutput)
                 var nrhs = __CLPK_integer(1)
                 var work : [Double] = [0.0]
@@ -521,13 +523,13 @@ open class NonLinearRegression : Regressor
                 var info : __CLPK_integer = 0
                 let jacobianOffset = batchSize * outputIndex * parametersPerOutput      //  Offset to start of Jacobian for this output
                 let residualOffset = batchSize * outputIndex      //  Offset to start of residual vector for this output
-                dgels_(&jobT, &m, &n, &nrhs, &J[jacobianOffset], &m, &r[residualOffset], &m, &work, &lwork, &info)
+                dgels_(&jobT, &m, &n, &nrhs, &J[jacobianOffset], &lda, &r[residualOffset], &ldb, &work, &lwork, &info)
                 if (info != 0 || work[0] < 1) {
                     throw NonLinearRegressionError.matrixSolutionError
                 }
                 lwork = __CLPK_integer(work[0])
                 work = [Double](repeating: 0.0, count: Int(work[0]))
-                dgels_(&jobT, &m, &n, &nrhs, &J[jacobianOffset], &m, &r[residualOffset], &m, &work, &lwork, &info)
+                dgels_(&jobT, &m, &n, &nrhs, &J[jacobianOffset], &lda, &r[residualOffset], &ldb, &work, &lwork, &info)
                 if (info != 0 || work[0] < 1) {
                     throw NonLinearRegressionError.matrixSolutionError
                 }

@@ -303,7 +303,7 @@ class LSTMTests: XCTestCase {
         }
     }
     
-    func stateLetterToDoubleArray(_ letter: String) -> [Double] {
+    func stateLetterToDoubleArray(_ letter: Character) -> [Double] {
         switch (letter) {
         case "B":
             return [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -339,13 +339,12 @@ class LSTMTests: XCTestCase {
     }
     
     func convertStringToSequence(_ grammerString: String) -> DataSet {
-        var characters = grammerString.characters.map { String($0) }
-        let length = characters.count
-        characters.append("x")      //  Add an unused character for the prediction target at the end of the grammer string
+        let characters = grammerString + "x" //  Add an unused character for the prediction target at the end of the grammer string
         let dataSet = DataSet(dataType: .regression, inputDimension: 7, outputDimension: 7)
-        for index in 0..<length {
+        for index in characters.indices {
+            guard index != characters.endIndex else { continue }
             let inputs = stateLetterToDoubleArray(characters[index])
-            let outputs = stateLetterToDoubleArray(characters[index+1])
+            let outputs = stateLetterToDoubleArray(characters[characters.index(after: index)])
             do {
                 try dataSet.addDataPoint(input: inputs, output: outputs)
             }

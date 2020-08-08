@@ -300,18 +300,20 @@ open class LinearRegressionModel : Regressor
             let jobTChar = "N" as NSString
             var jobT : Int8 = Int8(jobTChar.character(at: 0))          //  not transposed
             var m : __CLPK_integer = __CLPK_integer(trainData.size)
+            var lda = m
+            var ldb = m
             var n : __CLPK_integer = __CLPK_integer(numColumns)
             var nrhs = __CLPK_integer(outputDimension)
             var work : [Double] = [0.0]
             var lwork : __CLPK_integer = -1        //  Ask for the best size of the work array
             var info : __CLPK_integer = 0
-            dgels_(&jobT, &m, &n, &nrhs, &A, &m, &y, &m, &work, &lwork, &info)
+            dgels_(&jobT, &m, &n, &nrhs, &A, &lda, &y, &ldb, &work, &lwork, &info)
             if (info != 0 || work[0] < 1) {
                 throw LinearRegressionError.matrixSolutionError
             }
             lwork = __CLPK_integer(work[0])
             work = [Double](repeating: 0.0, count: Int(work[0]))
-            dgels_(&jobT, &m, &n, &nrhs, &A, &m, &y, &m, &work, &lwork, &info)
+            dgels_(&jobT, &m, &n, &nrhs, &A, &lda, &y, &ldb, &work, &lwork, &info)
             if (info != 0 || work[0] < 1) {
                 throw LinearRegressionError.matrixSolutionError
             }
