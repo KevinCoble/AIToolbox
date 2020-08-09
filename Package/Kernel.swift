@@ -42,7 +42,7 @@ class Kernel {
     var problemData : MLCombinedDataSet
     
     //  Diagonal items squared (for RBF)
-    let x_square: [Double]!
+    var x_square: [Double] = []
     
     let kernelType: SVMKernelType
     //  Closure with kernel function - initialize with lazy-var to avoid 'Variable kernel_function used before initialized' error when just a 'let'
@@ -59,7 +59,6 @@ class Kernel {
         self.degree = parameters.degree
         self.gamma = parameters.gamma
         self.coef0 = parameters.coef0
-        x_square = []
         
         if (parameters.type == .radialBasisFunction) {
             for i in 0..<data.size {

@@ -547,7 +547,7 @@ open class SVMModel
     func binarySVCProbability(_ data: MLCombinedDataSet, positiveLabel: Int, costPositive: Double, costNegative: Double) -> (A: Double, B: Double)
     {
         //  Get a shuffled index set
-        var perm = data.getRandomIndexSet()
+        let perm = data.getRandomIndexSet()
         
         //  Create the array for the decision values
         var decisionValues = [Double](repeating: 0.0, count: data.size)

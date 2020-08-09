@@ -46,7 +46,7 @@ open class ConstraintProblemVariable {
             return assignedValueIndex
         }
         set {
-            assignedValueIndex = assignedValue
+            assignedValueIndex = newValue
         }
     }
     

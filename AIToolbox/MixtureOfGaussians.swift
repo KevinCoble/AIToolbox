@@ -166,13 +166,17 @@ open class MixtureOfGaussians : Regressor
                     let pointClass = try classificationDataSet.getClass(point)
                     let inputs = try trainData.getInput(point)
                     counts[pointClass] += 1
-                    let ptr = UnsafeMutablePointer<Double>(mutating: centroids[pointClass])      //  Swift bug!  can't put this in line!
-                    vDSP_vaddD(inputs, 1, centroids[pointClass], 1, ptr, 1, vDSP_Length(inputDimension))
+                    
+                    withUnsafePointer(to: &centroids[pointClass][0]) {
+                        vDSP_vaddD(inputs, 1, $0, 1, UnsafeMutablePointer<Double>(mutating: $0) , 1, vDSP_Length(inputDimension))
+                    }
+                    
                 }
                 for term in 0..<termCount {
                     var inverse = 1.0 / Double(counts[term])
-                    let ptr = UnsafeMutablePointer<Double>(mutating: centroids[term])      //  Swift bug!  can't put this in line!
-                    vDSP_vsmulD(centroids[term], 1, &inverse, ptr, 1, vDSP_Length(inputDimension * inputDimension))
+                    withUnsafePointer(to: &centroids[term][0]) {
+                        vDSP_vsmulD($0, 1, &inverse, UnsafeMutablePointer<Double>(mutating: $0) , 1, vDSP_Length(inputDimension * inputDimension))
+                    }
                 }
             }
             
@@ -193,8 +197,9 @@ open class MixtureOfGaussians : Regressor
                 if (!diagonalΣ) {   //  We will force into spherical if diagonal covariance
                     //  Multiply into covariance matrix and sum
                     vDSP_mmulD(offset, 1, offset, 1, &matrix, 1, vDSP_Length(inputDimension), vDSP_Length(inputDimension), vDSP_Length(1))
-                    let ptr = UnsafeMutablePointer<Double>(mutating: covariance[pointClass])      //  Swift bug!  can't put this in line!
-                    vDSP_vaddD(matrix, 1, covariance[pointClass], 1, ptr, 1, vDSP_Length(inputDimension * inputDimension))
+                    withUnsafePointer(to: &covariance[pointClass][0]) {
+                        vDSP_vaddD(matrix, 1, $0, 1, UnsafeMutablePointer<Double>(mutating: $0), 1, vDSP_Length(inputDimension * inputDimension))
+                    }
                 }
                 //  Get dot product and sum into spherical in case covariance matrix is not positive definite  (dot product of offset is distance squared
                 var dotProduct = 0.0
@@ -242,8 +247,9 @@ open class MixtureOfGaussians : Regressor
                 α[term] = Double(counts[term]) / Double(trainData.size)
                 if (counts[term] > 1) {
                     var inverse = 1.0 / Double(counts[term])
-                    let ptr = UnsafeMutablePointer<Double>(mutating: covariance[term])      //  Swift bug!  can't put this in line!
-                    vDSP_vsmulD(covariance[term], 1, &inverse, ptr, 1, vDSP_Length(inputDimension * inputDimension))
+                    withUnsafePointer(to: &covariance[term][0]) {
+                        vDSP_vsmulD($0, 1, &inverse, UnsafeMutablePointer<Double>(mutating: $0), 1, vDSP_Length(inputDimension * inputDimension))
+                    }
                 }
                 if (inputDimension == 1) {
                     gaussians[term].setMean(centroids[term][0])
@@ -349,13 +355,15 @@ open class MixtureOfGaussians : Regressor
                     let inputs = try trainData.getInput(point)
                     weightTotals[term] += membershipWeights[term][point]
                     vDSP_vsmulD(inputs, 1, &membershipWeights[term][point], &vector, 1, vDSP_Length(inputDimension))
-                    let ptr = UnsafeMutablePointer<Double>(mutating: centroids[term])      //  Swift bug!  can't put this in line!
-                    vDSP_vaddD(vector, 1, centroids[term], 1, ptr, 1, vDSP_Length(inputDimension))
+                    withUnsafePointer(to: &centroids[term][0]) {
+                        vDSP_vaddD(vector, 1, $0, 1, UnsafeMutablePointer<Double>(mutating: $0), 1, vDSP_Length(inputDimension))
+                    }
                 }
                 α[term] = weightTotals[term] / Double(trainData.size)
                 var scale = 1.0 / weightTotals[term]
-                let ptr = UnsafeMutablePointer<Double>(mutating: centroids[term])      //  Swift bug!  can't put this in line!
-                vDSP_vsmulD(centroids[term], 1, &scale, ptr, 1, vDSP_Length(inputDimension))
+                withUnsafePointer(to: &centroids[term][0]) {
+                    vDSP_vsmulD($0, 1, &scale, UnsafeMutablePointer<Double>(mutating: $0), 1, vDSP_Length(inputDimension))
+                }
                 if (inputDimension == 1) {
                     gaussians[term].setMean(centroids[term][0])
                 }
@@ -382,7 +390,7 @@ open class MixtureOfGaussians : Regressor
                         sphericalCovarianceValue += membershipWeights[term][point] * dotProduct
                     }
                     sphericalCovarianceValue /= (weightTotals[term] * Double(inputDimension))
-                    var Σ = [Double](repeating: sphericalCovarianceValue, count: inputDimension)
+                    let Σ = [Double](repeating: sphericalCovarianceValue, count: inputDimension)
                     if (inputDimension == 1) {
                         gaussians[term].setVariance(Σ[0])
                     }

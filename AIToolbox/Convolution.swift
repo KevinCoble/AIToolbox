@@ -166,11 +166,15 @@ final public class Convolution2D : DeepNetworkOperator
         let matrixSize = UInt32(matrixType.getMatrixSize())
 
         //  Get the source data as a vImage buffer
-        var source = vImage_Buffer(data: UnsafeMutableRawPointer(mutating: inputs), height: vImagePixelCount(inputSize.dimensions[1]), width: vImagePixelCount(inputSize.dimensions[0]), rowBytes: inputSize.dimensions[0] * MemoryLayout<Float>.size)
+        var source: vImage_Buffer = withUnsafePointer(to: &lastInputs) {
+            return vImage_Buffer(data: UnsafeMutableRawPointer(mutating: $0), height: vImagePixelCount(inputSize.dimensions[1]), width: vImagePixelCount(inputSize.dimensions[0]), rowBytes: inputSize.dimensions[0] * MemoryLayout<Float>.size)
+        }
 
         //  Create a destination as a vImage buffer
         convolution = [Float](repeating: 0.0, count: inputs.count)
-        var dest = vImage_Buffer(data: UnsafeMutableRawPointer(mutating: convolution), height: vImagePixelCount(inputSize.dimensions[1]), width: vImagePixelCount(inputSize.dimensions[0]), rowBytes: inputSize.dimensions[0] * MemoryLayout<Float>.size)
+        var dest = withUnsafePointer(to: &convolution) {
+            return vImage_Buffer(data: UnsafeMutableRawPointer(mutating: $0), height: vImagePixelCount(inputSize.dimensions[1]), width: vImagePixelCount(inputSize.dimensions[0]), rowBytes: inputSize.dimensions[0] * MemoryLayout<Float>.size)
+        }
 
         //  Convolve
         let error = vImageConvolve_PlanarF(&source, &dest, nil, 0, 0, matrix, matrixSize, matrixSize, 0.0, UInt32(kvImageEdgeExtend))
