@@ -145,7 +145,7 @@ open class SVMModel
         for i in 0..<data.size {
             do {
                 let pointLabel = try data.getClass(i)
-                if let index = label.index(of: pointLabel) {
+                if let index = label.firstIndex(of: pointLabel) {
                     //  label already found
                     count[index] += 1
                 }
@@ -230,7 +230,7 @@ open class SVMModel
                 var weightedCost = [Double](repeating: Cost, count: classificationData.numClasses)
                 if let weightMods = weightModifiers {
                     for mod in weightMods {
-                        let index = classificationData.foundLabels.index(of: mod.classLabel)
+                        let index = classificationData.foundLabels.firstIndex(of: mod.classLabel)
                         if (index == nil) {
                             print("weight modifier label \(mod.classLabel) not found in data set")
                             continue

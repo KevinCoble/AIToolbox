@@ -227,7 +227,7 @@ extension MLClassificationDataSet {
         //  Get the different data labels
         for index in 0..<size {
             let thisClass = try getClass(index)
-            let thisClassIndex = classificationData.foundLabels.index(of: thisClass)
+            let thisClassIndex = classificationData.foundLabels.firstIndex(of: thisClass)
             if let classIndex = thisClassIndex {
                 //  Class label found, increment count
                 classificationData.classCount[classIndex] += 1

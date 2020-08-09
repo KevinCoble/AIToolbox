@@ -508,11 +508,11 @@
 					};
 					0EBA29AA1A91350C0012CEC9 = {
 						CreatedOnToolsVersion = 6.3;
-						LastSwiftMigration = 1010;
+						LastSwiftMigration = 1160;
 					};
 					0EBA29B51A91350C0012CEC9 = {
 						CreatedOnToolsVersion = 6.3;
-						LastSwiftMigration = 1010;
+						LastSwiftMigration = 1160;
 					};
 				};
 			};
@@ -928,7 +928,7 @@
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -953,7 +953,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -982,7 +982,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.MacRobotics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -1007,7 +1007,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.MacRobotics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};

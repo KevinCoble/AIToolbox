@@ -31,7 +31,7 @@ class MDPTests: XCTestCase {
     
     //  Routine to get the actions possible from each state.  Return an empty list at ending states.  This can be from a table or calculated
     func getActions(_ fromState: Int) -> [Int] {
-        var actions : [[Int]] = [
+        let actions : [[Int]] = [
             [0, 3],         //  State 0
             [1, 3],         //  State 1
             [0, 1, 3],      //  State 2
@@ -542,7 +542,7 @@ class MDPTests: XCTestCase {
     
     //  Routine to get the actions possible from each state.  Return an empty list at ending states.  This can be from a table or calculated
     func getRWActions(_ fromState: Int) -> [Int] {
-        var actions : [[Int]] = [
+        let actions : [[Int]] = [
             [],             //  State 0
             [0, 1],         //  State 1
             [0, 1],         //  State 2
