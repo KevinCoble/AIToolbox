@@ -18,27 +18,14 @@
 		0E02FB9C1CC1B25400C32F9F /* NonLinearRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E02FB9B1CC1B25400C32F9F /* NonLinearRegressionTests.swift */; };
 		0E02FB9D1CC1B25400C32F9F /* NonLinearRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E02FB9B1CC1B25400C32F9F /* NonLinearRegressionTests.swift */; };
 		0E04D00E1DEE6DAC008A5BF7 /* MLUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E04D00D1DEE6DAC008A5BF7 /* MLUIView.swift */; };
-		0E04D0111DEE6EFD008A5BF7 /* LinearRegression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAAFD691CB33D4F0062EBD5 /* LinearRegression.swift */; };
-		0E04D0131DEE6F04008A5BF7 /* MixtureOfGaussians.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E02FB921CBDD35300C32F9F /* MixtureOfGaussians.swift */; };
-		0E04D0141DEE6F07008A5BF7 /* NonLinearRegression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E02FB981CC1B22E00C32F9F /* NonLinearRegression.swift */; };
-		0E04D0151DEE6F0B008A5BF7 /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3CB59F1CCD30AE008ABA4E /* Validation.swift */; };
-		0E04D0161DEE6F0D008A5BF7 /* LogisticRegression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3CB5AA1CE6C9FB008ABA4E /* LogisticRegression.swift */; };
 		0E04D0171DEE6F11008A5BF7 /* Convolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F01DB2951A009CB319 /* Convolution.swift */; };
-		0E04D0181DEE6F12008A5BF7 /* Convolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F01DB2951A009CB319 /* Convolution.swift */; };
 		0E04D0191DEE6F16008A5BF7 /* DeepChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F11DB2951A009CB319 /* DeepChannel.swift */; };
-		0E04D01A1DEE6F17008A5BF7 /* DeepChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F11DB2951A009CB319 /* DeepChannel.swift */; };
 		0E04D01B1DEE6F19008A5BF7 /* DeepLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F21DB2951A009CB319 /* DeepLayer.swift */; };
-		0E04D01C1DEE6F1A008A5BF7 /* DeepLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F21DB2951A009CB319 /* DeepLayer.swift */; };
 		0E04D01D1DEE6F1D008A5BF7 /* DeepNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F31DB2951A009CB319 /* DeepNetwork.swift */; };
-		0E04D01E1DEE6F1E008A5BF7 /* DeepNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F31DB2951A009CB319 /* DeepNetwork.swift */; };
 		0E04D01F1DEE6F21008A5BF7 /* DeepNetworkOperator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F41DB2951A009CB319 /* DeepNetworkOperator.swift */; };
-		0E04D0201DEE6F22008A5BF7 /* DeepNetworkOperator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F41DB2951A009CB319 /* DeepNetworkOperator.swift */; };
 		0E04D0211DEE6F25008A5BF7 /* DeepNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F51DB2951A009CB319 /* DeepNeuralNetwork.swift */; };
-		0E04D0221DEE6F27008A5BF7 /* DeepNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F51DB2951A009CB319 /* DeepNeuralNetwork.swift */; };
 		0E04D0231DEE6F2B008A5BF7 /* MLPersistenceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F61DB2951A009CB319 /* MLPersistenceProtocol.swift */; };
-		0E04D0241DEE6F2C008A5BF7 /* MLPersistenceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F61DB2951A009CB319 /* MLPersistenceProtocol.swift */; };
 		0E04D0251DEE6F2F008A5BF7 /* Pooling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F71DB2951A009CB319 /* Pooling.swift */; };
-		0E04D0261DEE6F30008A5BF7 /* Pooling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA300F71DB2951A009CB319 /* Pooling.swift */; };
 		0E0A4F9D1C133E8800AD5AAE /* AIToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E0A4F931C133E8800AD5AAE /* AIToolbox.framework */; };
 		0E0A4FB01C1342D700AD5AAE /* AlphaBeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECD88651A9C3F6300049F28 /* AlphaBeta.swift */; };
 		0E0A4FB41C1342E800AD5AAE /* QueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29D11A98376F0012CEC9 /* QueueTests.swift */; };
@@ -115,21 +102,6 @@
 		0EB9FF461E80C1E800AA058E /* RecurrentNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF261E80C10A00AA058E /* RecurrentNeuralNetwork.swift */; };
 		0EB9FF471E80C1E800AA058E /* SVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF271E80C10A00AA058E /* SVM.swift */; };
 		0EB9FF481E80C1E800AA058E /* SVMExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF281E80C10A00AA058E /* SVMExtensions.swift */; };
-		0EB9FF491E80C21F00AA058E /* ConstraintPropogation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF181E80C10A00AA058E /* ConstraintPropogation.swift */; };
-		0EB9FF4A1E80C21F00AA058E /* DataSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF191E80C10A00AA058E /* DataSet.swift */; };
-		0EB9FF4B1E80C21F00AA058E /* Gaussian.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF1A1E80C10A00AA058E /* Gaussian.swift */; };
-		0EB9FF4C1E80C21F00AA058E /* GeneticAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF1B1E80C10A00AA058E /* GeneticAlgorithm.swift */; };
-		0EB9FF4D1E80C21F00AA058E /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF1C1E80C10A00AA058E /* Graph.swift */; };
-		0EB9FF4E1E80C21F00AA058E /* Kernel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF1D1E80C10A00AA058E /* Kernel.swift */; };
-		0EB9FF4F1E80C21F00AA058E /* KMeans.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF1E1E80C10A00AA058E /* KMeans.swift */; };
-		0EB9FF501E80C21F00AA058E /* LSTMNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF201E80C10A00AA058E /* LSTMNeuralNetwork.swift */; };
-		0EB9FF511E80C21F00AA058E /* MachineLearningProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF211E80C10A00AA058E /* MachineLearningProtocols.swift */; };
-		0EB9FF521E80C21F00AA058E /* NeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF221E80C10A00AA058E /* NeuralNetwork.swift */; };
-		0EB9FF531E80C21F00AA058E /* PolicyGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF241E80C10A00AA058E /* PolicyGradient.swift */; };
-		0EB9FF541E80C21F00AA058E /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF251E80C10A00AA058E /* Queue.swift */; };
-		0EB9FF551E80C21F00AA058E /* RecurrentNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF261E80C10A00AA058E /* RecurrentNeuralNetwork.swift */; };
-		0EB9FF561E80C21F00AA058E /* SVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF271E80C10A00AA058E /* SVM.swift */; };
-		0EB9FF571E80C21F00AA058E /* SVMExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EB9FF281E80C10A00AA058E /* SVMExtensions.swift */; };
 		0EBA29B11A91350C0012CEC9 /* AIToolbox.h in Headers */ = {isa = PBXBuildFile; fileRef = 0EBA29B01A91350C0012CEC9 /* AIToolbox.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0EBA29B71A91350C0012CEC9 /* AIToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EBA29AB1A91350C0012CEC9 /* AIToolbox.framework */; };
 		0EBA29CA1A9135940012CEC9 /* GraphTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBA29C91A9135940012CEC9 /* GraphTests.swift */; };
@@ -145,14 +117,6 @@
 		0EDA12261C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */; };
 		113C07471ED379D900C31415 /* DeepNonLinearity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113C07461ED379D900C31415 /* DeepNonLinearity.swift */; };
 		113C07481ED379D900C31415 /* DeepNonLinearity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113C07461ED379D900C31415 /* DeepNonLinearity.swift */; };
-		113C07491ED379D900C31415 /* DeepNonLinearity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113C07461ED379D900C31415 /* DeepNonLinearity.swift */; };
-		FB0D5A0B1CAF09230097590B /* PrincipalComponantAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0E25FD1CA119160087932B /* PrincipalComponantAnalysis.swift */; };
-		FB0D5A0D1CAF09230097590B /* AlphaBeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECD88651A9C3F6300049F28 /* AlphaBeta.swift */; };
-		FB0D5A111CAF09230097590B /* MetalNeuralNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12121C3F7DAF00F03FDE /* MetalNeuralNetwork.swift */; };
-		FB0D5A151CAF09230097590B /* MetalNeuralNetworkShaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */; };
-		FB0D5A181CAF09230097590B /* MarkovDecisionProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EAAFD461CA9F37E0062EBD5 /* MarkovDecisionProcess.swift */; };
-		FB0D5A191CAF09230097590B /* MetalNeuralNetworkShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0EDA12141C3F813600F03FDE /* MetalNeuralNetworkShaders.metal */; };
-		FB0D5A1E1CAF09230097590B /* AIToolbox.h in Headers */ = {isa = PBXBuildFile; fileRef = 0EBA29B01A91350C0012CEC9 /* AIToolbox.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FB0D5A301CB010090097590B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0D5A2E1CB010090097590B /* Foundation.framework */; };
 		FB0D5A311CB010090097590B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB0D5A2F1CB010090097590B /* UIKit.framework */; };
 /* End PBXBuildFile section */
@@ -239,8 +203,6 @@
 		0EDA12161C435FF700F03FDE /* MetalNeuralNetworkTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalNeuralNetworkTests.swift; sourceTree = "<group>"; };
 		0EDA12241C49FA9900F03FDE /* MetalNeuralNetworkShaders.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalNeuralNetworkShaders.swift; sourceTree = "<group>"; };
 		113C07461ED379D900C31415 /* DeepNonLinearity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeepNonLinearity.swift; sourceTree = "<group>"; };
-		FB0D5A231CAF09230097590B /* AIToolbox copy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "AIToolbox copy.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB0D5A241CAF09230097590B /* AIToolbox copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "AIToolbox copy-Info.plist"; path = "/Users/robertoprevidi/Developer/AIToolbox/AIToolbox copy-Info.plist"; sourceTree = "<absolute>"; };
 		FB0D5A2E1CB010090097590B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		FB0D5A2F1CB010090097590B /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
@@ -275,13 +237,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0EBA29B71A91350C0012CEC9 /* AIToolbox.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FB0D5A1C1CAF09230097590B /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -354,7 +309,6 @@
 				0E0A4F941C133E8800AD5AAE /* AIToolboxIOS */,
 				0E0A4FA01C133E8800AD5AAE /* AIToolboxIOSTests */,
 				0EBA29AC1A91350C0012CEC9 /* Products */,
-				FB0D5A241CAF09230097590B /* AIToolbox copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -365,7 +319,6 @@
 				0EBA29B61A91350C0012CEC9 /* AIToolboxTests.xctest */,
 				0E0A4F931C133E8800AD5AAE /* AIToolbox.framework */,
 				0E0A4F9C1C133E8800AD5AAE /* AIToolboxIOSTests.xctest */,
-				FB0D5A231CAF09230097590B /* AIToolbox copy.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -460,14 +413,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FB0D5A1D1CAF09230097590B /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				FB0D5A1E1CAF09230097590B /* AIToolbox.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
@@ -543,24 +488,6 @@
 			productReference = 0EBA29B61A91350C0012CEC9 /* AIToolboxTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		FB0D5A091CAF09230097590B /* AIToolbox copy */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = FB0D5A201CAF09230097590B /* Build configuration list for PBXNativeTarget "AIToolbox copy" */;
-			buildPhases = (
-				FB0D5A0A1CAF09230097590B /* Sources */,
-				FB0D5A1C1CAF09230097590B /* Frameworks */,
-				FB0D5A1D1CAF09230097590B /* Headers */,
-				FB0D5A1F1CAF09230097590B /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "AIToolbox copy";
-			productName = AIToolbox;
-			productReference = FB0D5A231CAF09230097590B /* AIToolbox copy.framework */;
-			productType = "com.apple.product-type.framework";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -594,6 +521,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 0EBA29A11A91350C0012CEC9;
@@ -605,7 +533,6 @@
 				0EBA29B51A91350C0012CEC9 /* AIToolboxTests */,
 				0E0A4F921C133E8800AD5AAE /* AIToolboxIOS */,
 				0E0A4F9B1C133E8800AD5AAE /* AIToolboxIOSTests */,
-				FB0D5A091CAF09230097590B /* AIToolbox copy */,
 			);
 		};
 /* End PBXProject section */
@@ -633,13 +560,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0EBA29B41A91350C0012CEC9 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		FB0D5A1F1CAF09230097590B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -784,48 +704,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FB0D5A0A1CAF09230097590B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0EB9FF4D1E80C21F00AA058E /* Graph.swift in Sources */,
-				0E04D0181DEE6F12008A5BF7 /* Convolution.swift in Sources */,
-				0EB9FF551E80C21F00AA058E /* RecurrentNeuralNetwork.swift in Sources */,
-				0EB9FF561E80C21F00AA058E /* SVM.swift in Sources */,
-				0E04D01E1DEE6F1E008A5BF7 /* DeepNetwork.swift in Sources */,
-				FB0D5A0B1CAF09230097590B /* PrincipalComponantAnalysis.swift in Sources */,
-				0E04D0221DEE6F27008A5BF7 /* DeepNeuralNetwork.swift in Sources */,
-				113C07491ED379D900C31415 /* DeepNonLinearity.swift in Sources */,
-				0E04D0141DEE6F07008A5BF7 /* NonLinearRegression.swift in Sources */,
-				0E04D0201DEE6F22008A5BF7 /* DeepNetworkOperator.swift in Sources */,
-				0E04D0241DEE6F2C008A5BF7 /* MLPersistenceProtocol.swift in Sources */,
-				0EB9FF571E80C21F00AA058E /* SVMExtensions.swift in Sources */,
-				0EB9FF4C1E80C21F00AA058E /* GeneticAlgorithm.swift in Sources */,
-				0E04D0161DEE6F0D008A5BF7 /* LogisticRegression.swift in Sources */,
-				0EB9FF4E1E80C21F00AA058E /* Kernel.swift in Sources */,
-				0E04D01A1DEE6F17008A5BF7 /* DeepChannel.swift in Sources */,
-				0EB9FF4F1E80C21F00AA058E /* KMeans.swift in Sources */,
-				0EB9FF491E80C21F00AA058E /* ConstraintPropogation.swift in Sources */,
-				0EB9FF521E80C21F00AA058E /* NeuralNetwork.swift in Sources */,
-				0EB9FF4B1E80C21F00AA058E /* Gaussian.swift in Sources */,
-				FB0D5A0D1CAF09230097590B /* AlphaBeta.swift in Sources */,
-				FB0D5A111CAF09230097590B /* MetalNeuralNetwork.swift in Sources */,
-				0EB9FF4A1E80C21F00AA058E /* DataSet.swift in Sources */,
-				0EB9FF531E80C21F00AA058E /* PolicyGradient.swift in Sources */,
-				0EB9FF541E80C21F00AA058E /* Queue.swift in Sources */,
-				0E04D0131DEE6F04008A5BF7 /* MixtureOfGaussians.swift in Sources */,
-				0EB9FF511E80C21F00AA058E /* MachineLearningProtocols.swift in Sources */,
-				0E04D0111DEE6EFD008A5BF7 /* LinearRegression.swift in Sources */,
-				FB0D5A151CAF09230097590B /* MetalNeuralNetworkShaders.swift in Sources */,
-				0E04D01C1DEE6F1A008A5BF7 /* DeepLayer.swift in Sources */,
-				FB0D5A181CAF09230097590B /* MarkovDecisionProcess.swift in Sources */,
-				FB0D5A191CAF09230097590B /* MetalNeuralNetworkShaders.metal in Sources */,
-				0E04D0261DEE6F30008A5BF7 /* Pooling.swift in Sources */,
-				0EB9FF501E80C21F00AA058E /* LSTMNeuralNetwork.swift in Sources */,
-				0E04D0151DEE6F0B008A5BF7 /* Validation.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -859,7 +737,7 @@
 				PRODUCT_NAME = AIToolbox;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 3.0.1;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -881,7 +759,7 @@
 				PRODUCT_NAME = AIToolbox;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 3.0.1;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -898,7 +776,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.AIToolboxIOSTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = Debug;
 		};
@@ -913,7 +791,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.MacRobotics.AIToolboxIOSTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SWIFT_VERSION = 3.0;
+				SWIFT_VERSION = 4.2;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -970,6 +848,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.2;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -1019,6 +898,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 4.2;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -1027,6 +907,8 @@
 		0EBA29C21A91350C0012CEC9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -1034,6 +916,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				INFOPLIST_FILE = AIToolbox/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
@@ -1050,6 +933,8 @@
 		0EBA29C31A91350C0012CEC9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -1057,6 +942,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				INFOPLIST_FILE = AIToolbox/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
@@ -1072,6 +958,8 @@
 		0EBA29C51A91350C0012CEC9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
@@ -1082,6 +970,7 @@
 					"$(inherited)",
 					"/Users/kevincoble/Library/Developer/Xcode/DerivedData/AIToolbox-fotxzwujvdsnmbcllkiihtlmhuph/Build/Products/Debug",
 				);
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -1098,6 +987,8 @@
 		0EBA29C61A91350C0012CEC9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
@@ -1108,55 +999,13 @@
 					"$(inherited)",
 					"/Users/kevincoble/Library/Developer/Xcode/DerivedData/AIToolbox-fotxzwujvdsnmbcllkiihtlmhuph/Build/Products/Release",
 				);
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				INFOPLIST_FILE = AIToolboxTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.MacRobotics.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.2;
-			};
-			name = Release;
-		};
-		FB0D5A211CAF09230097590B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "AIToolbox copy-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.MacRobotics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-			};
-			name = Debug;
-		};
-		FB0D5A221CAF09230097590B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "AIToolbox copy-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.MacRobotics.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
 			};
 			name = Release;
 		};
@@ -1204,15 +1053,6 @@
 			buildConfigurations = (
 				0EBA29C51A91350C0012CEC9 /* Debug */,
 				0EBA29C61A91350C0012CEC9 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		FB0D5A201CAF09230097590B /* Build configuration list for PBXNativeTarget "AIToolbox copy" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				FB0D5A211CAF09230097590B /* Debug */,
-				FB0D5A221CAF09230097590B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
